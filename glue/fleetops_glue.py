@@ -282,7 +282,9 @@ def needs_view():
                     "deadline": hms_iso(t.get("needed_by")), "duration_min": 15, "bring": [],
                     "evidence": {"robot": robot_name(t.get("robot_id")), "zone": t.get("zone"),
                                  "event_id": t.get("event_id"), "detail": ev.get("detail")},
-                    "status": t["status"], "assigned_staff": t.get("assignee"),
+                    # the dashboard treats "closed" as finished; the supervisor calls that "resolved"
+                    "status": "closed" if t["status"] == "resolved" else t["status"],
+                    "supervisor_status": t["status"], "assigned_staff": t.get("assignee"),
                     "opened_at": hms_iso(t.get("created_at")), "updated_at": hms_iso(t.get("updated_at"))})
     return out
 
