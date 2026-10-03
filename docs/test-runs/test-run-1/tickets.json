@@ -1,0 +1,702 @@
+[
+ {
+  "id": "T-1",
+  "event_type": "stuck",
+  "robot_id": 7,
+  "zone": 0,
+  "reason": "Robot 7 stuck; reroute its job",
+  "evidence": {
+   "event": {
+    "id": "E-0002",
+    "status": "active",
+    "robot_id": 7,
+    "zone": 0,
+    "type": "stuck",
+    "severity": "warning",
+    "detail": "no movement for 4s during carry",
+    "facts": {
+     "stopped_for_s": 4,
+     "task": "carry",
+     "goal": [
+      2,
+      4
+     ],
+     "position": [
+      2,
+      12
+     ],
+     "carrying": {
+      "sku": "SKU-1152",
+      "qty": 1
+     },
+     "error_code": "STUCK"
+    },
+    "first_seen": "12:01:39",
+    "active_for_s": 2,
+    "orders_in_zone": [
+     {
+      "id": "O-1001",
+      "zone": 0,
+      "units": 174,
+      "picked": 53,
+      "due": "12:05:32",
+      "minutes_to_due": 3.9,
+      "zone_rate_per_min": 117.0,
+      "projected_finish": "12:02:43",
+      "at_risk": false,
+      "late": false
+     },
+     {
+      "id": "O-1002",
+      "zone": 0,
+      "units": 149,
+      "picked": 0,
+      "due": "12:07:24",
+      "minutes_to_due": 5.7,
+      "zone_rate_per_min": 117.0,
+      "projected_finish": "12:03:59",
+      "at_risk": false,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": "12:30",
+  "priority": "high",
+  "status": "acknowledged",
+  "event_id": "E-0002",
+  "assignee": null,
+  "eta": null,
+  "created_at": "12:01:41",
+  "updated_at": "12:01:41",
+  "history": [
+   {
+    "at": "12:01:41",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Robot 7 stuck; reroute its job"
+   },
+   {
+    "at": "12:01:41",
+    "actor": "scheduler",
+    "status": "acknowledged",
+    "note": "on it"
+   }
+  ]
+ },
+ {
+  "id": "T-2",
+  "event_type": "overheat",
+  "robot_id": 0,
+  "zone": 0,
+  "reason": "System-wide motor overheat affecting 19/20 robots at 92C (limit 80C). Robots 8 (zone 1) and 12 (zone 5) stopped/stuck. At-risk orders: O-1006 (zone 2, due 12:08:57), O-1026 (zone 3, due 12:09:37). Needs urgent cooling intervention or load redistribution.",
+  "evidence": {
+   "event": {
+    "id": "E-0003",
+    "status": "active",
+    "robot_id": 0,
+    "zone": 0,
+    "type": "overheat",
+    "severity": "critical",
+    "detail": "motor 92C (limit 80C)",
+    "facts": {
+     "motor_temp_c": 92,
+     "limit_c": 80,
+     "task": "carry"
+    },
+    "first_seen": "12:01:50",
+    "active_for_s": 199,
+    "orders_in_zone": [
+     {
+      "id": "O-1018",
+      "zone": 0,
+      "units": 347,
+      "picked": 150,
+      "due": "12:08:14",
+      "minutes_to_due": 3.1,
+      "zone_rate_per_min": 123.0,
+      "projected_finish": "12:06:45",
+      "at_risk": false,
+      "late": false
+     },
+     {
+      "id": "O-1025",
+      "zone": 0,
+      "units": 399,
+      "picked": 0,
+      "due": "12:11:17",
+      "minutes_to_due": 6.1,
+      "zone_rate_per_min": 123.0,
+      "projected_finish": "12:09:59",
+      "at_risk": false,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": "12:08:57",
+  "priority": "critical",
+  "status": "escalated",
+  "event_id": "E-0003",
+  "assignee": null,
+  "eta": null,
+  "created_at": "12:05:09",
+  "updated_at": "12:48:23",
+  "history": [
+   {
+    "at": "12:05:09",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "System-wide motor overheat affecting 19/20 robots at 92C (limit 80C). Robots 8 (zone 1) and 12 (zone 5) stopped/stuck. At-risk orders: O-1006 (zone 2, due 12:08:57), O-1026 (zone 3, due 12:09:37). Needs urgent cooling intervention or load redistribution."
+   },
+   {
+    "at": "12:48:23",
+    "actor": "supervisor",
+    "status": "escalated",
+    "note": "Scheduler has not acked or rescheduled in 37 minutes. All 20 robots at 92C, fleet completely halted, 0 deliveries. 14 orders all late. This is a critical fleet-wide failure requiring immediate human intervention on cooling systems."
+   }
+  ]
+ },
+ {
+  "id": "T-3",
+  "event_type": "inventory_mismatch",
+  "robot_id": null,
+  "zone": 3,
+  "reason": "Zone 3 inventory mismatch: bin [23,20] SKU-1144 has 8 units, expected 14 (6 missing). Impacts at-risk order O-1026 (zone 3, 388 units, 0 picked, due 12:09:37). Physical count required.",
+  "evidence": {
+   "event": {
+    "id": "E-0001",
+    "status": "active",
+    "type": "inventory_mismatch",
+    "robot_id": null,
+    "zone": 3,
+    "severity": "warning",
+    "detail": "zone 3: 1 bins differ from the system count (+6 units missing)",
+    "facts": {
+     "bins": [
+      {
+       "bin": [
+        23,
+        20
+       ],
+       "sku": "SKU-1144",
+       "qty": 5,
+       "expected": 11
+      }
+     ],
+     "units_missing": 6
+    },
+    "first_seen": "12:01:37",
+    "active_for_s": 222,
+    "orders_in_zone": [
+     {
+      "id": "O-1019",
+      "zone": 3,
+      "units": 353,
+      "picked": 146,
+      "due": "12:08:25",
+      "minutes_to_due": 3.1,
+      "zone_rate_per_min": 137.0,
+      "projected_finish": "12:06:50",
+      "at_risk": false,
+      "late": false
+     },
+     {
+      "id": "O-1026",
+      "zone": 3,
+      "units": 388,
+      "picked": 0,
+      "due": "12:09:37",
+      "minutes_to_due": 4.3,
+      "zone_rate_per_min": 137.0,
+      "projected_finish": "12:09:40",
+      "at_risk": true,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": "12:09:37",
+  "priority": "high",
+  "status": "open",
+  "event_id": "E-0001",
+  "assignee": null,
+  "eta": null,
+  "created_at": "12:05:20",
+  "updated_at": "12:05:20",
+  "history": [
+   {
+    "at": "12:05:20",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Zone 3 inventory mismatch: bin [23,20] SKU-1144 has 8 units, expected 14 (6 missing). Impacts at-risk order O-1026 (zone 3, 388 units, 0 picked, due 12:09:37). Physical count required."
+   }
+  ]
+ },
+ {
+  "id": "T-4",
+  "event_type": "low_stock",
+  "robot_id": null,
+  "zone": 0,
+  "reason": "Zone 0 stock depleted to 0 units (limit 30). Affects orders O-1001 (196 units, late) and O-1002 (226 units, late). Needs immediate stock replenishment and cooling intervention.",
+  "evidence": {
+   "event": {
+    "id": "E-0024",
+    "status": "active",
+    "type": "low_stock",
+    "robot_id": null,
+    "zone": 0,
+    "severity": "warning",
+    "detail": "zone 0 stock 0 units (limit 30)",
+    "facts": {
+     "units": 0
+    },
+    "first_seen": "12:10:43",
+    "active_for_s": 479,
+    "orders_in_zone": [
+     {
+      "id": "O-1001",
+      "zone": 0,
+      "units": 196,
+      "picked": 0,
+      "due": "12:16:25",
+      "minutes_to_due": -2.3,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": true
+     },
+     {
+      "id": "O-1002",
+      "zone": 0,
+      "units": 226,
+      "picked": 0,
+      "due": "12:16:32",
+      "minutes_to_due": -2.2,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": true
+     }
+    ]
+   }
+  },
+  "needed_by": "12:16:25",
+  "priority": "critical",
+  "status": "open",
+  "event_id": "E-0024",
+  "assignee": null,
+  "eta": null,
+  "created_at": "12:18:41",
+  "updated_at": "12:18:41",
+  "history": [
+   {
+    "at": "12:18:41",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Zone 0 stock depleted to 0 units (limit 30). Affects orders O-1001 (196 units, late) and O-1002 (226 units, late). Needs immediate stock replenishment and cooling intervention."
+   }
+  ]
+ },
+ {
+  "id": "T-5",
+  "event_type": "low_stock",
+  "robot_id": null,
+  "zone": 1,
+  "reason": "Zone 1 stock depleted to 0 units (limit 30). Affects orders O-1003 (175 units, late) and O-1004 (179 units, late). Needs immediate stock replenishment and cooling intervention.",
+  "evidence": {
+   "event": {
+    "id": "E-0025",
+    "status": "active",
+    "type": "low_stock",
+    "robot_id": null,
+    "zone": 1,
+    "severity": "warning",
+    "detail": "zone 1 stock 0 units (limit 30)",
+    "facts": {
+     "units": 0
+    },
+    "first_seen": "12:10:43",
+    "active_for_s": 479,
+    "orders_in_zone": [
+     {
+      "id": "O-1003",
+      "zone": 1,
+      "units": 175,
+      "picked": 0,
+      "due": "12:15:00",
+      "minutes_to_due": -3.7,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": true
+     },
+     {
+      "id": "O-1004",
+      "zone": 1,
+      "units": 179,
+      "picked": 0,
+      "due": "12:15:23",
+      "minutes_to_due": -3.3,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": true
+     }
+    ]
+   }
+  },
+  "needed_by": "12:15:00",
+  "priority": "critical",
+  "status": "open",
+  "event_id": "E-0025",
+  "assignee": null,
+  "eta": null,
+  "created_at": "12:18:41",
+  "updated_at": "12:18:41",
+  "history": [
+   {
+    "at": "12:18:41",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Zone 1 stock depleted to 0 units (limit 30). Affects orders O-1003 (175 units, late) and O-1004 (179 units, late). Needs immediate stock replenishment and cooling intervention."
+   }
+  ]
+ },
+ {
+  "id": "T-6",
+  "event_type": "low_stock",
+  "robot_id": null,
+  "zone": 2,
+  "reason": "Zone 2 stock depleted to 0 units (limit 30). Affects orders O-1006 (157 units, late) and O-1005 (184 units, late). Needs immediate stock replenishment and cooling intervention.",
+  "evidence": {
+   "event": {
+    "id": "E-0026",
+    "status": "active",
+    "type": "low_stock",
+    "robot_id": null,
+    "zone": 2,
+    "severity": "warning",
+    "detail": "zone 2 stock 0 units (limit 30)",
+    "facts": {
+     "units": 0
+    },
+    "first_seen": "12:10:43",
+    "active_for_s": 479,
+    "orders_in_zone": [
+     {
+      "id": "O-1006",
+      "zone": 2,
+      "units": 157,
+      "picked": 0,
+      "due": "12:16:12",
+      "minutes_to_due": -2.5,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": true
+     },
+     {
+      "id": "O-1005",
+      "zone": 2,
+      "units": 184,
+      "picked": 0,
+      "due": "12:17:21",
+      "minutes_to_due": -1.3,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": true
+     }
+    ]
+   }
+  },
+  "needed_by": "12:16:12",
+  "priority": "critical",
+  "status": "open",
+  "event_id": "E-0026",
+  "assignee": null,
+  "eta": null,
+  "created_at": "12:18:41",
+  "updated_at": "12:18:41",
+  "history": [
+   {
+    "at": "12:18:41",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Zone 2 stock depleted to 0 units (limit 30). Affects orders O-1006 (157 units, late) and O-1005 (184 units, late). Needs immediate stock replenishment and cooling intervention."
+   }
+  ]
+ },
+ {
+  "id": "T-7",
+  "event_type": "low_stock",
+  "robot_id": null,
+  "zone": 3,
+  "reason": "Zone 3 stock depleted to 0 units (limit 30). Affects orders O-1007 and O-1008. Also inventory mismatch. Needs stock replenishment and cooling.",
+  "evidence": {
+   "event": {
+    "id": "E-0027",
+    "status": "active",
+    "type": "inventory_mismatch",
+    "robot_id": null,
+    "zone": 3,
+    "severity": "warning",
+    "detail": "zone 3: 1 bins differ from the system count (+6 units missing)",
+    "facts": {
+     "bins": [
+      {
+       "bin": [
+        23,
+        20
+       ],
+       "sku": "SKU-1144",
+       "qty": 0,
+       "expected": 6
+      }
+     ],
+     "units_missing": 6
+    },
+    "first_seen": "12:10:43",
+    "active_for_s": 535,
+    "orders_in_zone": [
+     {
+      "id": "O-1007",
+      "zone": 3,
+      "units": 164,
+      "picked": 0,
+      "due": "12:18:14",
+      "minutes_to_due": -1.4,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": true
+     },
+     {
+      "id": "O-1008",
+      "zone": 3,
+      "units": 207,
+      "picked": 0,
+      "due": "12:18:27",
+      "minutes_to_due": -1.2,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": true
+     }
+    ]
+   }
+  },
+  "needed_by": "12:18:14",
+  "priority": "critical",
+  "status": "open",
+  "event_id": "E-0027",
+  "assignee": null,
+  "eta": null,
+  "created_at": "12:19:38",
+  "updated_at": "12:19:38",
+  "history": [
+   {
+    "at": "12:19:38",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Zone 3 stock depleted to 0 units (limit 30). Affects orders O-1007 and O-1008. Also inventory mismatch. Needs stock replenishment and cooling."
+   }
+  ]
+ },
+ {
+  "id": "T-8",
+  "event_type": "low_stock",
+  "robot_id": null,
+  "zone": 4,
+  "reason": "Zone 4 stock depleted to 0 units (limit 30). Needs stock replenishment and cooling.",
+  "evidence": {
+   "event": {
+    "id": "E-0028",
+    "status": "active",
+    "type": "low_stock",
+    "robot_id": null,
+    "zone": 3,
+    "severity": "warning",
+    "detail": "zone 3 stock 0 units (limit 30)",
+    "facts": {
+     "units": 0
+    },
+    "first_seen": "12:10:43",
+    "active_for_s": 535,
+    "orders_in_zone": [
+     {
+      "id": "O-1007",
+      "zone": 3,
+      "units": 164,
+      "picked": 0,
+      "due": "12:18:14",
+      "minutes_to_due": -1.4,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": true
+     },
+     {
+      "id": "O-1008",
+      "zone": 3,
+      "units": 207,
+      "picked": 0,
+      "due": "12:18:27",
+      "minutes_to_due": -1.2,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": true
+     }
+    ]
+   }
+  },
+  "needed_by": "12:18:20",
+  "priority": "critical",
+  "status": "open",
+  "event_id": "E-0028",
+  "assignee": null,
+  "eta": null,
+  "created_at": "12:19:38",
+  "updated_at": "12:19:38",
+  "history": [
+   {
+    "at": "12:19:38",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Zone 4 stock depleted to 0 units (limit 30). Needs stock replenishment and cooling."
+   }
+  ]
+ },
+ {
+  "id": "T-9",
+  "event_type": "low_stock",
+  "robot_id": null,
+  "zone": 6,
+  "reason": "Zone 6 stock depleted to 0 units (limit 30). Needs stock replenishment and cooling.",
+  "evidence": {
+   "event": {
+    "id": "E-0030",
+    "status": "active",
+    "type": "low_stock",
+    "robot_id": null,
+    "zone": 5,
+    "severity": "warning",
+    "detail": "zone 5 stock 0 units (limit 30)",
+    "facts": {
+     "units": 0
+    },
+    "first_seen": "12:10:43",
+    "active_for_s": 535,
+    "orders_in_zone": [
+     {
+      "id": "O-1012",
+      "zone": 5,
+      "units": 219,
+      "picked": 0,
+      "due": "12:15:18",
+      "minutes_to_due": -4.3,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": true
+     },
+     {
+      "id": "O-1011",
+      "zone": 5,
+      "units": 154,
+      "picked": 0,
+      "due": "12:17:13",
+      "minutes_to_due": -2.4,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": true
+     }
+    ]
+   }
+  },
+  "needed_by": "12:18:35",
+  "priority": "critical",
+  "status": "open",
+  "event_id": "E-0030",
+  "assignee": null,
+  "eta": null,
+  "created_at": "12:19:38",
+  "updated_at": "12:19:38",
+  "history": [
+   {
+    "at": "12:19:38",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Zone 6 stock depleted to 0 units (limit 30). Needs stock replenishment and cooling."
+   }
+  ]
+ },
+ {
+  "id": "T-10",
+  "event_type": "low_stock",
+  "robot_id": null,
+  "zone": 5,
+  "reason": "Zone 5 stock depleted to 0 units (limit 30). Needs stock replenishment and cooling.",
+  "evidence": {
+   "event": {
+    "id": "E-0029",
+    "status": "active",
+    "type": "low_stock",
+    "robot_id": null,
+    "zone": 4,
+    "severity": "warning",
+    "detail": "zone 4 stock 0 units (limit 30)",
+    "facts": {
+     "units": 0
+    },
+    "first_seen": "12:10:43",
+    "active_for_s": 535,
+    "orders_in_zone": [
+     {
+      "id": "O-1009",
+      "zone": 4,
+      "units": 228,
+      "picked": 0,
+      "due": "12:16:40",
+      "minutes_to_due": -3.0,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": true
+     },
+     {
+      "id": "O-1010",
+      "zone": 4,
+      "units": 219,
+      "picked": 0,
+      "due": "12:17:06",
+      "minutes_to_due": -2.5,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": true
+     }
+    ]
+   }
+  },
+  "needed_by": "12:18:30",
+  "priority": "critical",
+  "status": "open",
+  "event_id": "E-0029",
+  "assignee": null,
+  "eta": null,
+  "created_at": "12:19:38",
+  "updated_at": "12:19:38",
+  "history": [
+   {
+    "at": "12:19:38",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Zone 5 stock depleted to 0 units (limit 30). Needs stock replenishment and cooling."
+   }
+  ]
+ }
+]

@@ -1,0 +1,477 @@
+=== 2026-10-03 15:59:50 isaac start ===
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1791061191.268558 1035452 descriptor_database.cc:633] File already exists in database: grpc/health/v1/health.proto
+W0000 00:00:1791061191.268582 1035452 message.cc:301] Protobuf GeneratedMessageFactory: File is already registered: grpc/health/v1/health.proto
+2026-10-03T20:59:51Z [Info] [carb] Logging to file: /home/dell/isaacsim-env/lib/python3.12/site-packages/isaacsim/kit/logs/Kit/Isaac-Sim Python/6.0/kit_20261003_155951.log
+[0.045s] [ext: omni.assets.plugins-0.0.0] startup
+[0.046s] [ext: omni.blobkey-1.1.2] startup
+[0.046s] [ext: omni.kit.async_engine-0.0.3] startup
+[0.121s] [ext: omni.client.lib-1.1.1] startup
+[0.132s] [ext: omni.client-1.3.0] startup
+[0.136s] [ext: omni.protobuf.lib-1.0.0] startup
+[0.136s] [ext: omni.grpc.lib-1.0.0] startup
+[0.140s] [ext: omni.metrics.core-0.0.3] startup
+[0.141s] [ext: omni.datastore-0.0.0] startup
+[0.141s] [ext: omni.gpu_foundation.shadercache.vulkan-1.0.0] startup
+[0.144s] [ext: omni.hsscclient-1.1.4] startup
+[0.144s] [ext: omni.stats-1.0.1] startup
+[0.145s] [ext: omni.ujitso.default-1.0.0] startup
+[0.147s] [ext: omni.gpu_foundation-0.0.0] startup
+[0.152s] [ext: carb.windowing.plugins-1.0.1] startup
+[0.159s] [ext: omni.kit.renderer.init-1.0.1] startup
+
+|---------------------------------------------------------------------------------------------|
+| Driver Version: 580.178.04    | Graphics API: Vulkan
+|=============================================================================================|
+| GPU | Name                             | Active | LDA | GPU Memory | Vendor-ID | LUID       |
+|     |                                  |        |     |            | Device-ID | UUID       |
+|     |                                  |        |     |            | Bus-ID    |            |
+|---------------------------------------------------------------------------------------------|
+| 0   | NVIDIA GB10                      | Yes: 0 |     | 93408   MB | 10de      | 0          |
+|     |                                  |        |     |            | 2e12      | 7e691fcf.. |
+|     |                                  |        |     |            | 1         |            |
+|=============================================================================================|
+| OS: 24.04.5 LTS (Noble Numbat) ubuntu, Version: 24.04.5, Kernel: 7.0.0-1019-nvidia
+| XServer Vendor: The X.Org Foundation, XServer Version: 12101011 (1.21.1.11)
+| Processor: Cortex-A725
+| Cores: 20 | Logical Cores: 20
+|---------------------------------------------------------------------------------------------|
+| Total Memory (MB): 124544 | Free Memory: 34675
+| Total Page/Swap (MB): 16383 | Free Page/Swap: 9612
+|---------------------------------------------------------------------------------------------|
+[1.121s] [ext: omni.kit.pipapi-0.0.0] startup
+[1.124s] [ext: omni.kit.telemetry-0.5.2] startup
+[1.152s] [ext: omni.kit.loop-isaac-1.6.0] startup
+[1.154s] [ext: omni.kit.test-2.0.7] startup
+[1.211s] [ext: omni.materialx.libs-1.0.9] startup
+[1.221s] [ext: omni.gpucompute.plugins-0.0.0] startup
+[1.221s] [ext: omni.usd.config-1.0.7] startup
+[1.224s] [ext: omni.usd.libs-1.0.3] startup
+[1.283s] [ext: omni.iray.libs-0.0.1] startup
+[1.296s] [ext: omni.mdl-57.0.3] startup
+[1.333s] [ext: omni.mdl.neuraylib-0.2.20] startup
+[1.335s] [ext: omni.kit.usd.mdl-1.1.9] startup
+[1.431s] [ext: omni.appwindow-1.2.2] startup
+[1.438s] [ext: omni.kit.renderer.core-1.2.2] startup
+[1.667s] [ext: omni.kit.renderer.capture-2.0.1] startup
+[1.669s] [ext: omni.kit.renderer.imgui-2.0.6] startup
+[1.709s] [ext: omni.ui-3.2.0] startup
+[1.716s] [ext: omni.kit.mainwindow-1.0.3] startup
+[1.717s] [ext: carb.audio-0.1.0] startup
+[1.720s] [ext: omni.uiaudio-1.0.0] startup
+[1.720s] [ext: omni.kit.uiapp-0.0.0] startup
+[1.721s] [ext: omni.usd.schema.metrics.assembler-110.1.0] startup
+[1.722s] [ext: omni.usd.schema.audio-0.0.1] startup
+[1.724s] [ext: omni.usd_resolver-1.0.0] startup
+[1.726s] [ext: omni.usd.core-1.8.3] startup
+[1.728s] [ext: omni.metropolis.schema-0.0.3] startup
+[1.729s] [ext: isaacsim.anim.robot.schema-0.1.1] startup
+[1.729s] [ext: omni.usd.schema.anim-0.0.1] startup
+[1.740s] [ext: omni.usd.schema.geospatial-0.0.1] startup
+[1.741s] [ext: omni.usd.schema.omnigraph-1.0.1] startup
+[1.744s] [ext: omni.usd.schema.semantics-0.0.0] startup
+[1.745s] [ext: omni.activity.core-1.0.3] startup
+[1.746s] [ext: omni.cubric-0.1.0] startup
+[1.746s] [ext: omni.graph.exec-0.9.6] startup
+[1.747s] [ext: omni.hydra.scene_delegate-0.3.5] startup
+[1.750s] [ext: usdrt.scenegraph-7.6.3] startup
+[1.767s] [ext: omni.hydra.usdrt_delegate-7.5.2] startup
+[1.772s] [ext: omni.inspect-1.0.2] startup
+[1.773s] [ext: omni.kit.actions.core-1.0.0] startup
+[1.775s] [ext: omni.kit.audiodeviceenum-1.0.2] startup
+[1.776s] [ext: omni.kit.commands-1.5.0] startup
+[1.778s] [ext: omni.kit.exec.core-0.13.5] startup
+[1.780s] [ext: omni.kit.usd_undo-0.1.8] startup
+[1.780s] [ext: omni.kit.window.popup_dialog-2.0.25] startup
+[1.782s] [ext: omni.kit.widget.nucleus_connector-2.3.1] startup
+[1.784s] [ext: omni.timeline-1.1.0] startup
+[1.786s] [ext: omni.usd-1.16.0] startup
+[1.814s] [ext: omni.graph.core-3.1.2] startup
+[1.816s] [ext: omni.kit.notification_manager-1.0.11] startup
+[1.817s] [ext: isaacsim.core.deprecation_manager-0.4.2] startup
+[1.818s] [ext: isaacsim.replicator.agent.schema-0.1.1] startup
+[1.818s] [ext: isaacsim.robot.schema-6.3.7] startup
+[1.821s] [ext: isaacsim.robot_motion.schema-0.2.1] startup
+[1.822s] [ext: omni.anim.behavior.schema-110.1.0] startup
+[1.824s] [ext: omni.anim.graph.schema-110.1.1] startup
+[1.829s] [ext: omni.anim.navigation.schema-110.1.0] startup
+[1.831s] [ext: omni.behavior.tree.schema-110.1.0] startup
+[1.831s] [ext: omni.kit.asset_converter-6.0.1] startup
+[1.839s] [ext: omni.usd.schema.flow-110.0.0] startup
+[1.839s] [ext: omni.usd.schema.mujoco-1.1.1] startup
+[1.839s] [ext: omni.usd.schema.newton-1.2.1] startup
+[1.840s] [ext: omni.usd.schema.omni_lens_distortion-1.0.0] startup
+[1.840s] [ext: omni.usd.schema.omni_projectors-1.0.0] startup
+[1.841s] [ext: omni.usd.schema.omni_sensors-0.0.0] startup
+[1.846s] [ext: omni.usd.schema.omniscripting-1.0.1] startup
+[1.848s] [ext: omni.usd.schema.physical_lighting-0.1.0] startup
+[1.850s] [ext: omni.usd.schema.physx-110.1.13] startup
+[1.871s] [ext: omni.usd.schema.render_settings.rtx-1.0.2] startup
+[1.874s] [ext: omni.usd.schema.usd_particle_field-1.0.0] startup
+[1.874s] [ext: isaacsim.core.version-2.1.1] startup
+[1.875s] [ext: omni.kit.menu.core-1.2.0] startup
+[1.875s] [ext: omni.kit.menu.utils-2.2.4] startup
+[1.880s] [ext: isaacsim.app.about-2.3.1] startup
+[1.884s] [ext: isaacsim.asset.transformer-1.2.5] startup
+[1.886s] [ext: omni.scene.optimizer.core-110.1.0] startup
+[1.912s] [ext: isaacsim.asset.importer.utils-1.8.1] startup
+[1.913s] [ext: omni.convexdecomposition-110.1.13] startup
+[1.915s] [ext: omni.physics-110.1.13] startup
+[1.917s] [ext: omni.physx.gpu-110.1.13] startup
+[1.917s] [ext: omni.physx.foundation-110.1.13] startup
+[1.918s] [ext: omni.usdphysics-110.1.13] startup
+[1.919s] [ext: omni.physx.cooking-110.1.13] startup
+[1.921s] [ext: omni.physx-110.1.13] startup
+[1.927s] [ext: omni.physics.physx-110.1.13] startup
+[1.929s] [ext: isaacsim.asset.exporter.urdf-2.0.5] startup
+[1.934s] [ext: omni.kit.clipboard-1.1.1] startup
+[1.935s] [ext: omni.kit.usd.layers-2.6.1] startup
+[1.941s] [ext: omni.kit.widget.context_menu-1.4.0] startup
+[1.942s] [ext: omni.kit.context_menu-1.9.0] startup
+[1.943s] [ext: omni.kit.helper.file_utils-0.1.10] startup
+[1.944s] [ext: omni.kit.widget.nucleus_info-2.0.2] startup
+[1.944s] [ext: omni.kit.search_core-1.0.8] startup
+[1.944s] [ext: omni.kit.widget.path_field-2.0.13] startup
+[1.945s] [ext: omni.kit.widget.browser_bar-2.0.10] startup
+[1.945s] [ext: omni.kit.widget.filebrowser-2.13.4] startup
+[1.947s] [ext: omni.kit.widget.options_menu-1.1.6] startup
+[1.949s] [ext: omni.kit.widget.options_button-1.0.3] startup
+[1.949s] [ext: omni.kit.widget.search_delegate-1.0.9] startup
+[1.950s] [ext: omni.ui.scene-2.0.3] startup
+[1.953s] [ext: omni.kit.window.filepicker-2.15.5] startup
+[1.962s] [ext: omni.kit.window.file_importer-1.1.21] startup
+[1.963s] [ext: omni.kit.material.library-3.1.2] startup
+[1.967s] [ext: isaacsim.asset.transformer.rules-1.7.10] startup
+[1.973s] [ext: omni.usdex.libs-2.2.2] startup
+[1.979s] [ext: isaacsim.asset.importer.mjcf-3.10.1] startup
+[1.980s] [ext: isaacsim.asset.importer.urdf-3.11.2] startup
+[1.982s] [ext: omni.kit.primitive.mesh-1.1.0] startup
+[1.984s] [ext: omni.kit.stage_template.core-1.1.22] startup
+[1.984s] [ext: omni.kit.stage_templates-2.0.2] startup
+[1.985s] [ext: omni.usd.metrics.assembler-110.1.2] startup
+[1.987s] [ext: omni.warp.core-1.13.0] startup
+[2.103s] [ext: isaacsim.core.experimental.utils-0.17.2] startup
+[2.104s] [ext: omni.physics.stageupdate-110.1.13] startup
+[2.106s] [ext: omni.physics.tensors-110.1.13] startup
+[2.109s] [ext: omni.physx.tensors-110.1.13] startup
+[2.115s] [ext: isaacsim.core.simulation_manager-1.15.6] startup
+[2.124s] [ext: isaacsim.storage.native-1.9.3] startup
+[2.125s] [ext: omni.usd.metrics.assembler.physics-110.1.13] startup
+[2.126s] [ext: isaacsim.core.utils-4.1.7] startup
+[2.128s] [ext: isaacsim.core.prims-0.11.7] startup
+[2.878s] [ext: isaacsim.core.api-5.2.13] startup
+[2.883s] [ext: isaacsim.core.cloner-1.7.3] startup
+[2.884s] [ext: isaacsim.test.docstring-1.3.2] startup
+[2.887s] [ext: isaacsim.core.experimental.prims-1.8.9] startup
+[2.905s] [ext: isaacsim.core.experimental.primdata-0.3.2] startup
+[2.906s] [ext: omni.graph.tools-1.81.0] startup
+[2.920s] [ext: omni.graph-1.142.5] startup
+[2.944s] [ext: isaacsim.core.experimental.actuators-0.1.2] startup
+[2.956s] [ext: isaacsim.core.experimental.materials-0.7.1] startup
+[2.958s] [ext: isaacsim.core.experimental.objects-0.8.1] startup
+[3.002s] [ext: omni.hydra.engine.stats-1.0.5] startup
+[3.004s] [ext: omni.hydra.rtx.shadercache.vulkan-1.0.0] startup
+[3.005s] [ext: omni.index.libs-387500.4413.0] startup
+[3.005s] [ext: omni.index-1.0.1] startup
+[3.008s] [ext: omni.ujitso.client-0.0.0] startup
+[3.008s] [ext: omni.usd.schema.playback-1.0.0] startup
+[3.010s] [ext: omni.volume-0.5.2] startup
+[3.015s] [ext: omni.hydra.rtx-1.0.4] startup
+2026-10-03T20:59:54Z [3,007ms] [Warning] [omni.log] Source: omni.hydra was already registered.
+[3.039s] [ext: omni.kit.hydra_texture-1.6.0] startup
+[3.042s] [ext: omni.kit.raycast.query-1.2.0] startup
+[3.045s] [ext: omni.kit.viewport.legacy_gizmos-1.0.24] startup
+[3.047s] [ext: omni.kit.viewport.registry-104.0.6] startup
+[3.048s] [ext: omni.kit.viewport.scene_camera_model-1.0.7] startup
+[3.051s] [ext: omni.kit.widget.viewport-109.2.0] startup
+[3.054s] [ext: omni.kit.window.drop_support-1.0.8] startup
+[3.054s] [ext: omni.kit.viewport.window-109.0.2] startup
+[3.068s] [ext: omni.kit.viewport.utility-2.0.1] startup
+[3.068s] [ext: isaacsim.core.rendering_manager-0.4.3] startup
+[3.082s] [ext: omni.graph.action_core-1.1.9] startup
+[3.084s] [ext: omni.graph.action_nodes_core-2.11.0] startup
+[3.086s] [ext: omni.graph.action_nodes-2.11.0] startup
+[3.113s] [ext: omni.graph.action-2.10.2] startup
+[3.114s] [ext: omni.graph.image.core-0.6.1] startup
+[3.115s] [ext: omni.graph.image.nodes-1.3.1] startup
+[3.116s] [ext: omni.graph.nodes_core-2.11.0] startup
+[3.121s] [ext: omni.graph.nodes-2.12.0] startup
+[3.125s] [ext: omni.kit.hotkeys.core-1.3.12] startup
+[3.126s] [ext: omni.kit.property.adapter.core-1.1.1] startup
+[3.128s] [ext: omni.kit.property.adapter.usd-1.0.5] startup
+[3.137s] [ext: omni.kit.widget.filter-1.1.5] startup
+[3.138s] [ext: omni.kit.widget.highlight_label-1.0.3] startup
+[3.139s] [ext: omni.kit.widget.searchfield-1.1.8] startup
+[3.139s] [ext: omni.kit.window.file_exporter-1.0.36] startup
+[3.140s] [ext: omni.kit.widget.stage-4.4.0] startup
+[3.146s] [ext: omni.kit.window.content_browser_registry-0.0.6] startup
+[3.147s] [ext: omni.kit.window.file-2.0.10] startup
+[3.149s] [ext: omni.kit.window.content_browser-3.1.8] startup
+[3.156s] [ext: omni.kit.window.property-1.15.1] startup
+[3.165s] [ext: omni.kit.property.usd-4.9.4] startup
+[3.173s] [ext: omni.graph.scriptnode-2.10.2] startup
+[3.180s] [ext: omni.kit.widget.searchable_combobox-1.0.7] startup
+[3.181s] [ext: omni.kit.widget.settings-2.0.0] startup
+[3.183s] [ext: omni.kit.window.preferences-1.8.3] startup
+[3.186s] [ext: omni.kit.viewport.menubar.core-107.2.2] startup
+[3.194s] [ext: omni.syntheticdata-0.6.15] startup
+[3.219s] [ext: omni.replicator.nv-1.1.1] startup
+[3.226s] [ext: omni.videoencoding-0.2.1] startup
+[3.228s] [ext: omni.replicator.core-1.13.27] startup
+2026-10-03T20:59:54Z [3,216ms] [Warning] [pxr.Semantics] pxr.Semantics is deprecated - please use Semantics instead
+2026-10-03T20:59:54Z [3,286ms] [Warning] [omni.replicator.core.scripts.extension] No material configuration file, adding configuration to material settings directly.
+[3.411s] [ext: isaacsim.core.nodes-5.10.5] startup
+[3.437s] [ext: isaacsim.core.throttling-2.3.5] startup
+[3.438s] [ext: omni.kit.manipulator.viewport-107.0.1] startup
+[3.439s] [ext: omni.graph.visualization.nodes-2.1.4] startup
+[3.452s] [ext: omni.kit.window.extensions-1.5.10] startup
+[3.456s] [ext: isaacsim.gui.components-1.8.5] startup
+[3.460s] [ext: isaacsim.robot.surface_gripper-3.6.2] startup
+[3.470s] [ext: isaacsim.robot.manipulators-3.4.4] startup
+[3.478s] [ext: isaacsim.robot_motion.lula-4.1.3] startup
+[3.485s] [ext: isaacsim.robot_motion.motion_generation-8.2.9] startup
+[3.489s] [ext: isaacsim.cortex.framework-1.0.18] startup
+[3.490s] [ext: isaacsim.cortex.behaviors-2.0.17] startup
+[3.492s] [ext: isaacsim.examples.base-1.3.2] startup
+[3.493s] [ext: omni.kit.widget.zoombar-1.0.7] startup
+[3.494s] [ext: omni.kit.browser.core-2.3.18] startup
+[3.496s] [ext: omni.kit.browser.folder.core-2.0.2] startup
+[3.499s] [ext: omni.kit.widget.stage_icons-1.0.8] startup
+[3.500s] [ext: omni.kit.window.stage-2.6.1] startup
+[3.503s] [ext: omni.kit.menu.stage-1.2.7] startup
+[3.504s] [ext: omni.kit.usd.collect-3.0.6] startup
+[3.506s] [ext: omni.kit.widget.prompt-1.0.7] startup
+[3.507s] [ext: omni.kit.tool.collect-2.2.19] startup
+[3.508s] [ext: isaacsim.examples.browser-0.3.2] startup
+[3.510s] [ext: omni.kit.search.files-1.0.4] startup
+[3.510s] [ext: omni.kit.widget.calendar-1.0.9] startup
+[3.511s] [ext: omni.kit.widget.extended_searchfield-1.0.31] startup
+[3.519s] [ext: omni.simready.content.browser-0.3.7] startup
+[3.588s] [ext: isaacsim.gui.content_browser-0.4.3] startup
+[3.591s] [ext: omni.kit.selection-0.1.6] startup
+[3.591s] [ext: isaacsim.gui.menu-2.10.5] startup
+[3.598s] [ext: isaacsim.gui.property-1.6.4] startup
+[3.603s] [ext: omni.kit.viewport.actions-110.0.0] startup
+[3.606s] [ext: omni.kit.viewport.menubar.display-107.1.3] startup
+[3.607s] [ext: isaacsim.gui.sensors.icon-2.2.1] startup
+[3.609s] [ext: omni.behavior.scripting.core-110.1.0] startup
+[3.612s] [ext: isaacsim.replicator.behavior-1.5.4] startup
+[3.612s] [ext: isaacsim.replicator.experimental.domain_randomization-1.2.5] startup
+[3.625s] [ext: isaacsim.replicator.domain_randomization-1.2.2] startup
+[3.680s] [ext: isaacsim.replicator.writers-1.5.4] startup
+[3.699s] [ext: isaacsim.robot.experimental.wheeled_robots-0.2.11] startup
+[3.715s] [ext: isaacsim.robot.policy.examples-5.2.12] startup
+[3.731s] [ext: isaacsim.robot.wheeled_robots-5.2.4] startup
+[3.734s] [ext: isaacsim.robot.wheeled_robots.nodes-0.1.5] startup
+[3.750s] [ext: isaacsim.robot_motion.experimental.motion_generation-6.1.3] startup
+[3.759s] [ext: isaacsim.robot_motion.cumotion-1.3.1] startup
+[3.771s] [ext: omni.kit.numpy.common-0.1.3] startup
+[3.773s] [ext: isaacsim.sensors.camera-1.7.9] startup
+[3.793s] [ext: isaacsim.sensors.experimental.physics-3.0.2] startup
+[3.799s] [ext: omni.sensors.net-1.0.1] startup
+[3.802s] [ext: omni.sensors.nv.common-3.0.0] startup
+[3.813s] [ext: omni.sensors.nv.materials-2.0.0] startup
+[3.816s] [ext: omni.sensors.nv.acoustic-3.0.0] startup
+[3.819s] [ext: omni.sensors.nv.ids-2.0.1] startup
+[3.821s] [ext: omni.sensors.nv.lidar-3.0.0] startup
+[3.825s] [ext: omni.sensors.nv.radar-3.0.0] startup
+[3.827s] [ext: isaacsim.sensors.experimental.rtx-1.4.6] startup
+[4.000s] [ext: isaacsim.sensors.physics.nodes-1.5.3] startup
+[4.007s] [ext: isaacsim.util.debug_draw-3.2.3] startup
+[4.014s] [ext: isaacsim.sensors.physx-2.5.5] startup
+[4.025s] [ext: isaacsim.sensors.rtx-15.17.1] startup
+[4.042s] [ext: isaacsim.simulation_app-2.18.4] startup
+[4.042s] [ext: omni.anim.curve.core-1.6.0] startup
+[4.051s] [ext: omni.graph.ui_nodes-2.11.1] startup
+[4.077s] [ext: omni.hydra.scene_api-0.1.3] startup
+[4.086s] [ext: omni.kit.manipulator.camera-110.0.0] startup
+[4.090s] [ext: omni.kit.manipulator.selector-1.1.4] startup
+[4.091s] [ext: omni.kit.manipulator.transform-107.0.0] startup
+[4.094s] [ext: omni.kit.widget.toolbar-2.1.0] startup
+[4.099s] [ext: omni.kit.manipulator.tool.snap-1.5.14] startup
+[4.102s] [ext: omni.kit.viewport.manipulator.transform-107.0.4] startup
+[4.105s] [ext: omni.kit.manipulator.prim.core-108.0.2] startup
+[4.112s] [ext: omni.kit.manipulator.prim.usd-107.0.3] startup
+[4.113s] [ext: omni.kit.manipulator.prim-108.0.0] startup
+[4.113s] [ext: omni.kit.manipulator.selection-109.0.1] startup
+[4.114s] [ext: omni.kit.menu.create-2.0.2] startup
+[4.116s] [ext: omni.kit.property.audio-1.0.16] startup
+[4.123s] [ext: omni.kit.property.camera-1.0.14] startup
+[4.125s] [ext: omni.kit.property.geometry-2.1.2] startup
+[4.129s] [ext: omni.kit.property.light-1.0.14] startup
+2026-10-03T20:59:55Z [4,132ms] [Warning] [omni.usd] Encountered USD Warnings but USD Diagnostics are currently muted. To view USD Warnings, please set the '/persistent/app/usd/muteUsdDiagnostics' setting to false in Preferences page.
+[4.164s] [ext: omni.kit.property.material-1.14.6] startup
+[4.173s] [ext: omni.kit.property.render-1.2.2] startup
+[4.175s] [ext: omni.kit.property.transform-1.6.9] startup
+[4.180s] [ext: omni.kit.property.bundle-1.5.1] startup
+[4.182s] [ext: omni.kit.usdz_export-1.1.0] startup
+[4.184s] [ext: omni.kit.tool.asset_importer-6.0.1] startup
+[4.189s] [ext: omni.kit.ui.actions-1.0.5] startup
+[4.191s] [ext: omni.kit.viewport.menubar.camera-107.0.10] startup
+[4.195s] [ext: omni.kit.viewport.menubar.lighting-107.3.2] startup
+[4.197s] [ext: omni.kit.viewport.menubar.render-110.0.0] startup
+[4.198s] [ext: omni.kit.viewport.menubar.settings-110.0.1] startup
+[4.201s] [ext: omni.kit.window.console-1.1.9] startup
+[4.208s] [ext: omni.kit.window.status_bar-0.1.11] startup
+[4.212s] [ext: omni.kit.window.toolbar-3.0.3] startup
+[4.215s] [ext: omni.ocio-0.1.1] startup
+[4.217s] [ext: omni.physx.commands-110.1.13] startup
+[4.222s] [ext: omni.replicator.replicator_yaml-2.0.12] startup
+[4.238s] [ext: omni.rtx.window.settings-0.8.0] startup
+[4.243s] [ext: omni.rtx.settings.core-0.7.1] startup
+[4.245s] [ext: omni.usd.metrics.assembler.ui-110.1.1] startup
+[4.251s] [ext: semantics.schema.editor-2.0.2] startup
+[4.257s] [ext: semantics.schema.property-2.0.2] startup
+[4.259s] [ext: omni.kit.menu.common-2.0.2] startup
+[4.260s] [ext: isaacsim.exp.base-6.0.1] startup
+[4.261s] [ext: isaacsim.exp.base.python-6.0.1] startup
+[4.264s] Simulation App Starting
+[7.122s] Simulation App Startup Complete
+[7.142s] app ready
+Starting kit application with the following args:  ['/home/dell/isaacsim-env/lib/python3.12/site-packages/isaacsim/exts/isaacsim.simulation_app/isaacsim/simulation_app/simulation_app.py', '/home/dell/isaacsim-env/lib/python3.12/site-packages/isaacsim/apps/isaacsim.exp.base.python.kit', '--/app/tokens/exe-path=/home/dell/isaacsim-env/lib/python3.12/site-packages/isaacsim/kit', '--/persistent/app/viewport/displayOptions=3094', '--/rtx/materialDb/syncLoads=True', '--/rtx/hydra/materialSyncLoads=True', '--/omni/kit/plugin/syncUsdLoads=True', '--/app/renderer/resolution/width=1920', '--/app/renderer/resolution/height=1080', '--/app/window/width=1440', '--/app/window/height=900', '--/renderer/multiGpu/enabled=True', '--/app/fastShutdown=True', '--/app/installSignalHandlers=0', '--ext-folder', '/home/dell/isaacsim-env/lib/python3.12/site-packages/isaacsim/exts', '--ext-folder', '/home/dell/isaacsim-env/lib/python3.12/site-packages/isaacsim/apps', '--/physics/cudaDevice=0', '--/plugins/carb.tasking.plugin/threadCount=20', '--/plugins/omni.tbb.globalcontrol/maxThreadCount=20', '--portable']
+Passing the following args to the base kit application:  ['--bridge', 'http://127.0.0.1:3001', '--cams', '--seed', '7']
+Warp 1.13.0 initialized:
+   CUDA Toolkit 12.9, Driver 13.0
+   Devices:
+     "cpu"      : "aarch64"
+     "cuda:0"   : "NVIDIA GB10" (122 GiB, sm_121, mempool enabled)
+   Kernel cache:
+     /home/dell/.cache/warp/1.13.0
+[fleetops    9.0s] app up
+[fleetops    9.6s] static warehouse written: 557 prims
+[fleetops    9.6s] warehouse referenced into the live stage
+[fleetops   11.4s] 20 carters referenced
+[fleetops   11.5s] deactivated 240 onboard cameras
+[fleetops   11.7s] carter physics off: 160 rigid bodies, 140 joints, 20 articulations
+2026-10-03T21:00:19Z [28,306ms] [Warning] [omni.physicsschema.plugin] ArticulationRootAPI definition on a static rigid body is not allowed, articulation root will be ignored. Prim: /World/Carter_0/chassis_link
+2026-10-03T21:00:19Z [28,306ms] [Warning] [omni.physicsschema.plugin] ArticulationRootAPI definition on a static rigid body is not allowed, articulation root will be ignored. Prim: /World/Carter_1/chassis_link
+2026-10-03T21:00:19Z [28,306ms] [Warning] [omni.physicsschema.plugin] ArticulationRootAPI definition on a static rigid body is not allowed, articulation root will be ignored. Prim: /World/Carter_10/chassis_link
+2026-10-03T21:00:19Z [28,306ms] [Warning] [omni.physicsschema.plugin] ArticulationRootAPI definition on a static rigid body is not allowed, articulation root will be ignored. Prim: /World/Carter_11/chassis_link
+2026-10-03T21:00:19Z [28,306ms] [Warning] [omni.physicsschema.plugin] ArticulationRootAPI definition on a static rigid body is not allowed, articulation root will be ignored. Prim: /World/Carter_12/chassis_link
+2026-10-03T21:00:19Z [28,306ms] [Warning] [omni.physicsschema.plugin] ArticulationRootAPI definition on a static rigid body is not allowed, articulation root will be ignored. Prim: /World/Carter_13/chassis_link
+2026-10-03T21:00:19Z [28,306ms] [Warning] [omni.physicsschema.plugin] ArticulationRootAPI definition on a static rigid body is not allowed, articulation root will be ignored. Prim: /World/Carter_14/chassis_link
+2026-10-03T21:00:19Z [28,306ms] [Warning] [omni.physicsschema.plugin] ArticulationRootAPI definition on a static rigid body is not allowed, articulation root will be ignored. Prim: /World/Carter_15/chassis_link
+2026-10-03T21:00:19Z [28,306ms] [Warning] [omni.physicsschema.plugin] ArticulationRootAPI definition on a static rigid body is not allowed, articulation root will be ignored. Prim: /World/Carter_16/chassis_link
+2026-10-03T21:00:19Z [28,306ms] [Warning] [omni.physicsschema.plugin] ArticulationRootAPI definition on a static rigid body is not allowed, articulation root will be ignored. Prim: /World/Carter_17/chassis_link
+2026-10-03T21:00:19Z [28,306ms] [Warning] [omni.physicsschema.plugin] ArticulationRootAPI definition on a static rigid body is not allowed, articulation root will be ignored. Prim: /World/Carter_18/chassis_link
+2026-10-03T21:00:19Z [28,306ms] [Warning] [omni.physicsschema.plugin] ArticulationRootAPI definition on a static rigid body is not allowed, articulation root will be ignored. Prim: /World/Carter_19/chassis_link
+2026-10-03T21:00:19Z [28,306ms] [Warning] [omni.physicsschema.plugin] ArticulationRootAPI definition on a static rigid body is not allowed, articulation root will be ignored. Prim: /World/Carter_2/chassis_link
+2026-10-03T21:00:19Z [28,306ms] [Warning] [omni.physicsschema.plugin] ArticulationRootAPI definition on a static rigid body is not allowed, articulation root will be ignored. Prim: /World/Carter_3/chassis_link
+2026-10-03T21:00:19Z [28,306ms] [Warning] [omni.physicsschema.plugin] ArticulationRootAPI definition on a static rigid body is not allowed, articulation root will be ignored. Prim: /World/Carter_4/chassis_link
+2026-10-03T21:00:19Z [28,306ms] [Warning] [omni.physicsschema.plugin] ArticulationRootAPI definition on a static rigid body is not allowed, articulation root will be ignored. Prim: /World/Carter_5/chassis_link
+2026-10-03T21:00:19Z [28,306ms] [Warning] [omni.physicsschema.plugin] ArticulationRootAPI definition on a static rigid body is not allowed, articulation root will be ignored. Prim: /World/Carter_6/chassis_link
+2026-10-03T21:00:19Z [28,306ms] [Warning] [omni.physicsschema.plugin] ArticulationRootAPI definition on a static rigid body is not allowed, articulation root will be ignored. Prim: /World/Carter_7/chassis_link
+2026-10-03T21:00:19Z [28,306ms] [Warning] [omni.physicsschema.plugin] ArticulationRootAPI definition on a static rigid body is not allowed, articulation root will be ignored. Prim: /World/Carter_8/chassis_link
+2026-10-03T21:00:19Z [28,306ms] [Warning] [omni.physicsschema.plugin] ArticulationRootAPI definition on a static rigid body is not allowed, articulation root will be ignored. Prim: /World/Carter_9/chassis_link
+[fleetops   29.9s] physics reset
+[fleetops   30.0s] camera streams on http://127.0.0.1:8212/stream/<overview|aisle|bays|robot/N>
+[fleetops   30.0s] pushing to http://127.0.0.1:3001 (token set)
+[fleetops   30.0s] FleetOps live: 20 Carters running
+[fleetops   30.5s] step 0, 2.1 steps/s, sim t=0s, pushes ok 0 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 3.97 m, overlap steps 0
+[fleetops   45.1s] step 300, 19.9 steps/s, sim t=15s, pushes ok 101 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 1.09 m, overlap steps 0
+[fleetops   59.6s] step 600, 20.3 steps/s, sim t=29s, pushes ok 202 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 1.06 m, overlap steps 0
+[fleetops   73.1s] step 900, 20.9 steps/s, sim t=43s, pushes ok 303 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 1.06 m, overlap steps 0
+[fleetops   86.1s] step 1200, 21.4 steps/s, sim t=56s, pushes ok 399 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 1.06 m, overlap steps 0
+[fleetops   99.1s] step 1500, 21.7 steps/s, sim t=69s, pushes ok 491 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 1.06 m, overlap steps 0
+[fleetops  112.0s] step 1800, 22.0 steps/s, sim t=82s, pushes ok 586 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.93 m, overlap steps 0
+[fleetops  124.9s] step 2100, 22.1 steps/s, sim t=94s, pushes ok 680 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.93 m, overlap steps 0
+[fleetops  137.9s] step 2400, 22.3 steps/s, sim t=107s, pushes ok 773 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.93 m, overlap steps 0
+[fleetops  151.0s] step 2700, 22.3 steps/s, sim t=121s, pushes ok 871 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.93 m, overlap steps 0
+[fleetops  164.1s] step 3000, 22.4 steps/s, sim t=134s, pushes ok 965 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.93 m, overlap steps 0
+[fleetops  176.8s] step 3300, 22.5 steps/s, sim t=146s, pushes ok 1057 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.93 m, overlap steps 0
+[fleetops  190.2s] step 3600, 22.5 steps/s, sim t=160s, pushes ok 1156 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.78 m, overlap steps 0
+[fleetops  203.5s] step 3900, 22.5 steps/s, sim t=173s, pushes ok 1254 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.78 m, overlap steps 0
+[fleetops  216.8s] step 4200, 22.5 steps/s, sim t=186s, pushes ok 1351 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.78 m, overlap steps 0
+[fleetops  230.3s] step 4500, 22.5 steps/s, sim t=200s, pushes ok 1451 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.78 m, overlap steps 0
+[fleetops  243.5s] step 4800, 22.5 steps/s, sim t=213s, pushes ok 1548 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.78 m, overlap steps 0
+[fleetops  256.5s] step 5100, 22.5 steps/s, sim t=226s, pushes ok 1644 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.78 m, overlap steps 0
+[fleetops  269.1s] step 5400, 22.6 steps/s, sim t=239s, pushes ok 1731 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.78 m, overlap steps 0
+[fleetops  282.2s] step 5700, 22.6 steps/s, sim t=252s, pushes ok 1827 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.78 m, overlap steps 0
+[fleetops  295.7s] step 6000, 22.6 steps/s, sim t=265s, pushes ok 1924 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.78 m, overlap steps 0
+[fleetops  308.7s] step 6300, 22.6 steps/s, sim t=278s, pushes ok 2018 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.78 m, overlap steps 0
+[fleetops  322.1s] step 6600, 22.6 steps/s, sim t=291s, pushes ok 2118 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.78 m, overlap steps 0
+[fleetops  335.4s] step 6900, 22.6 steps/s, sim t=305s, pushes ok 2218 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.77 m, overlap steps 0
+[fleetops  348.7s] step 7200, 22.6 steps/s, sim t=318s, pushes ok 2317 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.77 m, overlap steps 0
+[fleetops  361.6s] step 7500, 22.6 steps/s, sim t=331s, pushes ok 2412 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.77 m, overlap steps 0
+[fleetops  374.8s] step 7800, 22.6 steps/s, sim t=344s, pushes ok 2508 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.77 m, overlap steps 0
+[fleetops  388.2s] step 8100, 22.6 steps/s, sim t=358s, pushes ok 2607 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.77 m, overlap steps 0
+[fleetops  401.6s] step 8400, 22.6 steps/s, sim t=371s, pushes ok 2706 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.77 m, overlap steps 0
+[fleetops  414.9s] step 8700, 22.6 steps/s, sim t=384s, pushes ok 2804 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.77 m, overlap steps 0
+[fleetops  427.9s] step 9000, 22.6 steps/s, sim t=397s, pushes ok 2899 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.75 m, overlap steps 0
+[fleetops  441.1s] step 9300, 22.6 steps/s, sim t=410s, pushes ok 2996 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.75 m, overlap steps 0
+[fleetops  453.8s] step 9600, 22.7 steps/s, sim t=423s, pushes ok 3086 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.75 m, overlap steps 0
+[fleetops  466.4s] step 9900, 22.7 steps/s, sim t=436s, pushes ok 3173 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.75 m, overlap steps 0
+[fleetops  479.1s] step 10200, 22.7 steps/s, sim t=448s, pushes ok 3262 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.75 m, overlap steps 0
+[fleetops  492.3s] step 10500, 22.7 steps/s, sim t=462s, pushes ok 3360 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.75 m, overlap steps 0
+[fleetops  505.6s] step 10800, 22.7 steps/s, sim t=475s, pushes ok 3459 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.75 m, overlap steps 0
+[fleetops  518.9s] step 11100, 22.7 steps/s, sim t=488s, pushes ok 3559 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.75 m, overlap steps 0
+[fleetops  531.8s] step 11400, 22.7 steps/s, sim t=501s, pushes ok 3651 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.75 m, overlap steps 0
+[fleetops  544.8s] step 11700, 22.7 steps/s, sim t=514s, pushes ok 3744 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.75 m, overlap steps 0
+[fleetops  557.4s] step 12000, 22.8 steps/s, sim t=527s, pushes ok 3835 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.75 m, overlap steps 0
+[fleetops  570.2s] step 12300, 22.8 steps/s, sim t=540s, pushes ok 3927 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.75 m, overlap steps 0
+[fleetops  583.2s] step 12600, 22.8 steps/s, sim t=553s, pushes ok 4021 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.75 m, overlap steps 0
+[fleetops  596.2s] step 12900, 22.8 steps/s, sim t=566s, pushes ok 4115 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops  608.7s] step 13200, 22.8 steps/s, sim t=578s, pushes ok 4204 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops  621.2s] step 13500, 22.8 steps/s, sim t=591s, pushes ok 4290 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops  634.4s] step 13800, 22.8 steps/s, sim t=604s, pushes ok 4385 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops  647.9s] step 14100, 22.8 steps/s, sim t=617s, pushes ok 4484 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops  661.3s] step 14400, 22.8 steps/s, sim t=631s, pushes ok 4584 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops  674.6s] step 14700, 22.8 steps/s, sim t=644s, pushes ok 4683 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops  687.7s] step 15000, 22.8 steps/s, sim t=657s, pushes ok 4779 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops  701.0s] step 15300, 22.8 steps/s, sim t=670s, pushes ok 4878 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops  714.2s] step 15600, 22.8 steps/s, sim t=684s, pushes ok 4977 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops  727.5s] step 15900, 22.8 steps/s, sim t=697s, pushes ok 5075 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops  741.1s] step 16200, 22.8 steps/s, sim t=710s, pushes ok 5174 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops  754.6s] step 16500, 22.8 steps/s, sim t=724s, pushes ok 5274 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops  767.6s] step 16800, 22.8 steps/s, sim t=737s, pushes ok 5368 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops  780.6s] step 17100, 22.8 steps/s, sim t=750s, pushes ok 5464 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops  793.5s] step 17400, 22.8 steps/s, sim t=763s, pushes ok 5555 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops  806.5s] step 17700, 22.8 steps/s, sim t=776s, pushes ok 5651 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops  819.8s] step 18000, 22.8 steps/s, sim t=789s, pushes ok 5750 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops  833.1s] step 18300, 22.8 steps/s, sim t=802s, pushes ok 5846 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops  846.3s] step 18600, 22.8 steps/s, sim t=816s, pushes ok 5944 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops  859.7s] step 18900, 22.8 steps/s, sim t=829s, pushes ok 6043 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops  873.1s] step 19200, 22.8 steps/s, sim t=842s, pushes ok 6143 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops  886.2s] step 19500, 22.8 steps/s, sim t=855s, pushes ok 6238 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops  899.4s] step 19800, 22.8 steps/s, sim t=869s, pushes ok 6336 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops  913.0s] step 20100, 22.8 steps/s, sim t=882s, pushes ok 6435 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops  926.2s] step 20400, 22.8 steps/s, sim t=895s, pushes ok 6534 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops  939.5s] step 20700, 22.8 steps/s, sim t=909s, pushes ok 6631 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops  952.8s] step 21000, 22.8 steps/s, sim t=922s, pushes ok 6729 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops  966.2s] step 21300, 22.8 steps/s, sim t=935s, pushes ok 6829 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops  979.6s] step 21600, 22.7 steps/s, sim t=949s, pushes ok 6927 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops  992.9s] step 21900, 22.7 steps/s, sim t=962s, pushes ok 7026 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1006.2s] step 22200, 22.7 steps/s, sim t=975s, pushes ok 7124 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1019.4s] step 22500, 22.7 steps/s, sim t=989s, pushes ok 7219 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1032.8s] step 22800, 22.7 steps/s, sim t=1002s, pushes ok 7316 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1046.3s] step 23100, 22.7 steps/s, sim t=1015s, pushes ok 7415 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1059.4s] step 23400, 22.7 steps/s, sim t=1029s, pushes ok 7511 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1072.2s] step 23700, 22.7 steps/s, sim t=1041s, pushes ok 7600 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1087.0s] step 24000, 22.7 steps/s, sim t=1056s, pushes ok 7694 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1106.9s] step 24300, 22.6 steps/s, sim t=1075s, pushes ok 7814 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1121.3s] step 24600, 22.5 steps/s, sim t=1089s, pushes ok 7915 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1134.6s] step 24900, 22.5 steps/s, sim t=1102s, pushes ok 8014 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1147.9s] step 25200, 22.5 steps/s, sim t=1116s, pushes ok 8113 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1161.2s] step 25500, 22.5 steps/s, sim t=1129s, pushes ok 8211 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1174.5s] step 25800, 22.5 steps/s, sim t=1142s, pushes ok 8309 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1187.8s] step 26100, 22.5 steps/s, sim t=1155s, pushes ok 8407 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1200.7s] step 26400, 22.6 steps/s, sim t=1168s, pushes ok 8501 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1213.8s] step 26700, 22.6 steps/s, sim t=1182s, pushes ok 8600 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1227.4s] step 27000, 22.6 steps/s, sim t=1195s, pushes ok 8699 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1240.6s] step 27300, 22.6 steps/s, sim t=1208s, pushes ok 8797 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1253.8s] step 27600, 22.6 steps/s, sim t=1221s, pushes ok 8895 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1266.9s] step 27900, 22.6 steps/s, sim t=1235s, pushes ok 8991 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1280.2s] step 28200, 22.6 steps/s, sim t=1248s, pushes ok 9089 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1293.3s] step 28500, 22.6 steps/s, sim t=1261s, pushes ok 9185 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1306.2s] step 28800, 22.6 steps/s, sim t=1274s, pushes ok 9279 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1319.4s] step 29100, 22.6 steps/s, sim t=1287s, pushes ok 9377 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1332.9s] step 29400, 22.6 steps/s, sim t=1301s, pushes ok 9477 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1346.0s] step 29700, 22.6 steps/s, sim t=1314s, pushes ok 9572 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1359.1s] step 30000, 22.6 steps/s, sim t=1327s, pushes ok 9669 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1372.4s] step 30300, 22.6 steps/s, sim t=1340s, pushes ok 9768 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1385.5s] step 30600, 22.6 steps/s, sim t=1353s, pushes ok 9864 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1398.8s] step 30900, 22.6 steps/s, sim t=1366s, pushes ok 9963 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1411.6s] step 31200, 22.6 steps/s, sim t=1379s, pushes ok 10054 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1424.7s] step 31500, 22.6 steps/s, sim t=1392s, pushes ok 10148 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1438.2s] step 31800, 22.6 steps/s, sim t=1406s, pushes ok 10248 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1451.7s] step 32100, 22.6 steps/s, sim t=1419s, pushes ok 10348 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0

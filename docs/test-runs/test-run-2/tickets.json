@@ -1,0 +1,2907 @@
+[
+ {
+  "id": "T-1",
+  "event_type": "inventory_mismatch",
+  "robot_id": null,
+  "zone": 3,
+  "reason": "Zone 3: bin [23,3] SKU-1114 shows qty 24 vs expected 30 (6 units missing). Orders O-1008 (due 13:20:16, 5.6 min) and O-1007 (due 13:20:34, 6.0 min) both at_risk=false but zone rate is high (134.0 units/min) \u2014 schedule an inventory check to confirm count before shortages propagate.",
+  "evidence": {
+   "event": {
+    "id": "E-0001",
+    "status": "active",
+    "type": "inventory_mismatch",
+    "robot_id": null,
+    "zone": 3,
+    "severity": "warning",
+    "detail": "zone 3: 1 bins differ from the system count (+6 units missing)",
+    "facts": {
+     "bins": [
+      {
+       "bin": [
+        23,
+        3
+       ],
+       "sku": "SKU-1114",
+       "qty": 23,
+       "expected": 29
+      }
+     ],
+     "units_missing": 6
+    },
+    "first_seen": "13:14:08",
+    "active_for_s": 48,
+    "orders_in_zone": [
+     {
+      "id": "O-1008",
+      "zone": 3,
+      "units": 141,
+      "picked": 131,
+      "due": "13:20:16",
+      "minutes_to_due": 5.3,
+      "zone_rate_per_min": 131.0,
+      "projected_finish": "13:15:01",
+      "at_risk": false,
+      "late": false
+     },
+     {
+      "id": "O-1007",
+      "zone": 3,
+      "units": 193,
+      "picked": 0,
+      "due": "13:20:34",
+      "minutes_to_due": 5.6,
+      "zone_rate_per_min": 131.0,
+      "projected_finish": "13:16:29",
+      "at_risk": false,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": "13:20",
+  "priority": "high",
+  "status": "open",
+  "event_id": "E-0001",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:14:56",
+  "updated_at": "13:26:38",
+  "history": [
+   {
+    "at": "13:14:56",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Zone 3: bin [23,3] SKU-1114 shows qty 24 vs expected 30 (6 units missing). Orders O-1008 (due 13:20:16, 5.6 min) and O-1007 (due 13:20:34, 6.0 min) both at_risk=false but zone rate is high (134.0 units/min) \u2014 schedule an inventory check to confirm count before shortages propagate."
+   },
+   {
+    "at": "13:26:18",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "URGENT UPDATE: New event E-0047 at zone 3 \u2014 bin [23,3] SKU-1114 now at qty 0 (was 23), 6 units missing. Orders O-1007 (153 units, due 13:25, at_risk, 3 min) and O-1008 (221 units, due 13:28, at_risk, 7 min) now at_risk=true. Previous status at_risk=false, now critical. Escalating priority from medium to high. Re-check zone 3 inventory and replenish before orders miss deadlines."
+   },
+   {
+    "at": "13:26:38",
+    "actor": "supervisor",
+    "status": "open",
+    "note": ""
+   }
+  ]
+ },
+ {
+  "id": "T-2",
+  "event_type": "stuck",
+  "robot_id": 8,
+  "zone": 1,
+  "reason": "Robot 8 stuck in zone 1 at bin [25,5] \u2014 no movement for 15s during pick, target bin empty (SKU-1119). Known cause: sent to pick from empty bin. Orders O-1023 (due 13:23, 5.2 min) and O-1018 (due 13:23, 5.3 min) in zone 1 not at_risk but tight deadlines. Reassign robot and update bin inventory.",
+  "evidence": {
+   "event": {
+    "id": "E-0024",
+    "status": "cleared",
+    "robot_id": 8,
+    "zone": 1,
+    "type": "stuck",
+    "severity": "warning",
+    "detail": "no movement for 36s during charge",
+    "facts": {
+     "stopped_for_s": 36,
+     "task": "charge",
+     "goal": [
+      45,
+      24
+     ],
+     "position": [
+      2,
+      24
+     ],
+     "carrying": null,
+     "error_code": "OVERHEAT"
+    },
+    "first_seen": "13:17:43",
+    "active_for_s": 36,
+    "cleared_at": "13:18:20",
+    "orders_in_zone": [
+     {
+      "id": "O-1023",
+      "zone": 1,
+      "units": 324,
+      "picked": 208,
+      "due": "13:23:09",
+      "minutes_to_due": 4.5,
+      "zone_rate_per_min": 79.0,
+      "projected_finish": "13:20:09",
+      "at_risk": false,
+      "late": false
+     },
+     {
+      "id": "O-1018",
+      "zone": 1,
+      "units": 319,
+      "picked": 1,
+      "due": "13:23:12",
+      "minutes_to_due": 4.5,
+      "zone_rate_per_min": 79.0,
+      "projected_finish": "13:24:10",
+      "at_risk": true,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": "13:23",
+  "priority": "medium",
+  "status": "open",
+  "event_id": "E-0024",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:18:41",
+  "updated_at": "13:18:41",
+  "history": [
+   {
+    "at": "13:18:41",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Robot 8 stuck in zone 1 at bin [25,5] \u2014 no movement for 15s during pick, target bin empty (SKU-1119). Known cause: sent to pick from empty bin. Orders O-1023 (due 13:23, 5.2 min) and O-1018 (due 13:23, 5.3 min) in zone 1 not at_risk but tight deadlines. Reassign robot and update bin inventory."
+   }
+  ]
+ },
+ {
+  "id": "T-3",
+  "event_type": "stuck",
+  "robot_id": 7,
+  "zone": 0,
+  "reason": "Robot 7 stuck in zone 0 at [2,17] \u2014 no movement for 229s during carry (carrying SKU-1214). Goal is [2,4]. Orders O-1021 (due 13:20, 2.7 min) and O-1002 (due 13:21, 3.6 min) tight deadlines. Reassign robot's load and check why it's not moving.",
+  "evidence": {
+   "event": {
+    "id": "E-0002",
+    "status": "active",
+    "robot_id": 7,
+    "zone": 0,
+    "type": "stuck",
+    "severity": "warning",
+    "detail": "no movement for 284s during carry",
+    "facts": {
+     "stopped_for_s": 284,
+     "task": "carry",
+     "goal": [
+      2,
+      4
+     ],
+     "position": [
+      2,
+      17
+     ],
+     "carrying": {
+      "sku": "SKU-1214",
+      "qty": 1
+     },
+     "error_code": "STUCK"
+    },
+    "first_seen": "13:14:10",
+    "active_for_s": 282,
+    "orders_in_zone": [
+     {
+      "id": "O-1021",
+      "zone": 0,
+      "units": 284,
+      "picked": 250,
+      "due": "13:20:41",
+      "minutes_to_due": 1.8,
+      "zone_rate_per_min": 73.0,
+      "projected_finish": "13:19:19",
+      "at_risk": false,
+      "late": false
+     },
+     {
+      "id": "O-1002",
+      "zone": 0,
+      "units": 203,
+      "picked": 0,
+      "due": "13:21:35",
+      "minutes_to_due": 2.7,
+      "zone_rate_per_min": 73.0,
+      "projected_finish": "13:22:06",
+      "at_risk": true,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": "13:20",
+  "priority": "high",
+  "status": "open",
+  "event_id": "E-0002",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:18:52",
+  "updated_at": "13:18:52",
+  "history": [
+   {
+    "at": "13:18:52",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Robot 7 stuck in zone 0 at [2,17] \u2014 no movement for 229s during carry (carrying SKU-1214). Goal is [2,4]. Orders O-1021 (due 13:20, 2.7 min) and O-1002 (due 13:21, 3.6 min) tight deadlines. Reassign robot's load and check why it's not moving."
+   }
+  ]
+ },
+ {
+  "id": "T-4",
+  "event_type": "stuck",
+  "robot_id": 10,
+  "zone": 3,
+  "reason": "Robot 10 stuck at pick for 61s in zone 3, target bin [43,4] empty. Affects O-1007 (zone 3, 193 units). Reassign its pick. Robot overheated at 92C. Also has inventory_mismatch E-0001 affecting this zone.",
+  "evidence": {
+   "event": {
+    "id": "E-0022",
+    "status": "cleared",
+    "robot_id": 10,
+    "zone": 3,
+    "type": "stuck",
+    "severity": "warning",
+    "detail": "no movement for 73s during charge",
+    "facts": {
+     "stopped_for_s": 73,
+     "task": "charge",
+     "goal": [
+      45,
+      9
+     ],
+     "position": [
+      2,
+      9
+     ],
+     "carrying": null,
+     "error_code": "OVERHEAT"
+    },
+    "first_seen": "13:14:52",
+    "active_for_s": 73,
+    "cleared_at": "13:16:05",
+    "orders_in_zone": [
+     {
+      "id": "O-1016",
+      "zone": 3,
+      "units": 450,
+      "picked": 136,
+      "due": "13:22:21",
+      "minutes_to_due": 2.2,
+      "zone_rate_per_min": 134.0,
+      "projected_finish": "13:22:28",
+      "at_risk": true,
+      "late": false
+     },
+     {
+      "id": "O-1029",
+      "zone": 3,
+      "units": 391,
+      "picked": 0,
+      "due": "13:24:51",
+      "minutes_to_due": 4.7,
+      "zone_rate_per_min": 134.0,
+      "projected_finish": "13:25:23",
+      "at_risk": true,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": "13:20:34",
+  "priority": "high",
+  "status": "open",
+  "event_id": "E-0022",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:20:07",
+  "updated_at": "13:20:07",
+  "history": [
+   {
+    "at": "13:20:07",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Robot 10 stuck at pick for 61s in zone 3, target bin [43,4] empty. Affects O-1007 (zone 3, 193 units). Reassign its pick. Robot overheated at 92C. Also has inventory_mismatch E-0001 affecting this zone."
+   }
+  ]
+ },
+ {
+  "id": "T-5",
+  "event_type": "overheat",
+  "robot_id": null,
+  "zone": 0,
+  "reason": "Systemic overheat: 19 of 20 robots at 92C (limit 80C) across all 7 zones (robot_ids 0-6,8-19). All orders at_risk with zone rate 0.0 across all zones. Affects zone 0 orders O-1002 (153 units, due 13:26, at_risk) and O-1001 (121 units, due 13:28, at_risk). Schedule thermal check for all robots immediately.",
+  "evidence": {
+   "event": {
+    "id": "E-0025",
+    "status": "active",
+    "robot_id": 0,
+    "zone": 0,
+    "type": "overheat",
+    "severity": "critical",
+    "detail": "motor 92C (limit 80C)",
+    "facts": {
+     "motor_temp_c": 92,
+     "limit_c": 80,
+     "task": "pick"
+    },
+    "first_seen": "13:20:59",
+    "active_for_s": 157,
+    "orders_in_zone": [
+     {
+      "id": "O-1002",
+      "zone": 0,
+      "units": 153,
+      "picked": 0,
+      "due": "13:26:30",
+      "minutes_to_due": 2.9,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": false
+     },
+     {
+      "id": "O-1001",
+      "zone": 0,
+      "units": 121,
+      "picked": 0,
+      "due": "13:28:55",
+      "minutes_to_due": 5.3,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": "13:26",
+  "priority": "critical",
+  "status": "open",
+  "event_id": "E-0025",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:23:36",
+  "updated_at": "13:23:36",
+  "history": [
+   {
+    "at": "13:23:36",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Systemic overheat: 19 of 20 robots at 92C (limit 80C) across all 7 zones (robot_ids 0-6,8-19). All orders at_risk with zone rate 0.0 across all zones. Affects zone 0 orders O-1002 (153 units, due 13:26, at_risk) and O-1001 (121 units, due 13:28, at_risk). Schedule thermal check for all robots immediately."
+   }
+  ]
+ },
+ {
+  "id": "T-6",
+  "event_type": "stuck",
+  "robot_id": 7,
+  "zone": 0,
+  "reason": "Robot 7 stuck at [2,17] in zone 0 during carry, no movement for 31s carrying SKU-1214 to [2,4]. Orders O-1002 (153 units, due 13:26, 5 min to due, at_risk) and O-1001 (121 units, due 13:29, 7 min to due, at_risk). Reassign load to another robot.",
+  "evidence": {
+   "event": {
+    "id": "E-0052",
+    "status": "active",
+    "robot_id": 7,
+    "zone": 0,
+    "type": "stuck",
+    "severity": "warning",
+    "detail": "no movement for 173s during carry",
+    "facts": {
+     "stopped_for_s": 173,
+     "task": "carry",
+     "goal": [
+      2,
+      4
+     ],
+     "position": [
+      2,
+      17
+     ],
+     "carrying": {
+      "sku": "SKU-1214",
+      "qty": 1
+     },
+     "error_code": "STUCK"
+    },
+    "first_seen": "13:21:01",
+    "active_for_s": 171,
+    "orders_in_zone": [
+     {
+      "id": "O-1002",
+      "zone": 0,
+      "units": 153,
+      "picked": 0,
+      "due": "13:26:30",
+      "minutes_to_due": 2.6,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": false
+     },
+     {
+      "id": "O-1001",
+      "zone": 0,
+      "units": 121,
+      "picked": 0,
+      "due": "13:28:55",
+      "minutes_to_due": 5.0,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": "13:26",
+  "priority": "high",
+  "status": "open",
+  "event_id": "E-0052",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:23:52",
+  "updated_at": "13:23:52",
+  "history": [
+   {
+    "at": "13:23:52",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Robot 7 stuck at [2,17] in zone 0 during carry, no movement for 31s carrying SKU-1214 to [2,4]. Orders O-1002 (153 units, due 13:26, 5 min to due, at_risk) and O-1001 (121 units, due 13:29, 7 min to due, at_risk). Reassign load to another robot."
+   }
+  ]
+ },
+ {
+  "id": "T-7",
+  "event_type": "low_stock",
+  "robot_id": null,
+  "zone": 0,
+  "reason": "Systemic low_stock across all 7 zones (0-6): every zone at 0 units (limit 30). Affects 14 open orders O-1001 through O-1014, all at_risk with zone_rate 0.0. Urgent: O-1004 (zone 1, due 13:25, 3 min), O-1007 (zone 3, due 13:25, 3 min), O-1012 (zone 5, due 13:25, 3 min). Replenish all zones immediately.",
+  "evidence": {
+   "event": {
+    "id": "E-0044",
+    "status": "active",
+    "type": "low_stock",
+    "robot_id": null,
+    "zone": 0,
+    "severity": "warning",
+    "detail": "zone 0 stock 0 units (limit 30)",
+    "facts": {
+     "units": 0
+    },
+    "first_seen": "13:20:59",
+    "active_for_s": 238,
+    "orders_in_zone": [
+     {
+      "id": "O-1002",
+      "zone": 0,
+      "units": 153,
+      "picked": 0,
+      "due": "13:26:30",
+      "minutes_to_due": 1.5,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": false
+     },
+     {
+      "id": "O-1001",
+      "zone": 0,
+      "units": 121,
+      "picked": 0,
+      "due": "13:28:55",
+      "minutes_to_due": 4.0,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": "13:25",
+  "priority": "critical",
+  "status": "open",
+  "event_id": "E-0044",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:24:58",
+  "updated_at": "13:24:58",
+  "history": [
+   {
+    "at": "13:24:58",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Systemic low_stock across all 7 zones (0-6): every zone at 0 units (limit 30). Affects 14 open orders O-1001 through O-1014, all at_risk with zone_rate 0.0. Urgent: O-1004 (zone 1, due 13:25, 3 min), O-1007 (zone 3, due 13:25, 3 min), O-1012 (zone 5, due 13:25, 3 min). Replenish all zones immediately."
+   }
+  ]
+ },
+ {
+  "id": "T-8",
+  "event_type": "inventory_mismatch",
+  "robot_id": null,
+  "zone": 2,
+  "reason": "Zone 2: 1 bin mismatch on SKU-1081 at bin [19,5] (18/26, 8 units missing). Affects O-1006 (6.9 min to due) and O-1005 (7.0 min to due).",
+  "evidence": {
+   "event": {
+    "id": "E-0053",
+    "status": "active",
+    "type": "inventory_mismatch",
+    "robot_id": null,
+    "zone": 2,
+    "severity": "warning",
+    "detail": "zone 2: 1 bins differ from the system count (+8 units missing)",
+    "facts": {
+     "bins": [
+      {
+       "bin": [
+        19,
+        5
+       ],
+       "sku": "SKU-1081",
+       "qty": 16,
+       "expected": 24
+      }
+     ],
+     "units_missing": 8
+    },
+    "first_seen": "13:28:08",
+    "active_for_s": 39,
+    "orders_in_zone": [
+     {
+      "id": "O-1006",
+      "zone": 2,
+      "units": 167,
+      "picked": 101,
+      "due": "13:35:18",
+      "minutes_to_due": 6.5,
+      "zone_rate_per_min": 136.9,
+      "projected_finish": "13:29:17",
+      "at_risk": false,
+      "late": false
+     },
+     {
+      "id": "O-1005",
+      "zone": 2,
+      "units": 183,
+      "picked": 0,
+      "due": "13:35:25",
+      "minutes_to_due": 6.6,
+      "zone_rate_per_min": 136.9,
+      "projected_finish": "13:30:37",
+      "at_risk": false,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": "13:35",
+  "priority": "high",
+  "status": "open",
+  "event_id": "E-0053",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:28:48",
+  "updated_at": "13:28:48",
+  "history": [
+   {
+    "at": "13:28:48",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Zone 2: 1 bin mismatch on SKU-1081 at bin [19,5] (18/26, 8 units missing). Affects O-1006 (6.9 min to due) and O-1005 (7.0 min to due)."
+   }
+  ]
+ },
+ {
+  "id": "T-9",
+  "event_type": "stuck",
+  "robot_id": 0,
+  "zone": 0,
+  "reason": "Robot 0 stuck in zone 0, no movement for 17s during carry task (SKU-1071, qty 1, stuck at [2,21] heading to [2,24], error_code: STUCK). Affects O-1002 (5.8 min to due) and O-1001 (7.5 min to due).",
+  "evidence": {
+   "event": {
+    "id": "E-0054",
+    "status": "active",
+    "robot_id": 0,
+    "zone": 0,
+    "type": "stuck",
+    "severity": "warning",
+    "detail": "no movement for 56s during carry",
+    "facts": {
+     "stopped_for_s": 56,
+     "task": "carry",
+     "goal": [
+      2,
+      24
+     ],
+     "position": [
+      2,
+      21
+     ],
+     "carrying": {
+      "sku": "SKU-1071",
+      "qty": 1
+     },
+     "error_code": "STUCK"
+    },
+    "first_seen": "13:28:10",
+    "active_for_s": 54,
+    "orders_in_zone": [
+     {
+      "id": "O-1002",
+      "zone": 0,
+      "units": 173,
+      "picked": 84,
+      "due": "13:34:15",
+      "minutes_to_due": 5.2,
+      "zone_rate_per_min": 84.0,
+      "projected_finish": "13:30:07",
+      "at_risk": false,
+      "late": false
+     },
+     {
+      "id": "O-1001",
+      "zone": 0,
+      "units": 128,
+      "picked": 0,
+      "due": "13:35:56",
+      "minutes_to_due": 6.9,
+      "zone_rate_per_min": 84.0,
+      "projected_finish": "13:31:38",
+      "at_risk": false,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": "13:34",
+  "priority": "high",
+  "status": "open",
+  "event_id": "E-0054",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:29:03",
+  "updated_at": "13:29:03",
+  "history": [
+   {
+    "at": "13:29:03",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Robot 0 stuck in zone 0, no movement for 17s during carry task (SKU-1071, qty 1, stuck at [2,21] heading to [2,24], error_code: STUCK). Affects O-1002 (5.8 min to due) and O-1001 (7.5 min to due)."
+   }
+  ]
+ },
+ {
+  "id": "T-10",
+  "event_type": "overheat",
+  "robot_id": null,
+  "zone": 1,
+  "reason": "Systemic overheat zone 1: robots 1,8,15 all at 92C (limit 80C). O-1004 due 3.3min most urgent, O-1003 due 4.4m",
+  "evidence": {
+   "event": {
+    "id": "E-0055",
+    "status": "active",
+    "robot_id": 1,
+    "zone": 1,
+    "type": "overheat",
+    "severity": "critical",
+    "detail": "motor 92C (limit 80C)",
+    "facts": {
+     "motor_temp_c": 92,
+     "limit_c": 80,
+     "task": "carry"
+    },
+    "first_seen": "13:28:39",
+    "active_for_s": 90,
+    "orders_in_zone": [
+     {
+      "id": "O-1003",
+      "zone": 1,
+      "units": 151,
+      "picked": 76,
+      "due": "13:33:24",
+      "minutes_to_due": 3.3,
+      "zone_rate_per_min": 138.0,
+      "projected_finish": "13:30:41",
+      "at_risk": false,
+      "late": false
+     },
+     {
+      "id": "O-1018",
+      "zone": 1,
+      "units": 434,
+      "picked": 0,
+      "due": "13:34:54",
+      "minutes_to_due": 4.8,
+      "zone_rate_per_min": 138.0,
+      "projected_finish": "13:33:50",
+      "at_risk": false,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": "13:32:18",
+  "priority": "critical",
+  "status": "open",
+  "event_id": "E-0055",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:30:09",
+  "updated_at": "13:30:09",
+  "history": [
+   {
+    "at": "13:30:09",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Systemic overheat zone 1: robots 1,8,15 all at 92C (limit 80C). O-1004 due 3.3min most urgent, O-1003 due 4.4m"
+   }
+  ]
+ },
+ {
+  "id": "T-11",
+  "event_type": "overheat",
+  "robot_id": null,
+  "zone": 0,
+  "reason": "Systemic overheat zone 0: robots 7,14 all at 92C (limit 80C). O-1002 due 5.3min, O-1001 due 7.0m",
+  "evidence": {
+   "event": {
+    "id": "E-0061",
+    "status": "active",
+    "robot_id": 7,
+    "zone": 0,
+    "type": "overheat",
+    "severity": "warning",
+    "detail": "motor 87C (limit 80C)",
+    "facts": {
+     "motor_temp_c": 87,
+     "limit_c": 80,
+     "task": "charge"
+    },
+    "first_seen": "13:28:39",
+    "active_for_s": 99,
+    "orders_in_zone": [
+     {
+      "id": "O-1001",
+      "zone": 0,
+      "units": 128,
+      "picked": 9,
+      "due": "13:35:56",
+      "minutes_to_due": 5.6,
+      "zone_rate_per_min": 80.0,
+      "projected_finish": "13:31:47",
+      "at_risk": false,
+      "late": false
+     },
+     {
+      "id": "O-1021",
+      "zone": 0,
+      "units": 298,
+      "picked": 0,
+      "due": "13:36:56",
+      "minutes_to_due": 6.6,
+      "zone_rate_per_min": 80.0,
+      "projected_finish": "13:35:31",
+      "at_risk": false,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": "13:34:15",
+  "priority": "critical",
+  "status": "open",
+  "event_id": "E-0061",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:30:18",
+  "updated_at": "13:30:18",
+  "history": [
+   {
+    "at": "13:30:18",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Systemic overheat zone 0: robots 7,14 all at 92C (limit 80C). O-1002 due 5.3min, O-1001 due 7.0m"
+   }
+  ]
+ },
+ {
+  "id": "T-12",
+  "event_type": "overheat",
+  "robot_id": null,
+  "zone": 2,
+  "reason": "Systemic overheat zone 2: robots 2,9,16 all at 92C (limit 80C). O-1006 due 6.3min, O-1005 due 6.4m",
+  "evidence": {
+   "event": {
+    "id": "E-0056",
+    "status": "active",
+    "robot_id": 2,
+    "zone": 2,
+    "type": "overheat",
+    "severity": "critical",
+    "detail": "motor 92C (limit 80C)",
+    "facts": {
+     "motor_temp_c": 92,
+     "limit_c": 80,
+     "task": "carry"
+    },
+    "first_seen": "13:28:39",
+    "active_for_s": 132,
+    "orders_in_zone": [
+     {
+      "id": "O-1016",
+      "zone": 2,
+      "units": 381,
+      "picked": 204,
+      "due": "13:35:02",
+      "minutes_to_due": 4.2,
+      "zone_rate_per_min": 110.0,
+      "projected_finish": "13:32:28",
+      "at_risk": false,
+      "late": false
+     },
+     {
+      "id": "O-1005",
+      "zone": 2,
+      "units": 183,
+      "picked": 0,
+      "due": "13:35:25",
+      "minutes_to_due": 4.6,
+      "zone_rate_per_min": 110.0,
+      "projected_finish": "13:34:07",
+      "at_risk": false,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": "13:35:18",
+  "priority": "critical",
+  "status": "open",
+  "event_id": "E-0056",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:30:51",
+  "updated_at": "13:30:51",
+  "history": [
+   {
+    "at": "13:30:51",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Systemic overheat zone 2: robots 2,9,16 all at 92C (limit 80C). O-1006 due 6.3min, O-1005 due 6.4m"
+   }
+  ]
+ },
+ {
+  "id": "T-13",
+  "event_type": "overheat",
+  "robot_id": null,
+  "zone": 3,
+  "reason": "Systemic overheat zone 3: robots 3,10,17 all at 92C (limit 80C). O-1008 due 5.0min, O-1007 due 5.8m",
+  "evidence": {
+   "event": {
+    "id": "E-0057",
+    "status": "active",
+    "robot_id": 3,
+    "zone": 3,
+    "type": "overheat",
+    "severity": "critical",
+    "detail": "motor 92C (limit 80C)",
+    "facts": {
+     "motor_temp_c": 92,
+     "limit_c": 80,
+     "task": "carry"
+    },
+    "first_seen": "13:28:39",
+    "active_for_s": 138,
+    "orders_in_zone": [
+     {
+      "id": "O-1017",
+      "zone": 3,
+      "units": 499,
+      "picked": 163,
+      "due": "13:33:54",
+      "minutes_to_due": 3.0,
+      "zone_rate_per_min": 112.0,
+      "projected_finish": "13:33:57",
+      "at_risk": true,
+      "late": false
+     },
+     {
+      "id": "O-1007",
+      "zone": 3,
+      "units": 211,
+      "picked": 0,
+      "due": "13:34:45",
+      "minutes_to_due": 3.8,
+      "zone_rate_per_min": 112.0,
+      "projected_finish": "13:35:50",
+      "at_risk": true,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": "13:34:00",
+  "priority": "critical",
+  "status": "open",
+  "event_id": "E-0057",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:30:57",
+  "updated_at": "13:30:57",
+  "history": [
+   {
+    "at": "13:30:57",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Systemic overheat zone 3: robots 3,10,17 all at 92C (limit 80C). O-1008 due 5.0min, O-1007 due 5.8m"
+   }
+  ]
+ },
+ {
+  "id": "T-14",
+  "event_type": "overheat",
+  "robot_id": null,
+  "zone": 4,
+  "reason": "Systemic overheat zone 4: robots 4,11,18 all at 92C (limit 80C). O-1010 due 5.2min, O-1009 due 5.8m",
+  "evidence": {
+   "event": {
+    "id": "E-0058",
+    "status": "active",
+    "robot_id": 4,
+    "zone": 4,
+    "type": "overheat",
+    "severity": "critical",
+    "detail": "motor 92C (limit 80C)",
+    "facts": {
+     "motor_temp_c": 92,
+     "limit_c": 80,
+     "task": "carry"
+    },
+    "first_seen": "13:28:39",
+    "active_for_s": 145,
+    "orders_in_zone": [
+     {
+      "id": "O-1019",
+      "zone": 4,
+      "units": 396,
+      "picked": 33,
+      "due": "13:36:04",
+      "minutes_to_due": 5.0,
+      "zone_rate_per_min": 112.0,
+      "projected_finish": "13:34:19",
+      "at_risk": false,
+      "late": false
+     },
+     {
+      "id": "O-1022",
+      "zone": 4,
+      "units": 363,
+      "picked": 0,
+      "due": "13:38:09",
+      "minutes_to_due": 7.1,
+      "zone_rate_per_min": 112.0,
+      "projected_finish": "13:37:33",
+      "at_risk": false,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": "13:34:12",
+  "priority": "critical",
+  "status": "open",
+  "event_id": "E-0058",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:31:04",
+  "updated_at": "13:31:04",
+  "history": [
+   {
+    "at": "13:31:04",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Systemic overheat zone 4: robots 4,11,18 all at 92C (limit 80C). O-1010 due 5.2min, O-1009 due 5.8m"
+   }
+  ]
+ },
+ {
+  "id": "T-15",
+  "event_type": "overheat",
+  "robot_id": null,
+  "zone": 5,
+  "reason": "Systemic overheat zone 5: robots 5,12,19 all at 92C (limit 80C). O-1011 due 5.1min, O-1012 due 5.4m",
+  "evidence": {
+   "event": {
+    "id": "E-0059",
+    "status": "active",
+    "robot_id": 5,
+    "zone": 5,
+    "type": "overheat",
+    "severity": "critical",
+    "detail": "motor 92C (limit 80C)",
+    "facts": {
+     "motor_temp_c": 92,
+     "limit_c": 80,
+     "task": "pick"
+    },
+    "first_seen": "13:28:39",
+    "active_for_s": 150,
+    "orders_in_zone": [
+     {
+      "id": "O-1015",
+      "zone": 5,
+      "units": 481,
+      "picked": 1,
+      "due": "13:35:09",
+      "minutes_to_due": 4.0,
+      "zone_rate_per_min": 84.0,
+      "projected_finish": "13:36:52",
+      "at_risk": true,
+      "late": false
+     },
+     {
+      "id": "O-1024",
+      "zone": 5,
+      "units": 248,
+      "picked": 0,
+      "due": "13:37:24",
+      "minutes_to_due": 6.3,
+      "zone_rate_per_min": 84.0,
+      "projected_finish": "13:39:49",
+      "at_risk": true,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": "13:34:02",
+  "priority": "critical",
+  "status": "open",
+  "event_id": "E-0059",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:31:09",
+  "updated_at": "13:31:09",
+  "history": [
+   {
+    "at": "13:31:09",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Systemic overheat zone 5: robots 5,12,19 all at 92C (limit 80C). O-1011 due 5.1min, O-1012 due 5.4m"
+   }
+  ]
+ },
+ {
+  "id": "T-16",
+  "event_type": "overheat",
+  "robot_id": null,
+  "zone": 6,
+  "reason": "Systemic overheat zone 6: robots 6,13 all at 92C (limit 80C). O-1013 due 3.7min, O-1014 due 4.1m",
+  "evidence": {
+   "event": {
+    "id": "E-0060",
+    "status": "active",
+    "robot_id": 6,
+    "zone": 6,
+    "type": "overheat",
+    "severity": "critical",
+    "detail": "motor 92C (limit 80C)",
+    "facts": {
+     "motor_temp_c": 92,
+     "limit_c": 80,
+     "task": "pick"
+    },
+    "first_seen": "13:28:39",
+    "active_for_s": 159,
+    "orders_in_zone": [
+     {
+      "id": "O-1014",
+      "zone": 6,
+      "units": 208,
+      "picked": 112,
+      "due": "13:33:05",
+      "minutes_to_due": 1.8,
+      "zone_rate_per_min": 71.0,
+      "projected_finish": "13:32:39",
+      "at_risk": false,
+      "late": false
+     },
+     {
+      "id": "O-1020",
+      "zone": 6,
+      "units": 260,
+      "picked": 0,
+      "due": "13:34:57",
+      "minutes_to_due": 3.6,
+      "zone_rate_per_min": 71.0,
+      "projected_finish": "13:36:19",
+      "at_risk": true,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": "13:32:39",
+  "priority": "critical",
+  "status": "open",
+  "event_id": "E-0060",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:31:18",
+  "updated_at": "13:31:18",
+  "history": [
+   {
+    "at": "13:31:18",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Systemic overheat zone 6: robots 6,13 all at 92C (limit 80C). O-1013 due 3.7min, O-1014 due 4.1m"
+   }
+  ]
+ },
+ {
+  "id": "T-17",
+  "event_type": "stuck",
+  "robot_id": 5,
+  "zone": 5,
+  "reason": "robot 5 stuck on pick \u2014 sent to empty bin SKU-1215 at [37,17]. Blocks O-1015 (at_risk, 4.4 min to due) and O-1012 (3.6 min to due).",
+  "evidence": {
+   "event": {
+    "id": "E-0090",
+    "status": "active",
+    "robot_id": 5,
+    "zone": 5,
+    "type": "stuck",
+    "severity": "warning",
+    "detail": "no movement for 83s during pick (target bin empty)",
+    "facts": {
+     "stopped_for_s": 83,
+     "task": "pick",
+     "goal": [
+      37,
+      17
+     ],
+     "position": [
+      2,
+      24
+     ],
+     "carrying": null,
+     "error_code": "OVERHEAT",
+     "target_bin": {
+      "bin": [
+       37,
+       17
+      ],
+      "sku": "SKU-1215",
+      "qty": 0,
+      "expected": 0
+     },
+     "known_cause": "sent to pick from an empty bin"
+    },
+    "first_seen": "13:30:32",
+    "active_for_s": 81,
+    "orders_in_zone": [
+     {
+      "id": "O-1015",
+      "zone": 5,
+      "units": 481,
+      "picked": 75,
+      "due": "13:35:09",
+      "minutes_to_due": 3.3,
+      "zone_rate_per_min": 100.0,
+      "projected_finish": "13:35:56",
+      "at_risk": true,
+      "late": false
+     },
+     {
+      "id": "O-1024",
+      "zone": 5,
+      "units": 248,
+      "picked": 0,
+      "due": "13:37:24",
+      "minutes_to_due": 5.5,
+      "zone_rate_per_min": 100.0,
+      "projected_finish": "13:38:25",
+      "at_risk": true,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": "13:34:19",
+  "priority": "critical",
+  "status": "open",
+  "event_id": "E-0090",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:31:52",
+  "updated_at": "13:31:52",
+  "history": [
+   {
+    "at": "13:31:52",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "robot 5 stuck on pick \u2014 sent to empty bin SKU-1215 at [37,17]. Blocks O-1015 (at_risk, 4.4 min to due) and O-1012 (3.6 min to due)."
+   }
+  ]
+ },
+ {
+  "id": "T-18",
+  "event_type": "overheat",
+  "robot_id": "8,9,10,11,12,13,14,15,16,17,18,19",
+  "zone": 1,
+  "reason": "Systemic overheat: robots 8-19 all at 92C (limit 80C), zones 0-6. O-1007 (zone 3) at_risk, 0.7 min to due. O-1023 (zone 1) at_risk, 1.7 min. O-1020 (zone 6) at_risk, 0.9 min. O-1015 (zone 5) at_risk, 1.1 min. O-1021 (zone 0) at_risk, 2.9 min. O-1030 (zone 4) at_risk, 5.2 min. O-1028 (zone 3) at_risk, 3.6 min.",
+  "evidence": {
+   "event": {
+    "id": "E-0062",
+    "status": "active",
+    "robot_id": 8,
+    "zone": 1,
+    "type": "overheat",
+    "severity": "critical",
+    "detail": "motor 91C (limit 80C)",
+    "facts": {
+     "motor_temp_c": 91,
+     "limit_c": 80,
+     "task": "charge"
+    },
+    "first_seen": "13:28:39",
+    "active_for_s": 368,
+    "orders_in_zone": [
+     {
+      "id": "O-1023",
+      "zone": 1,
+      "units": 419,
+      "picked": 77,
+      "due": "13:35:45",
+      "minutes_to_due": 1.0,
+      "zone_rate_per_min": 125.0,
+      "projected_finish": "13:37:31",
+      "at_risk": true,
+      "late": false
+     },
+     {
+      "id": "O-1031",
+      "zone": 1,
+      "units": 493,
+      "picked": 0,
+      "due": "13:39:21",
+      "minutes_to_due": 4.6,
+      "zone_rate_per_min": 125.0,
+      "projected_finish": "13:41:28",
+      "at_risk": true,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": "13:34:45",
+  "priority": "critical",
+  "status": "open",
+  "event_id": "E-0062",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:34:47",
+  "updated_at": "13:34:47",
+  "history": [
+   {
+    "at": "13:34:47",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Systemic overheat: robots 8-19 all at 92C (limit 80C), zones 0-6. O-1007 (zone 3) at_risk, 0.7 min to due. O-1023 (zone 1) at_risk, 1.7 min. O-1020 (zone 6) at_risk, 0.9 min. O-1015 (zone 5) at_risk, 1.1 min. O-1021 (zone 0) at_risk, 2.9 min. O-1030 (zone 4) at_risk, 5.2 min. O-1028 (zone 3) at_risk, 3.6 min."
+   }
+  ]
+ },
+ {
+  "id": "T-19",
+  "event_type": "overheat",
+  "robot_id": 9,
+  "zone": 2,
+  "reason": "Robot 9 overheat 90C (limit 80C), zone 2, at-risk order O-1026 3.7 min to due",
+  "evidence": {
+   "event": {
+    "id": "E-0063",
+    "status": "active",
+    "robot_id": 9,
+    "zone": 2,
+    "type": "overheat",
+    "severity": "critical",
+    "detail": "motor 92C (limit 80C)",
+    "facts": {
+     "motor_temp_c": 92,
+     "limit_c": 80,
+     "task": "pick"
+    },
+    "first_seen": "13:28:39",
+    "active_for_s": 385,
+    "orders_in_zone": [
+     {
+      "id": "O-1026",
+      "zone": 2,
+      "units": 266,
+      "picked": 144,
+      "due": "13:36:22",
+      "minutes_to_due": 1.3,
+      "zone_rate_per_min": 95.0,
+      "projected_finish": "13:36:21",
+      "at_risk": false,
+      "late": false
+     },
+     {
+      "id": "O-1029",
+      "zone": 2,
+      "units": 536,
+      "picked": 0,
+      "due": "13:40:39",
+      "minutes_to_due": 5.6,
+      "zone_rate_per_min": 95.0,
+      "projected_finish": "13:42:00",
+      "at_risk": true,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": null,
+  "priority": "high",
+  "status": "open",
+  "event_id": "E-0063",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:35:04",
+  "updated_at": "13:35:04",
+  "history": [
+   {
+    "at": "13:35:04",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Robot 9 overheat 90C (limit 80C), zone 2, at-risk order O-1026 3.7 min to due"
+   }
+  ]
+ },
+ {
+  "id": "T-20",
+  "event_type": "overheat",
+  "robot_id": 10,
+  "zone": 3,
+  "reason": "Robot 10 overheat 88C (limit 80C), zone 3, at-risk order O-1007 2.1 min to due (1.2 min to due for O-1017 nearby)",
+  "evidence": {
+   "event": {
+    "id": "E-0064",
+    "status": "active",
+    "robot_id": 10,
+    "zone": 3,
+    "type": "overheat",
+    "severity": "critical",
+    "detail": "motor 92C (limit 80C)",
+    "facts": {
+     "motor_temp_c": 92,
+     "limit_c": 80,
+     "task": "pick"
+    },
+    "first_seen": "13:28:39",
+    "active_for_s": 385,
+    "orders_in_zone": [
+     {
+      "id": "O-1007",
+      "zone": 3,
+      "units": 211,
+      "picked": 121,
+      "due": "13:34:45",
+      "minutes_to_due": -0.3,
+      "zone_rate_per_min": 54.0,
+      "projected_finish": "13:36:44",
+      "at_risk": true,
+      "late": true
+     },
+     {
+      "id": "O-1028",
+      "zone": 3,
+      "units": 319,
+      "picked": 0,
+      "due": "13:37:37",
+      "minutes_to_due": 2.6,
+      "zone_rate_per_min": 54.0,
+      "projected_finish": "13:42:39",
+      "at_risk": true,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": null,
+  "priority": "critical",
+  "status": "open",
+  "event_id": "E-0064",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:35:04",
+  "updated_at": "13:35:04",
+  "history": [
+   {
+    "at": "13:35:04",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Robot 10 overheat 88C (limit 80C), zone 3, at-risk order O-1007 2.1 min to due (1.2 min to due for O-1017 nearby)"
+   }
+  ]
+ },
+ {
+  "id": "T-21",
+  "event_type": "overheat",
+  "robot_id": 11,
+  "zone": 4,
+  "reason": "Robot 11 overheat 89C (limit 80C), zone 4, no at-risk orders",
+  "evidence": {
+   "event": {
+    "id": "E-0065",
+    "status": "active",
+    "robot_id": 11,
+    "zone": 4,
+    "type": "overheat",
+    "severity": "critical",
+    "detail": "motor 92C (limit 80C)",
+    "facts": {
+     "motor_temp_c": 92,
+     "limit_c": 80,
+     "task": "pick"
+    },
+    "first_seen": "13:28:39",
+    "active_for_s": 385,
+    "orders_in_zone": [
+     {
+      "id": "O-1022",
+      "zone": 4,
+      "units": 363,
+      "picked": 113,
+      "due": "13:38:09",
+      "minutes_to_due": 3.1,
+      "zone_rate_per_min": 86.0,
+      "projected_finish": "13:37:59",
+      "at_risk": false,
+      "late": false
+     },
+     {
+      "id": "O-1030",
+      "zone": 4,
+      "units": 500,
+      "picked": 0,
+      "due": "13:39:15",
+      "minutes_to_due": 4.2,
+      "zone_rate_per_min": 86.0,
+      "projected_finish": "13:43:47",
+      "at_risk": true,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": null,
+  "priority": "medium",
+  "status": "open",
+  "event_id": "E-0065",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:35:04",
+  "updated_at": "13:35:04",
+  "history": [
+   {
+    "at": "13:35:04",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Robot 11 overheat 89C (limit 80C), zone 4, no at-risk orders"
+   }
+  ]
+ },
+ {
+  "id": "T-22",
+  "event_type": "overheat",
+  "robot_id": 12,
+  "zone": 5,
+  "reason": "Robot 12 overheat 91C (limit 80C), zone 5, at-risk orders O-1015 2.5 min and O-1024 4.7 min to due",
+  "evidence": {
+   "event": {
+    "id": "E-0066",
+    "status": "active",
+    "robot_id": 12,
+    "zone": 5,
+    "type": "overheat",
+    "severity": "critical",
+    "detail": "motor 92C (limit 80C)",
+    "facts": {
+     "motor_temp_c": 92,
+     "limit_c": 80,
+     "task": "pick"
+    },
+    "first_seen": "13:28:39",
+    "active_for_s": 385,
+    "orders_in_zone": [
+     {
+      "id": "O-1015",
+      "zone": 5,
+      "units": 481,
+      "picked": 407,
+      "due": "13:35:09",
+      "minutes_to_due": 0.1,
+      "zone_rate_per_min": 103.0,
+      "projected_finish": "13:35:47",
+      "at_risk": true,
+      "late": false
+     },
+     {
+      "id": "O-1024",
+      "zone": 5,
+      "units": 248,
+      "picked": 0,
+      "due": "13:37:24",
+      "minutes_to_due": 2.3,
+      "zone_rate_per_min": 103.0,
+      "projected_finish": "13:38:12",
+      "at_risk": true,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": null,
+  "priority": "critical",
+  "status": "open",
+  "event_id": "E-0066",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:35:04",
+  "updated_at": "13:35:04",
+  "history": [
+   {
+    "at": "13:35:04",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Robot 12 overheat 91C (limit 80C), zone 5, at-risk orders O-1015 2.5 min and O-1024 4.7 min to due"
+   }
+  ]
+ },
+ {
+  "id": "T-23",
+  "event_type": "overheat",
+  "robot_id": 13,
+  "zone": 6,
+  "reason": "Robot 13 overheat 88C (limit 80C), zone 6, at-risk order O-1020 2.3 min to due",
+  "evidence": {
+   "event": {
+    "id": "E-0067",
+    "status": "active",
+    "robot_id": 13,
+    "zone": 6,
+    "type": "overheat",
+    "severity": "critical",
+    "detail": "motor 92C (limit 80C)",
+    "facts": {
+     "motor_temp_c": 92,
+     "limit_c": 80,
+     "task": "pick"
+    },
+    "first_seen": "13:28:39",
+    "active_for_s": 385,
+    "orders_in_zone": [
+     {
+      "id": "O-1020",
+      "zone": 6,
+      "units": 260,
+      "picked": 204,
+      "due": "13:34:57",
+      "minutes_to_due": -0.1,
+      "zone_rate_per_min": 67.0,
+      "projected_finish": "13:35:54",
+      "at_risk": true,
+      "late": true
+     },
+     {
+      "id": "O-1027",
+      "zone": 6,
+      "units": 188,
+      "picked": 0,
+      "due": "13:39:45",
+      "minutes_to_due": 4.7,
+      "zone_rate_per_min": 67.0,
+      "projected_finish": "13:38:43",
+      "at_risk": false,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": null,
+  "priority": "high",
+  "status": "open",
+  "event_id": "E-0067",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:35:04",
+  "updated_at": "13:35:04",
+  "history": [
+   {
+    "at": "13:35:04",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Robot 13 overheat 88C (limit 80C), zone 6, at-risk order O-1020 2.3 min to due"
+   }
+  ]
+ },
+ {
+  "id": "T-24",
+  "event_type": "overheat",
+  "robot_id": 14,
+  "zone": 0,
+  "reason": "Robot 14 overheat 89C (limit 80C), zone 0, at-risk order O-1021 4.3 min to due",
+  "evidence": {
+   "event": {
+    "id": "E-0068",
+    "status": "active",
+    "robot_id": 14,
+    "zone": 0,
+    "type": "overheat",
+    "severity": "critical",
+    "detail": "motor 92C (limit 80C)",
+    "facts": {
+     "motor_temp_c": 92,
+     "limit_c": 80,
+     "task": "pick"
+    },
+    "first_seen": "13:28:39",
+    "active_for_s": 385,
+    "orders_in_zone": [
+     {
+      "id": "O-1025",
+      "zone": 0,
+      "units": 273,
+      "picked": 229,
+      "due": "13:36:27",
+      "minutes_to_due": 1.4,
+      "zone_rate_per_min": 65.0,
+      "projected_finish": "13:35:45",
+      "at_risk": false,
+      "late": false
+     },
+     {
+      "id": "O-1021",
+      "zone": 0,
+      "units": 298,
+      "picked": 0,
+      "due": "13:36:56",
+      "minutes_to_due": 1.9,
+      "zone_rate_per_min": 65.0,
+      "projected_finish": "13:40:20",
+      "at_risk": true,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": null,
+  "priority": "high",
+  "status": "open",
+  "event_id": "E-0068",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:35:04",
+  "updated_at": "13:35:04",
+  "history": [
+   {
+    "at": "13:35:04",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Robot 14 overheat 89C (limit 80C), zone 0, at-risk order O-1021 4.3 min to due"
+   }
+  ]
+ },
+ {
+  "id": "T-25",
+  "event_type": "overheat",
+  "robot_id": 15,
+  "zone": 1,
+  "reason": "Robot 15 overheat 89C (limit 80C), zone 1, at-risk order O-1023 3.1 min to due",
+  "evidence": {
+   "event": {
+    "id": "E-0069",
+    "status": "active",
+    "robot_id": 15,
+    "zone": 1,
+    "type": "overheat",
+    "severity": "critical",
+    "detail": "motor 92C (limit 80C)",
+    "facts": {
+     "motor_temp_c": 92,
+     "limit_c": 80,
+     "task": "pick"
+    },
+    "first_seen": "13:28:39",
+    "active_for_s": 385,
+    "orders_in_zone": [
+     {
+      "id": "O-1023",
+      "zone": 1,
+      "units": 419,
+      "picked": 78,
+      "due": "13:35:45",
+      "minutes_to_due": 0.7,
+      "zone_rate_per_min": 93.0,
+      "projected_finish": "13:38:44",
+      "at_risk": true,
+      "late": false
+     },
+     {
+      "id": "O-1031",
+      "zone": 1,
+      "units": 493,
+      "picked": 0,
+      "due": "13:39:21",
+      "minutes_to_due": 4.3,
+      "zone_rate_per_min": 93.0,
+      "projected_finish": "13:44:02",
+      "at_risk": true,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": null,
+  "priority": "high",
+  "status": "open",
+  "event_id": "E-0069",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:35:04",
+  "updated_at": "13:35:04",
+  "history": [
+   {
+    "at": "13:35:04",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Robot 15 overheat 89C (limit 80C), zone 1, at-risk order O-1023 3.1 min to due"
+   }
+  ]
+ },
+ {
+  "id": "T-26",
+  "event_type": "overheat",
+  "robot_id": 16,
+  "zone": 2,
+  "reason": "Robot 16 overheat 91C (limit 80C), zone 2, at-risk order O-1026 3.7 min to due",
+  "evidence": {
+   "event": {
+    "id": "E-0070",
+    "status": "active",
+    "robot_id": 16,
+    "zone": 2,
+    "type": "overheat",
+    "severity": "critical",
+    "detail": "motor 92C (limit 80C)",
+    "facts": {
+     "motor_temp_c": 92,
+     "limit_c": 80,
+     "task": "pick"
+    },
+    "first_seen": "13:28:39",
+    "active_for_s": 385,
+    "orders_in_zone": [
+     {
+      "id": "O-1026",
+      "zone": 2,
+      "units": 266,
+      "picked": 144,
+      "due": "13:36:22",
+      "minutes_to_due": 1.3,
+      "zone_rate_per_min": 95.0,
+      "projected_finish": "13:36:21",
+      "at_risk": false,
+      "late": false
+     },
+     {
+      "id": "O-1029",
+      "zone": 2,
+      "units": 536,
+      "picked": 0,
+      "due": "13:40:39",
+      "minutes_to_due": 5.6,
+      "zone_rate_per_min": 95.0,
+      "projected_finish": "13:42:00",
+      "at_risk": true,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": null,
+  "priority": "high",
+  "status": "open",
+  "event_id": "E-0070",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:35:04",
+  "updated_at": "13:35:04",
+  "history": [
+   {
+    "at": "13:35:04",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Robot 16 overheat 91C (limit 80C), zone 2, at-risk order O-1026 3.7 min to due"
+   }
+  ]
+ },
+ {
+  "id": "T-27",
+  "event_type": "stuck",
+  "robot_id": 3,
+  "zone": "3",
+  "reason": "Robot 3 stuck at bin [7,20] during pick \u2014 sent to pick from an empty bin (known_cause: sent to pick from an empty bin). O-1007 zone 3: 0.4 min to due, at_risk. O-1028 zone 3: 3.3 min to due, at_risk.",
+  "evidence": {
+   "event": {
+    "id": "E-0093",
+    "status": "cleared",
+    "robot_id": 3,
+    "zone": 3,
+    "type": "stuck",
+    "severity": "warning",
+    "detail": "no movement for 65s during charge",
+    "facts": {
+     "stopped_for_s": 65,
+     "task": "charge",
+     "goal": [
+      45,
+      19
+     ],
+     "position": [
+      2,
+      19
+     ],
+     "carrying": null,
+     "error_code": "OVERHEAT"
+    },
+    "first_seen": "13:33:42",
+    "active_for_s": 65,
+    "cleared_at": "13:34:47",
+    "orders_in_zone": [
+     {
+      "id": "O-1007",
+      "zone": 3,
+      "units": 211,
+      "picked": 121,
+      "due": "13:34:45",
+      "minutes_to_due": -0.5,
+      "zone_rate_per_min": 36.0,
+      "projected_finish": "13:37:48",
+      "at_risk": true,
+      "late": true
+     },
+     {
+      "id": "O-1028",
+      "zone": 3,
+      "units": 319,
+      "picked": 0,
+      "due": "13:37:37",
+      "minutes_to_due": 2.3,
+      "zone_rate_per_min": 36.0,
+      "projected_finish": "13:46:40",
+      "at_risk": true,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": "13:35:31",
+  "priority": "high",
+  "status": "open",
+  "event_id": "E-0093",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:35:18",
+  "updated_at": "13:35:18",
+  "history": [
+   {
+    "at": "13:35:18",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Robot 3 stuck at bin [7,20] during pick \u2014 sent to pick from an empty bin (known_cause: sent to pick from an empty bin). O-1007 zone 3: 0.4 min to due, at_risk. O-1028 zone 3: 3.3 min to due, at_risk."
+   }
+  ]
+ },
+ {
+  "id": "T-28",
+  "event_type": "low_stock",
+  "robot_id": null,
+  "zone": "1",
+  "reason": "Zone 1 stock at 13 units (limit 30). O-1023 zone 1: 1.4 min to due, at_risk. O-1031 zone 1: 5.0 min to due, at_risk.",
+  "evidence": {
+   "event": {
+    "id": "E-0094",
+    "status": "active",
+    "type": "low_stock",
+    "robot_id": null,
+    "zone": 1,
+    "severity": "warning",
+    "detail": "zone 1 stock 0 units (limit 30)",
+    "facts": {
+     "units": 0
+    },
+    "first_seen": "13:34:10",
+    "active_for_s": 80,
+    "orders_in_zone": [
+     {
+      "id": "O-1023",
+      "zone": 1,
+      "units": 419,
+      "picked": 78,
+      "due": "13:35:45",
+      "minutes_to_due": 0.2,
+      "zone_rate_per_min": 34.0,
+      "projected_finish": "13:45:32",
+      "at_risk": true,
+      "late": false
+     },
+     {
+      "id": "O-1031",
+      "zone": 1,
+      "units": 493,
+      "picked": 0,
+      "due": "13:39:21",
+      "minutes_to_due": 3.9,
+      "zone_rate_per_min": 34.0,
+      "projected_finish": "14:00:02",
+      "at_risk": true,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": "13:36:00",
+  "priority": "high",
+  "status": "open",
+  "event_id": "E-0094",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:35:30",
+  "updated_at": "13:35:30",
+  "history": [
+   {
+    "at": "13:35:30",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Zone 1 stock at 13 units (limit 30). O-1023 zone 1: 1.4 min to due, at_risk. O-1031 zone 1: 5.0 min to due, at_risk."
+   }
+  ]
+ },
+ {
+  "id": "T-29",
+  "event_type": "overheat",
+  "robot_id": 17,
+  "zone": 3,
+  "reason": "Robot 17 overheat 89C (limit 80C), zone 3, at-risk order O-1007 2.1 min to due",
+  "evidence": {
+   "event": {
+    "id": "E-0071",
+    "status": "active",
+    "robot_id": 17,
+    "zone": 3,
+    "type": "overheat",
+    "severity": "critical",
+    "detail": "motor 92C (limit 80C)",
+    "facts": {
+     "motor_temp_c": 92,
+     "limit_c": 80,
+     "task": "pick"
+    },
+    "first_seen": "13:28:39",
+    "active_for_s": 424,
+    "orders_in_zone": [
+     {
+      "id": "O-1007",
+      "zone": 3,
+      "units": 211,
+      "picked": 121,
+      "due": "13:34:45",
+      "minutes_to_due": -1.0,
+      "zone_rate_per_min": 7.0,
+      "projected_finish": "13:48:34",
+      "at_risk": true,
+      "late": true
+     },
+     {
+      "id": "O-1028",
+      "zone": 3,
+      "units": 319,
+      "picked": 0,
+      "due": "13:37:37",
+      "minutes_to_due": 1.9,
+      "zone_rate_per_min": 7.0,
+      "projected_finish": "14:34:09",
+      "at_risk": true,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": null,
+  "priority": "critical",
+  "status": "open",
+  "event_id": "E-0071",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:35:43",
+  "updated_at": "13:35:43",
+  "history": [
+   {
+    "at": "13:35:43",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Robot 17 overheat 89C (limit 80C), zone 3, at-risk order O-1007 2.1 min to due"
+   }
+  ]
+ },
+ {
+  "id": "T-30",
+  "event_type": "overheat",
+  "robot_id": 18,
+  "zone": 4,
+  "reason": "Robot 18 overheat 88C (limit 80C), zone 4, no at-risk orders",
+  "evidence": {
+   "event": {
+    "id": "E-0072",
+    "status": "active",
+    "robot_id": 18,
+    "zone": 4,
+    "type": "overheat",
+    "severity": "critical",
+    "detail": "motor 92C (limit 80C)",
+    "facts": {
+     "motor_temp_c": 92,
+     "limit_c": 80,
+     "task": "pick"
+    },
+    "first_seen": "13:28:39",
+    "active_for_s": 424,
+    "orders_in_zone": [
+     {
+      "id": "O-1022",
+      "zone": 4,
+      "units": 363,
+      "picked": 113,
+      "due": "13:38:09",
+      "minutes_to_due": 2.4,
+      "zone_rate_per_min": 6.0,
+      "projected_finish": "14:17:23",
+      "at_risk": true,
+      "late": false
+     },
+     {
+      "id": "O-1030",
+      "zone": 4,
+      "units": 500,
+      "picked": 0,
+      "due": "13:39:15",
+      "minutes_to_due": 3.5,
+      "zone_rate_per_min": 6.0,
+      "projected_finish": "15:40:43",
+      "at_risk": true,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": null,
+  "priority": "medium",
+  "status": "open",
+  "event_id": "E-0072",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:35:43",
+  "updated_at": "13:35:43",
+  "history": [
+   {
+    "at": "13:35:43",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Robot 18 overheat 88C (limit 80C), zone 4, no at-risk orders"
+   }
+  ]
+ },
+ {
+  "id": "T-31",
+  "event_type": "overheat",
+  "robot_id": 19,
+  "zone": 5,
+  "reason": "Robot 19 overheat 91C (limit 80C), zone 5, at-risk orders O-1015 2.5 min and O-1024 4.7 min to due",
+  "evidence": {
+   "event": {
+    "id": "E-0073",
+    "status": "active",
+    "robot_id": 19,
+    "zone": 5,
+    "type": "overheat",
+    "severity": "critical",
+    "detail": "motor 92C (limit 80C)",
+    "facts": {
+     "motor_temp_c": 92,
+     "limit_c": 80,
+     "task": "pick"
+    },
+    "first_seen": "13:28:39",
+    "active_for_s": 424,
+    "orders_in_zone": [
+     {
+      "id": "O-1015",
+      "zone": 5,
+      "units": 481,
+      "picked": 407,
+      "due": "13:35:09",
+      "minutes_to_due": -0.6,
+      "zone_rate_per_min": 5.0,
+      "projected_finish": "13:50:31",
+      "at_risk": true,
+      "late": true
+     },
+     {
+      "id": "O-1024",
+      "zone": 5,
+      "units": 248,
+      "picked": 0,
+      "due": "13:37:24",
+      "minutes_to_due": 1.7,
+      "zone_rate_per_min": 5.0,
+      "projected_finish": "14:40:07",
+      "at_risk": true,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": null,
+  "priority": "critical",
+  "status": "open",
+  "event_id": "E-0073",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:35:43",
+  "updated_at": "13:35:43",
+  "history": [
+   {
+    "at": "13:35:43",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Robot 19 overheat 91C (limit 80C), zone 5, at-risk orders O-1015 2.5 min and O-1024 4.7 min to due"
+   }
+  ]
+ },
+ {
+  "id": "T-32",
+  "event_type": "stuck",
+  "robot_id": 15,
+  "zone": 1,
+  "reason": "Robot 15 stuck at bin [7,6] empty (known_cause: sent to pick from empty bin). O-1023 zone 1 at_risk, 0.4 min to due. O-1031 at_risk, 4.0 min to due. Needs Scheduler to reassign and replenish bin.",
+  "evidence": {
+   "event": {
+    "id": "E-0104",
+    "status": "active",
+    "robot_id": 15,
+    "zone": 1,
+    "type": "stuck",
+    "severity": "warning",
+    "detail": "no movement for 74s during pick (target bin empty)",
+    "facts": {
+     "stopped_for_s": 74,
+     "task": "pick",
+     "goal": [
+      7,
+      6
+     ],
+     "position": [
+      45,
+      14
+     ],
+     "carrying": null,
+     "error_code": "OVERHEAT",
+     "target_bin": {
+      "bin": [
+       7,
+       6
+      ],
+      "sku": "SKU-1007",
+      "qty": 0,
+      "expected": 0
+     },
+     "known_cause": "sent to pick from an empty bin"
+    },
+    "first_seen": "13:34:53",
+    "active_for_s": 72,
+    "orders_in_zone": [
+     {
+      "id": "O-1023",
+      "zone": 1,
+      "units": 419,
+      "picked": 78,
+      "due": "13:35:45",
+      "minutes_to_due": -0.3,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": true
+     },
+     {
+      "id": "O-1031",
+      "zone": 1,
+      "units": 493,
+      "picked": 0,
+      "due": "13:39:21",
+      "minutes_to_due": 3.3,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": "13:35:45",
+  "priority": "critical",
+  "status": "open",
+  "event_id": "E-0104",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:36:04",
+  "updated_at": "13:36:04",
+  "history": [
+   {
+    "at": "13:36:04",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Robot 15 stuck at bin [7,6] empty (known_cause: sent to pick from empty bin). O-1023 zone 1 at_risk, 0.4 min to due. O-1031 at_risk, 4.0 min to due. Needs Scheduler to reassign and replenish bin."
+   }
+  ]
+ },
+ {
+  "id": "T-33",
+  "event_type": "stuck",
+  "robot_id": 17,
+  "zone": 3,
+  "reason": "Robot 17 stuck at bin [7,6] empty (known_cause: sent to pick from empty bin). Zone 3: O-1007 at_risk & late (-0.6 min), O-1028 at_risk 2.2 min to due. Needs Scheduler to reassign.",
+  "evidence": {
+   "event": {
+    "id": "E-0105",
+    "status": "active",
+    "robot_id": 17,
+    "zone": 3,
+    "type": "stuck",
+    "severity": "warning",
+    "detail": "no movement for 96s during pick (target bin empty)",
+    "facts": {
+     "stopped_for_s": 96,
+     "task": "pick",
+     "goal": [
+      7,
+      6
+     ],
+     "position": [
+      45,
+      9
+     ],
+     "carrying": null,
+     "error_code": "OVERHEAT",
+     "target_bin": {
+      "bin": [
+       7,
+       6
+      ],
+      "sku": "SKU-1007",
+      "qty": 0,
+      "expected": 0
+     },
+     "known_cause": "sent to pick from an empty bin"
+    },
+    "first_seen": "13:34:53",
+    "active_for_s": 94,
+    "orders_in_zone": [
+     {
+      "id": "O-1007",
+      "zone": 3,
+      "units": 211,
+      "picked": 121,
+      "due": "13:34:45",
+      "minutes_to_due": -1.7,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": true
+     },
+     {
+      "id": "O-1028",
+      "zone": 3,
+      "units": 319,
+      "picked": 0,
+      "due": "13:37:37",
+      "minutes_to_due": 1.2,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": "13:34:45",
+  "priority": "critical",
+  "status": "open",
+  "event_id": "E-0105",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:36:27",
+  "updated_at": "13:36:27",
+  "history": [
+   {
+    "at": "13:36:27",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Robot 17 stuck at bin [7,6] empty (known_cause: sent to pick from empty bin). Zone 3: O-1007 at_risk & late (-0.6 min), O-1028 at_risk 2.2 min to due. Needs Scheduler to reassign."
+   }
+  ]
+ },
+ {
+  "id": "T-34",
+  "event_type": "deadlock",
+  "robot_id": null,
+  "zone": 3,
+  "reason": "Deadlock: robots 17 and 19 stopped at [45,9] within 1.5 cells. Zone 3: O-1007 at_risk & late (-0.6 min), O-1028 at_risk 2.2 min to due. Both robots also stuck at empty bin [7,6] and overheat. Needs Scheduler to resolve deadlock and reassign.",
+  "evidence": {
+   "event": {
+    "id": "E-0107",
+    "status": "active",
+    "type": "deadlock",
+    "robot_id": null,
+    "robot_ids": [
+     17,
+     19
+    ],
+    "zone": 3,
+    "severity": "critical",
+    "detail": "robots [17, 19] stopped within 1.5 cells of each other",
+    "facts": {
+     "positions": {
+      "17": [
+       45,
+       9
+      ],
+      "19": [
+       45,
+       9
+      ]
+     }
+    },
+    "first_seen": "13:34:53",
+    "active_for_s": 112,
+    "orders_in_zone": [
+     {
+      "id": "O-1007",
+      "zone": 3,
+      "units": 211,
+      "picked": 121,
+      "due": "13:34:45",
+      "minutes_to_due": -2.0,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": true
+     },
+     {
+      "id": "O-1028",
+      "zone": 3,
+      "units": 319,
+      "picked": 0,
+      "due": "13:37:37",
+      "minutes_to_due": 0.9,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": "13:34:45",
+  "priority": "critical",
+  "status": "open",
+  "event_id": "E-0107",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:36:45",
+  "updated_at": "13:36:45",
+  "history": [
+   {
+    "at": "13:36:45",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Deadlock: robots 17 and 19 stopped at [45,9] within 1.5 cells. Zone 3: O-1007 at_risk & late (-0.6 min), O-1028 at_risk 2.2 min to due. Both robots also stuck at empty bin [7,6] and overheat. Needs Scheduler to resolve deadlock and reassign."
+   }
+  ]
+ },
+ {
+  "id": "T-35",
+  "event_type": "throughput_drop",
+  "robot_id": null,
+  "zone": 3,
+  "reason": "Zone 3 throughput at 31 deliveries/min vs 122 baseline (75% drop). Robots [3, 10, 17] all overheat (92C) and stuck at empty bin. O-1007 at_risk & late (-0.6 min), O-1028 at_risk 2.2 min to due. Needs Scheduler to reroute and cool robots.",
+  "evidence": {
+   "event": {
+    "id": "E-0108",
+    "status": "active",
+    "type": "throughput_drop",
+    "robot_id": null,
+    "zone": 3,
+    "severity": "warning",
+    "detail": "zone 3 at 0 deliveries/min vs 93/min before",
+    "facts": {
+     "recent_per_min": 0.0,
+     "baseline_per_min": 93.2,
+     "robots_in_zone": [
+      3,
+      10,
+      17
+     ]
+    },
+    "first_seen": "13:35:00",
+    "active_for_s": 113,
+    "orders_in_zone": [
+     {
+      "id": "O-1007",
+      "zone": 3,
+      "units": 211,
+      "picked": 121,
+      "due": "13:34:45",
+      "minutes_to_due": -2.1,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": true
+     },
+     {
+      "id": "O-1028",
+      "zone": 3,
+      "units": 319,
+      "picked": 0,
+      "due": "13:37:37",
+      "minutes_to_due": 0.7,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": "13:34:45",
+  "priority": "critical",
+  "status": "open",
+  "event_id": "E-0108",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:36:53",
+  "updated_at": "13:36:53",
+  "history": [
+   {
+    "at": "13:36:53",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Zone 3 throughput at 31 deliveries/min vs 122 baseline (75% drop). Robots [3, 10, 17] all overheat (92C) and stuck at empty bin. O-1007 at_risk & late (-0.6 min), O-1028 at_risk 2.2 min to due. Needs Scheduler to reroute and cool robots."
+   }
+  ]
+ },
+ {
+  "id": "T-36",
+  "event_type": "throughput_drop",
+  "robot_id": null,
+  "zone": "all",
+  "reason": "SYSTEMIC: all 7 zones affected by motor overheat (E-0055 to E-0073). 6 throughput_drop events (E-0109-E-0114): zone1(O-1023 at_risk+late,-0.1min,O-1031 3.5min), zone4(O-1022 at_risk,2.3min,O-1030 3.4min), zone2(O-1026 at_risk,0.5min,O-1029 4.8min), zone6(O-1020 at_risk+late,-0.9min,O-1027 3.9min), zone0(O-1025 at_risk,0.6min,O-1021 1.1min), zone5(O-1015 at_risk+late,-0.7min,O-1024 1.5min). Robots affected: [0,1,2,4,5,6,7,8,9,11,12,13,14,15,16,18,19] across all zones. Root cause: motors hitting 92C (limit 80C). Immediate schedule/rebalancing needed.",
+  "evidence": {
+   "event": {
+    "id": "E-0109",
+    "status": "active",
+    "type": "throughput_drop",
+    "robot_id": null,
+    "zone": 1,
+    "severity": "warning",
+    "detail": "zone 1 at 0 deliveries/min vs 91/min before",
+    "facts": {
+     "recent_per_min": 0.0,
+     "baseline_per_min": 90.6,
+     "robots_in_zone": [
+      1,
+      8,
+      15
+     ]
+    },
+    "first_seen": "13:35:15",
+    "active_for_s": 123,
+    "orders_in_zone": [
+     {
+      "id": "O-1023",
+      "zone": 1,
+      "units": 419,
+      "picked": 78,
+      "due": "13:35:45",
+      "minutes_to_due": -1.6,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": true
+     },
+     {
+      "id": "O-1031",
+      "zone": 1,
+      "units": 493,
+      "picked": 0,
+      "due": "13:39:21",
+      "minutes_to_due": 2.1,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": null,
+  "priority": "critical",
+  "status": "open",
+  "event_id": "E-0109",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:37:18",
+  "updated_at": "13:37:18",
+  "history": [
+   {
+    "at": "13:37:18",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "SYSTEMIC: all 7 zones affected by motor overheat (E-0055 to E-0073). 6 throughput_drop events (E-0109-E-0114): zone1(O-1023 at_risk+late,-0.1min,O-1031 3.5min), zone4(O-1022 at_risk,2.3min,O-1030 3.4min), zone2(O-1026 at_risk,0.5min,O-1029 4.8min), zone6(O-1020 at_risk+late,-0.9min,O-1027 3.9min), zone0(O-1025 at_risk,0.6min,O-1021 1.1min), zone5(O-1015 at_risk+late,-0.7min,O-1024 1.5min). Robots affected: [0,1,2,4,5,6,7,8,9,11,12,13,14,15,16,18,19] across all zones. Root cause: motors hitting 92C (limit 80C). Immediate schedule/rebalancing needed."
+   }
+  ]
+ },
+ {
+  "id": "T-37",
+  "event_type": "low_stock",
+  "robot_id": null,
+  "zone": 5,
+  "reason": "zone 5 stock 0 units (limit 30); at-risk order O-1015 due 0.0min LATE (407/481 picked, 74 remaining), O-1024 due 2.2min (0/248 picked)",
+  "evidence": {
+   "event": {
+    "id": "E-0095",
+    "status": "active",
+    "type": "low_stock",
+    "robot_id": null,
+    "zone": 5,
+    "severity": "warning",
+    "detail": "zone 5 stock 0 units (limit 30)",
+    "facts": {
+     "units": 0
+    },
+    "first_seen": "13:34:26",
+    "active_for_s": 177,
+    "orders_in_zone": [
+     {
+      "id": "O-1015",
+      "zone": 5,
+      "units": 481,
+      "picked": 407,
+      "due": "13:35:09",
+      "minutes_to_due": -2.2,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": true
+     },
+     {
+      "id": "O-1024",
+      "zone": 5,
+      "units": 248,
+      "picked": 0,
+      "due": "13:37:24",
+      "minutes_to_due": 0.0,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": "0.0min",
+  "priority": "critical",
+  "status": "open",
+  "event_id": "E-0095",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:37:23",
+  "updated_at": "13:37:23",
+  "history": [
+   {
+    "at": "13:37:23",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "zone 5 stock 0 units (limit 30); at-risk order O-1015 due 0.0min LATE (407/481 picked, 74 remaining), O-1024 due 2.2min (0/248 picked)"
+   }
+  ]
+ },
+ {
+  "id": "T-38",
+  "event_type": "low_stock",
+  "robot_id": null,
+  "zone": 2,
+  "reason": "zone 2 stock 0 units (limit 30); at-risk order O-1026 due 1.2min (144/266 picked, 122 remaining), O-1029 due 5.5min (0/536 picked)",
+  "evidence": {
+   "event": {
+    "id": "E-0097",
+    "status": "active",
+    "type": "low_stock",
+    "robot_id": null,
+    "zone": 2,
+    "severity": "warning",
+    "detail": "zone 2 stock 0 units (limit 30)",
+    "facts": {
+     "units": 0
+    },
+    "first_seen": "13:34:28",
+    "active_for_s": 175,
+    "orders_in_zone": [
+     {
+      "id": "O-1026",
+      "zone": 2,
+      "units": 266,
+      "picked": 144,
+      "due": "13:36:22",
+      "minutes_to_due": -1.0,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": true
+     },
+     {
+      "id": "O-1029",
+      "zone": 2,
+      "units": 536,
+      "picked": 0,
+      "due": "13:40:39",
+      "minutes_to_due": 3.3,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": "1.2min",
+  "priority": "critical",
+  "status": "open",
+  "event_id": "E-0097",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:37:23",
+  "updated_at": "13:37:23",
+  "history": [
+   {
+    "at": "13:37:23",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "zone 2 stock 0 units (limit 30); at-risk order O-1026 due 1.2min (144/266 picked, 122 remaining), O-1029 due 5.5min (0/536 picked)"
+   }
+  ]
+ },
+ {
+  "id": "T-39",
+  "event_type": "low_stock",
+  "robot_id": null,
+  "zone": 6,
+  "reason": "zone 6 stock 0 units (limit 30); at-risk order O-1020 due 0.2min LATE (204/260 picked, 56 remaining), O-1027 due 4.6min (0/188 picked)",
+  "evidence": {
+   "event": {
+    "id": "E-0096",
+    "status": "active",
+    "type": "low_stock",
+    "robot_id": null,
+    "zone": 6,
+    "severity": "warning",
+    "detail": "zone 6 stock 0 units (limit 30)",
+    "facts": {
+     "units": 0
+    },
+    "first_seen": "13:34:27",
+    "active_for_s": 176,
+    "orders_in_zone": [
+     {
+      "id": "O-1020",
+      "zone": 6,
+      "units": 260,
+      "picked": 204,
+      "due": "13:34:57",
+      "minutes_to_due": -2.5,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": true
+     },
+     {
+      "id": "O-1027",
+      "zone": 6,
+      "units": 188,
+      "picked": 0,
+      "due": "13:39:45",
+      "minutes_to_due": 2.4,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": "0.2min",
+  "priority": "critical",
+  "status": "open",
+  "event_id": "E-0096",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:37:24",
+  "updated_at": "13:37:24",
+  "history": [
+   {
+    "at": "13:37:24",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "zone 6 stock 0 units (limit 30); at-risk order O-1020 due 0.2min LATE (204/260 picked, 56 remaining), O-1027 due 4.6min (0/188 picked)"
+   }
+  ]
+ },
+ {
+  "id": "T-40",
+  "event_type": "low_stock",
+  "robot_id": null,
+  "zone": 3,
+  "reason": "zone 3 stock 0 units (limit 30); at-risk order O-1007 due 0.4min LATE (121/211 picked, 90 remaining), O-1028 due 2.5min (0/319 picked)",
+  "evidence": {
+   "event": {
+    "id": "E-0098",
+    "status": "active",
+    "type": "low_stock",
+    "robot_id": null,
+    "zone": 3,
+    "severity": "warning",
+    "detail": "zone 3 stock 0 units (limit 30)",
+    "facts": {
+     "units": 0
+    },
+    "first_seen": "13:34:28",
+    "active_for_s": 176,
+    "orders_in_zone": [
+     {
+      "id": "O-1007",
+      "zone": 3,
+      "units": 211,
+      "picked": 121,
+      "due": "13:34:45",
+      "minutes_to_due": -2.6,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": true
+     },
+     {
+      "id": "O-1028",
+      "zone": 3,
+      "units": 319,
+      "picked": 0,
+      "due": "13:37:37",
+      "minutes_to_due": 0.2,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": "0.4min",
+  "priority": "critical",
+  "status": "open",
+  "event_id": "E-0098",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:37:24",
+  "updated_at": "13:37:24",
+  "history": [
+   {
+    "at": "13:37:24",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "zone 3 stock 0 units (limit 30); at-risk order O-1007 due 0.4min LATE (121/211 picked, 90 remaining), O-1028 due 2.5min (0/319 picked)"
+   }
+  ]
+ },
+ {
+  "id": "T-41",
+  "event_type": "low_stock",
+  "robot_id": null,
+  "zone": 4,
+  "reason": "zone 4 stock 0 units (limit 30); at-risk order O-1022 due 3.0min (113/363 picked, 250 remaining), O-1030 due 4.1min (0/500 picked)",
+  "evidence": {
+   "event": {
+    "id": "E-0099",
+    "status": "active",
+    "type": "low_stock",
+    "robot_id": null,
+    "zone": 4,
+    "severity": "warning",
+    "detail": "zone 4 stock 0 units (limit 30)",
+    "facts": {
+     "units": 0
+    },
+    "first_seen": "13:34:32",
+    "active_for_s": 172,
+    "orders_in_zone": [
+     {
+      "id": "O-1022",
+      "zone": 4,
+      "units": 363,
+      "picked": 113,
+      "due": "13:38:09",
+      "minutes_to_due": 0.8,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": false
+     },
+     {
+      "id": "O-1030",
+      "zone": 4,
+      "units": 500,
+      "picked": 0,
+      "due": "13:39:15",
+      "minutes_to_due": 1.9,
+      "zone_rate_per_min": 0.0,
+      "projected_finish": "never at the current rate",
+      "at_risk": true,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": "3.0min",
+  "priority": "high",
+  "status": "open",
+  "event_id": "E-0099",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:37:24",
+  "updated_at": "13:37:24",
+  "history": [
+   {
+    "at": "13:37:24",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "zone 4 stock 0 units (limit 30); at-risk order O-1022 due 3.0min (113/363 picked, 250 remaining), O-1030 due 4.1min (0/500 picked)"
+   }
+  ]
+ }
+]

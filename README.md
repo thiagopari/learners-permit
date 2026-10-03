@@ -73,3 +73,26 @@ tools/ask_agent.sh "How many robots are waiting for traffic?"   # supervisor LLM
 python3 sim/test_fleet.py 1800 7  # 30 sim-minutes of traffic: overlaps, deadlocks, throughput
 curl localhost:7100/fleetlog?minutes=5   # live fleet log (JSON) for the scheduler side
 ```
+
+## Repository map
+
+This repository collects everything built for the Dell x NVIDIA GB10 hackathon (Boston, October 3, 2026) under the project name Hyperion.
+
+| Path | What it is |
+|---|---|
+| `/` (root) | FleetOps: the warehouse fleet, dashboard feeds, glue and Isaac Sim integration (docker compose in `docker/`) |
+| `agent/` | The agent's OpenClaw workspace from the NemoClaw sandbox: standing orders (`AGENTS.md`), policy, persona, heartbeat and the `warehouse-supervisor` skill |
+| `cell/` | The supervisor tool service, its OpenClaw skill and the bandit trust gate (`bandit.py`) |
+| `navfix/` | The Discord navbot and the ops dashboard |
+| `warehouse/` | The warehouse simulator |
+| `isaac/` | The Isaac Sim warehouse scene |
+| `infra/` | `Dockerfile.cell` (GR00T N1.7 + LIBERO for arm64), the plug-in drive scripts, and `runtime-config.md` (how the containers ran on the GB10) |
+| `docs/business/` | Business research: pain and ROI, market, competition, why local, verticals, measurements, pricing, fact-checks |
+| `docs/planning/`, `docs/notes/` | The team brief, the business analysis, the integration plan and the setup handoff |
+| `docs/pitch/` | Pitch page and clips |
+| `docs/run-logs/`, `docs/test-runs/` | Service logs and end-to-end test results (tickets and trust-gate state) from the day |
+| `docs/media/rollouts/` | GR00T N1.7 rollout clips from the LIBERO simulator |
+
+Demo videos, all rollout clips and an Isaac telemetry snapshot are attached to the [v1.0-hackathon release](https://github.com/thiagopari/hyperion/releases/tag/v1.0-hackathon).
+
+Secrets (`.env`, tokens, `openclaw.json`), model checkpoints and runtime databases are deliberately not in the repository.

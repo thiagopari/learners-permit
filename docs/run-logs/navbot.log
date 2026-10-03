@@ -1,0 +1,16 @@
+=== 2026-10-03 14:34:06 start ===
+2026-10-03 14:34:06,633 WARNING discord.client: PyNaCl is not installed, voice will NOT be supported
+2026-10-03 14:34:06,633 WARNING discord.client: davey is not installed, voice will NOT be supported
+2026-10-03 14:34:06,633 INFO discord.client: logging in using static token
+2026-10-03 14:34:06,935 INFO navbot: listening on http://127.0.0.1:8787/events
+2026-10-03 14:34:07,007 INFO aiohttp.access: 127.0.0.1 [03/Oct/2026:14:34:07 -0500] "GET /health HTTP/1.1" 200 195 "-" "curl/8.5.0"
+2026-10-03 14:34:07,277 INFO discord.gateway: Shard ID None has connected to Gateway (Session ID: 0fd6809e0a860f355555eda4acca4ca8).
+2026-10-03 14:34:07,515 INFO aiohttp.access: 127.0.0.1 [03/Oct/2026:14:34:07 -0500] "GET /health HTTP/1.1" 200 195 "-" "curl/8.5.0"
+2026-10-03 14:34:08,024 INFO aiohttp.access: 127.0.0.1 [03/Oct/2026:14:34:08 -0500] "GET /health HTTP/1.1" 200 195 "-" "curl/8.5.0"
+2026-10-03 14:34:08,532 INFO aiohttp.access: 127.0.0.1 [03/Oct/2026:14:34:08 -0500] "GET /health HTTP/1.1" 200 195 "-" "curl/8.5.0"
+2026-10-03 14:34:09,039 INFO aiohttp.access: 127.0.0.1 [03/Oct/2026:14:34:09 -0500] "GET /health HTTP/1.1" 200 195 "-" "curl/8.5.0"
+2026-10-03 14:34:09,278 INFO navbot: logged in as navfix#7709
+2026-10-03 14:34:09,282 INFO navbot: activity bot_ready {'reads_messages': True, 'user_name': 'navfix'}
+2026-10-03 14:34:09,546 INFO aiohttp.access: 127.0.0.1 [03/Oct/2026:14:34:09 -0500] "GET /health HTTP/1.1" 200 194 "-" "curl/8.5.0"
+2026-10-03 14:34:17,889 INFO aiohttp.access: 127.0.0.1 [03/Oct/2026:14:34:17 -0500] "GET /health HTTP/1.1" 200 194 "-" "curl/8.5.0"
+2026-10-03 14:39:12,689 INFO aiohttp.access: 127.0.0.1 [03/Oct/2026:14:39:12 -0500] "GET /health HTTP/1.1" 200 194 "-" "curl/8.5.0"

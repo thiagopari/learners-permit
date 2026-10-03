@@ -1,0 +1,16 @@
+{
+ "route_b": {
+  "policy": "proposed_route",
+  "successes": 20,
+  "trials": 21,
+  "at": "12:01:50",
+  "job": "C-1"
+ },
+ "drawer_skill": {
+  "policy": "libero_goal",
+  "successes": 15,
+  "trials": 15,
+  "at": "12:13:39",
+  "job": "C-3"
+ }
+}

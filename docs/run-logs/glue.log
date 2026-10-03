@@ -1,0 +1,6 @@
+=== 2026-10-03 14:34:05 start ===
+fleetops glue on 127.0.0.1:7100 | supervisor http://127.0.0.1:8090 | bridge http://127.0.0.1:3001 | navbot http://127.0.0.1:8787
+=== 2026-10-03 14:38:35 start ===
+fleetops glue on 127.0.0.1:7100 | supervisor http://127.0.0.1:8090 | bridge http://127.0.0.1:3001 | navbot http://127.0.0.1:8787
+=== 2026-10-03 14:38:51 start ===
+fleetops glue on 127.0.0.1:7100 | supervisor http://127.0.0.1:8090 | bridge http://127.0.0.1:3001 | navbot http://127.0.0.1:8787
