@@ -7,6 +7,9 @@
 #   ./fleetops.sh status                    one line per component
 #   ./fleetops.sh logs    <component>       follow a component's log
 #   ./fleetops.sh build                     rebuild the image after a code change and redeploy
+#   ./fleetops.sh isaac                     Isaac Sim GUI on this screen becomes the sim (headless sim stops)
+#   ./fleetops.sh headless                  close Isaac, headless sim back
+#   ./fleetops.sh reset-demo                back up and clear tickets + trust before a demo run
 #
 # Components, in start order:
 #   model       vLLM serving Qwen3.6-35B-A3B (docker container vllm-qwen, port 8000)   [start/status only]
@@ -124,5 +127,20 @@ case "${1:-status}" in
   status)  status; echo; "${COMPOSE[@]}" ps --format "table {{.Service}}\t{{.Status}}" ;;
   logs)    "${COMPOSE[@]}" logs -f --tail 40 "${2:?component}" ;;
   tmux-start) for c in $(targets "${2:-}"); do start_one "$c" || exit 1; done ;;   # old non-container mode
+  isaac)   # Isaac Sim GUI on this box's screen becomes the sim: stop the headless sim first (one source only)
+           "${COMPOSE[@]}" stop sim
+           tmux kill-session -t fo-isaac 2>/dev/null
+           echo "=== $(date '+%F %T') isaac start ===" >> "$LOGS/isaac.log"
+           tmux new -d -s fo-isaac "bash -c 'export DISPLAY=${ISAAC_DISPLAY:-:1} XAUTHORITY=/run/user/$(id -u)/gdm/Xauthority OMNI_KIT_ACCEPT_EULA=YES; exec $HOME/isaacsim-env/bin/python $FO/isaac/warehouse_live.py --bridge http://127.0.0.1:3001 --seed ${FLEET_SEED:-7} >> $LOGS/isaac.log 2>&1'"
+           echo "  isaac       starting on display ${ISAAC_DISPLAY:-:1} (first launch compiles shaders: a few minutes)"
+           for i in $(seq 1 120); do curl -s --max-time 2 http://127.0.0.1:3001/health | grep -q '"source": "isaac"' && { echo "  isaac       live: pushing to the bridge"; exit 0; }; sleep 5; done
+           echo "  isaac       not pushing after 10 min; last log lines:"; tail -5 "$LOGS/isaac.log" ;;
+  headless) tmux kill-session -t fo-isaac 2>/dev/null && echo "  isaac       closed"; "${COMPOSE[@]}" start sim; sleep 3; status ;;
+  reset-demo) # clean slate before a run: back up, then clear tickets and trust history
+           b="$SUP/data/backup-$(date +%H%M%S)"; mkdir -p "$b"
+           cp -a "$SUP/data/tickets.json" "$SUP/data/trust.json" "$b/" 2>/dev/null
+           "${COMPOSE[@]}" stop supervisor glue
+           rm -f "$SUP/data/tickets.json" "$SUP/data/trust.json"
+           "${COMPOSE[@]}" start supervisor glue; sleep 4; echo "  tickets and trust cleared (backup: $b)"; status ;;
   *)       sed -n '2,25p' "$0"; exit 1 ;;
 esac
