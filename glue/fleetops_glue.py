@@ -34,7 +34,8 @@ CONFIG = {
     "site": E("SITE_ID", "fleetops"),
     "site_name": E("SITE_NAME", "FleetOps DC"),
     "site_area": E("SITE_AREA", "Boston"),
-    "isaac_stream": E("ISAAC_STREAM_URL", ""),     # e.g. http://<laptop>:8211/... ; empty = map only
+    "isaac_stream": E("ISAAC_STREAM_URL", ""),     # optional iframe (e.g. a WebRTC client); empty = none
+    "isaac_cams": E("ISAAC_CAMS_URL", "http://127.0.0.1:8212"),   # warehouse_live.py --cams camera server
     "fleetlog_every_s": float(E("FLEETLOG_EVERY_S", "300")),
     "approvals": E("GLUE_APPROVALS", "1") == "1",  # ask Discord to approve schedule changes
 }
@@ -289,9 +290,32 @@ def needs_view():
     return out
 
 
+_cams_cache = {"at": 0.0, "info": None}
+
+
+def isaac_cams():
+    """The Isaac camera server's /cams, cached for 5 s; None when Isaac is not running with --cams."""
+    if time.time() - _cams_cache["at"] > 5:
+        try:
+            _cams_cache["info"] = get_json(CONFIG["isaac_cams"], "/cams", timeout=0.5)
+        except Exception:
+            _cams_cache["info"] = None
+        _cams_cache["at"] = time.time()
+    return _cams_cache["info"]
+
+
 def feeds_view(base):
     feeds = [{"id": "map", "label": "Live floor map", "site": CONFIG["site"], "robot_id": None, "kind": "image",
               "url": f"{base}/feeds/map.svg", "refresh_ms": 500, "proxy": True}]
+    cams = isaac_cams()
+    if cams:   # real Isaac Sim cameras: fixed views, then one chase camera per robot
+        for c in cams.get("fixed", []):
+            feeds.append({"id": f"isaac-{c['id']}", "label": c["label"], "site": CONFIG["site"], "robot_id": None,
+                          "kind": "mjpeg", "url": f"{CONFIG['isaac_cams']}/stream/{c['id']}", "proxy": True})
+        for i in range(int(cams.get("robots", 0))):
+            feeds.append({"id": f"isaac-robot-{i}", "label": f"{robot_name(i)} · chase camera", "site": CONFIG["site"],
+                          "robot_id": robot_name(i), "kind": "mjpeg",
+                          "url": f"{CONFIG['isaac_cams']}/stream/robot/{i}", "proxy": True})
     if CONFIG["isaac_stream"]:
         feeds.insert(0, {"id": "isaac", "label": "Isaac Sim", "site": CONFIG["site"], "robot_id": None,
                          "kind": "iframe", "url": CONFIG["isaac_stream"]})   # loaded by the viewer's browser directly

@@ -17,6 +17,9 @@ ap.add_argument("--only-frames", default="", help="comma list of frame numbers t
 ap.add_argument("--bridge", default="", help="push the fleet to this sim bridge, e.g. http://127.0.0.1:3001")
 ap.add_argument("--token-file", default="", help="file holding the bridge token (default ../secrets/bridge_token)")
 ap.add_argument("--seed", type=int, default=7)
+ap.add_argument("--cams", action="store_true", help="serve live camera streams (MJPEG) for the dashboard")
+ap.add_argument("--cam-port", type=int, default=8212)
+ap.add_argument("--cam-res", default="640x360")
 args = ap.parse_args()
 
 T0 = time.time()
@@ -324,6 +327,114 @@ if args.record:
     sim_app.close()
     raise SystemExit(0)
 
+# ---------------- live camera streams for the dashboard ----------------
+CAMS = None
+if args.cams:
+    import threading
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+    import cv2
+    import omni.replicator.core as rep
+    from isaacsim.core.utils.viewports import set_camera_view
+    CX_ = (XMIN + XMAX) / 2
+    CW, CH = map(int, args.cam_res.split("x"))
+    FIXED = {  # name: (label, eye, target)
+        "overview": ("Isaac · overview", (CX_ - 6, -50, 30), (CX_, -3, 0)),
+        "aisle":    ("Isaac · aisle 2", (centers[2], -17, 2.2), (centers[2], 6, 0.4)),
+        "bays":     ("Isaac · pack bays", (centers[1], YBOT - 10, 4.5), (centers[1], YBOT, 0.2)),
+    }
+
+    class Cams:
+        def __init__(self):
+            self.lock = threading.Lock()
+            self.jpeg, self.rgb, self.seen = {}, {}, {}
+            self.follow_id, self.follow_eye, self.follow_tgt = 0, None, None
+            for name, (label, eye, tgt) in list(FIXED.items()) + [("follow", ("chase", (0, 0, 2), (1, 0, 0)))]:
+                UsdGeom.Camera.Define(st, f"/World/Cam_{name}").CreateFocalLengthAttr(18.0 if name != "follow" else 16.0)
+                set_camera_view(eye=list(eye), target=list(tgt), camera_prim_path=f"/World/Cam_{name}")
+                rp = rep.create.render_product(f"/World/Cam_{name}", (CW, CH))
+                ann = rep.AnnotatorRegistry.get_annotator("rgb"); ann.attach([rp])
+                self.rgb[name] = ann
+
+        def watching(self, name):
+            return time.time() - self.seen.get(name, 0) < 3.0
+
+        def update(self, step):
+            b = bots[self.follow_id]
+            h = (math.cos(b.yaw), math.sin(b.yaw))
+            eye = [b.pos[0] - 3.6 * h[0], b.pos[1] - 3.6 * h[1], 1.5]
+            tgt = [b.pos[0] + 2.5 * h[0], b.pos[1] + 2.5 * h[1], 0.4]
+            if self.follow_eye is not None:   # glide through turns
+                eye = [self.follow_eye[i] + (eye[i] - self.follow_eye[i]) * 0.15 for i in range(3)]
+                tgt = [self.follow_tgt[i] + (tgt[i] - self.follow_tgt[i]) * 0.15 for i in range(3)]
+            self.follow_eye, self.follow_tgt = eye, tgt
+            set_camera_view(eye=eye, target=tgt, camera_prim_path="/World/Cam_follow")
+            if step % 3:                      # encode about every 3rd frame, only for streams someone watches
+                return
+            for name, ann in self.rgb.items():
+                if not self.watching(name):
+                    continue
+                try:
+                    img = ann.get_data()
+                except Exception:
+                    continue
+                if img is None or getattr(img, "size", 0) == 0:
+                    continue
+                ok, buf = cv2.imencode(".jpg", cv2.cvtColor(np.asarray(img)[..., :3], cv2.COLOR_RGB2BGR),
+                                       [cv2.IMWRITE_JPEG_QUALITY, 78])
+                if ok:
+                    with self.lock:
+                        self.jpeg[name] = buf.tobytes()
+
+    CAMS = Cams()
+
+    class CamHandler(BaseHTTPRequestHandler):
+        def log_message(self, *a):
+            pass
+
+        def do_GET(self):
+            path = self.path.split("?")[0].rstrip("/")
+            if path == "/cams":
+                body = json.dumps({"fixed": [{"id": k, "label": v[0]} for k, v in FIXED.items()],
+                                   "robots": len(bots), "follow": CAMS.follow_id, "res": [CW, CH]}).encode()
+                self.send_response(200); self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body); return
+            parts = path.split("/")[1:]       # stream/<cam>  or  stream/robot/<id>
+            if len(parts) >= 2 and parts[0] in ("stream", "snap"):
+                if parts[1] == "robot" and len(parts) == 3 and parts[2].isdigit():
+                    CAMS.follow_id = max(0, min(len(bots) - 1, int(parts[2]))); name = "follow"
+                else:
+                    name = parts[1]
+                if name not in CAMS.rgb:
+                    self.send_response(404); self.end_headers(); return
+                CAMS.seen[name] = time.time()
+                if parts[0] == "snap":
+                    for _ in range(40):
+                        if name in CAMS.jpeg: break
+                        time.sleep(0.05)
+                    with CAMS.lock: frame = CAMS.jpeg.get(name, b"")
+                    self.send_response(200 if frame else 503); self.send_header("Content-Type", "image/jpeg")
+                    self.send_header("Content-Length", str(len(frame))); self.end_headers(); self.wfile.write(frame); return
+                self.send_response(200)
+                self.send_header("Content-Type", "multipart/x-mixed-replace; boundary=frame")
+                self.send_header("Cache-Control", "no-store"); self.end_headers()
+                last = None
+                try:
+                    while True:
+                        CAMS.seen[name] = time.time()
+                        with CAMS.lock: frame = CAMS.jpeg.get(name)
+                        if frame is not None and frame is not last:
+                            self.wfile.write(b"--frame\r\nContent-Type: image/jpeg\r\nContent-Length: "
+                                             + str(len(frame)).encode() + b"\r\n\r\n" + frame + b"\r\n")
+                            self.wfile.flush(); last = frame
+                        time.sleep(0.08)
+                except (BrokenPipeError, ConnectionResetError, OSError):
+                    return
+            self.send_response(404); self.end_headers()
+
+    _srv = ThreadingHTTPServer(("127.0.0.1", args.cam_port), CamHandler)
+    threading.Thread(target=_srv.serve_forever, daemon=True).start()
+    mark(f"camera streams on http://127.0.0.1:{args.cam_port}/stream/<overview|aisle|bays|robot/N>")
+
 push = None
 if args.bridge:
     from pusher import Pusher
@@ -346,6 +457,8 @@ while sim_app.is_running():
     if push:
         push.tick(now)
     apply_poses()
+    if CAMS:
+        CAMS.update(step)
     sp = min_spacing()
     closest_ever = min(closest_ever, sp)
     overlap_steps += sp < 0.6   # Carter footprint is ~0.6 m: centres closer than that means overlap
