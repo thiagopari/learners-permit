@@ -60,7 +60,7 @@ healthy() {
 }
 
 start_one() {
-  local c=$1
+  local c=$1 i
   case $c in
     model) healthy model && { echo "  model       already up"; return 0; }
            docker start vllm-qwen >/dev/null && echo "  model       starting (loading weights takes a few minutes)"
@@ -82,7 +82,7 @@ start_one() {
 }
 
 stop_one() {
-  local c=$1
+  local c=$1 i
   case $c in model|agent) echo "  $(printf %-11s $c) left running (shared; stop it by hand if you mean to)"; return 0;; esac
   tmux kill-session -t "fo-$c" 2>/dev/null
   local p; p=$(port_of "$c")
@@ -112,7 +112,7 @@ targets() { if [ -z "${1:-}" ] || [ "$1" = all ]; then echo "${ORDER[@]}"; else 
 
 case "${1:-status}" in
   start)   for c in $(targets "${2:-}"); do start_one "$c" || { echo "stopping here: fix $c first"; exit 1; }; done ;;
-  stop)    t=($(targets "${2:-}")); for ((i=${#t[@]}-1; i>=0; i--)); do stop_one "${t[$i]}"; done ;;
+  stop)    t=($(targets "${2:-}")); for ((k=${#t[@]}-1; k>=0; k--)); do stop_one "${t[$k]}"; done ;;
   restart) "$0" stop "${2:-all}"; "$0" start "${2:-all}" ;;
   status)  status ;;
   logs)    tail -n 40 -f "$LOGS/${2:?component}.log" ;;
