@@ -14,6 +14,9 @@ ap.add_argument("--steps", type=int, default=0, help="0 = run until the window i
 ap.add_argument("--record", type=float, default=0, help="seconds of cinematic video to render (implies headless)")
 ap.add_argument("--res", default="1920x1080")
 ap.add_argument("--only-frames", default="", help="comma list of frame numbers to render (preview)")
+ap.add_argument("--bridge", default="", help="push the fleet to this sim bridge, e.g. http://127.0.0.1:3001")
+ap.add_argument("--token-file", default="", help="file holding the bridge token (default ../secrets/bridge_token)")
+ap.add_argument("--seed", type=int, default=7)
 args = ap.parse_args()
 
 T0 = time.time()
@@ -39,12 +42,14 @@ world = World(stage_units_in_meters=1.0)
 st = omni.usd.get_context().get_stage()
 
 # ---------------- layout (metres) ----------------
-import sys
-sys.path.insert(0, "/home/ferbin/warehouse-isaac")
-from fleet import (Fleet, AIS, LEN, centers, XMIN, XMAX, YBOT, YTOP, BAY,
+import os, sys
+HERE = os.path.dirname(os.path.abspath(__file__))
+SIM_DIR = os.path.join(HERE, "..", "sim") if os.path.isdir(os.path.join(HERE, "..", "sim")) else HERE
+sys.path.insert(0, SIM_DIR)
+from fleet import (Fleet, AIS, LEN, centers, XMIN, XMAX, YBOT, YTOP, BAY, EXIT_GAP, REJOIN,
                    PICK_X, DOCK_X, PICK_DX, DOCK_DX, NORTHBOUND)
 
-STATIC_USD = "/home/ferbin/warehouse-isaac/warehouse_static.usda"
+STATIC_USD = os.path.join(HERE, "warehouse_static.usda")
 
 def build_static(path):
     """Build the racks/totes/lines/lights on a private offline stage and save it.
@@ -128,6 +133,15 @@ def build_static(path):
         box(f"Dock_{i}", (x - 1.1, YTOP + BAY, 0.02), (3.4, 1.5, 0.05), M["dock"])
         for j, dx in enumerate(DOCK_DX):
             box(f"DockSpur_{i}_{j}", (x + dx, YTOP + BAY / 2, 0.001), (0.08, BAY, 0.005), M["line"])
+    # drive-through bays (fleet.py): out of the slot onto an exit lane behind it, back to the main lane downstream
+    for tag, xs_, dxs, y, sgn in (("P", PICK_X, PICK_DX, YBOT, 1), ("D", DOCK_X, DOCK_DX, YTOP, -1)):
+        for i, x in enumerate(xs_):
+            ys, ye = y - sgn * BAY, y - sgn * (BAY + EXIT_GAP)
+            x_end = x + sgn * REJOIN
+            box(f"Exit{tag}_{i}", ((x + x_end) / 2, ye, 0.001), (abs(x_end - x) + 0.08, 0.08, 0.005), M["line"])
+            box(f"Rejoin{tag}_{i}", (x_end, (y + ye) / 2, 0.001), (0.08, abs(y - ye), 0.005), M["line"])
+            for j, dx in enumerate(dxs):
+                box(f"SlotOut{tag}_{i}_{j}", (x + dx, (ys + ye) / 2, 0.001), (0.08, EXIT_GAP, 0.005), M["line"])
 
     dome = UsdLux.DomeLight.Define(ws, "/Warehouse/Dome")
     dome.CreateIntensityAttr(650.0); dome.CreateColorAttr(Gf.Vec3f(0.8, 0.85, 1.0))
@@ -156,17 +170,33 @@ add_reference_to_stage(usd_path=STATIC_USD, prim_path="/World/Warehouse")
 mark("warehouse referenced into the live stage")
 
 # ---------------- robots ----------------
-FLEET = Fleet(args.robots)          # traffic logic lives in fleet.py (tested headless by test_fleet.py)
+FLEET = Fleet(args.robots, seed=args.seed)   # traffic logic lives in fleet.py (tested headless by test_fleet.py)
 bots = FLEET.bots
 for b in bots:
     p = f"/World/Carter_{b.i}"
     add_reference_to_stage(usd_path=CARTER, prim_path=p)
     b.xf = SingleXFormPrim(p, position=np.array(b.pos))
 
+# a red beacon floats above any robot with an error code, so faults are visible on screen
+_beacon_mat = UsdShade.Material.Define(st, "/World/BeaconLook")
+_bs = UsdShade.Shader.Define(st, "/World/BeaconLook/S"); _bs.CreateIdAttr("UsdPreviewSurface")
+_bs.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(1.0, 0.1, 0.08))
+_bs.CreateInput("emissiveColor", Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(4.0, 0.2, 0.1))
+_beacon_mat.CreateSurfaceOutput().ConnectToSource(_bs.ConnectableAPI(), "surface")
+beacons = []
+for b in bots:
+    sph = UsdGeom.Sphere.Define(st, f"/World/Beacon_{b.i}"); sph.CreateRadiusAttr(0.22)
+    UsdShade.MaterialBindingAPI.Apply(sph.GetPrim()).Bind(_beacon_mat)
+    beacons.append((sph, UsdGeom.Xformable(sph).AddTranslateOp(), UsdGeom.Imageable(sph)))
+
 def apply_poses():
-    for b in bots:
+    for b, (sph, op, img) in zip(bots, beacons):
         b.xf.set_world_pose(position=np.array(b.pos),
                             orientation=np.array([math.cos(b.yaw / 2), 0, 0, math.sin(b.yaw / 2)]))
+        if b.error:
+            op.Set(Gf.Vec3d(b.pos[0], b.pos[1], 1.25)); img.MakeVisible()
+        else:
+            img.MakeInvisible()
 
 def min_spacing():
     return FLEET.min_spacing()
@@ -294,13 +324,27 @@ if args.record:
     sim_app.close()
     raise SystemExit(0)
 
-tf = open("/home/ferbin/warehouse-isaac/telemetry.jsonl", "w")
+push = None
+if args.bridge:
+    from pusher import Pusher
+    tok_file = args.token_file or os.path.join(HERE, "..", "secrets", "bridge_token")
+    token = open(tok_file).read().strip() if os.path.exists(tok_file) else os.environ.get("BRIDGE_TOKEN", "")
+    push = Pusher(FLEET, args.bridge, token, source="isaac")
+    mark(f"pushing to {args.bridge} (token {'set' if token else 'MISSING'})")
+tf = open(os.path.join(HERE, "telemetry.jsonl"), "w")
 mark(f"FleetOps live: {len(bots)} Carters running")
-step, dt, t_run = 0, 1 / 30.0, time.time()
+step, t_run, t_prev = 0, time.time(), time.time()
 closest_ever, overlap_steps = 1e9, 0
 while sim_app.is_running():
     world.step(render=True)
+    now = time.time()
+    dt = min(0.1, max(1 / 120, now - t_prev)); t_prev = now   # real time, whatever the GUI frame rate
+    if push:
+        for c in push.apply():
+            mark(f"demo command from the bridge: {c}")
     FLEET.step(dt)
+    if push:
+        push.tick(now)
     apply_poses()
     sp = min_spacing()
     closest_ever = min(closest_ever, sp)
@@ -312,7 +356,8 @@ while sim_app.is_running():
         tf.write(json.dumps(rec) + "\n"); tf.flush()
     if step % 300 == 0:
         zs = chassis_z() or [float("nan")]
-        mark(f"step {step}, {(step + 1) / max(1e-6, time.time() - t_run):.1f} steps/s, "
+        mark(f"step {step}, {(step + 1) / max(1e-6, time.time() - t_run):.1f} steps/s, sim t={FLEET.t:.0f}s, "
+             + (f"pushes ok {push.sent} failed {push.failed}, " if push else "") +
              f"chassis z min {min(zs):.2f} max {max(zs):.2f} (n={len(zs)}), "
              f"closest ever {closest_ever:.2f} m, overlap steps {overlap_steps}")
     step += 1
