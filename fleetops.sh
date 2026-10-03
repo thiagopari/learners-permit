@@ -6,6 +6,7 @@
 #   ./fleetops.sh restart [component|all]
 #   ./fleetops.sh status                    one line per component
 #   ./fleetops.sh logs    <component>       follow a component's log
+#   ./fleetops.sh build                     rebuild the image after a code change and redeploy
 #
 # Components, in start order:
 #   model       vLLM serving Qwen3.6-35B-A3B (docker container vllm-qwen, port 8000)   [start/status only]
@@ -110,11 +111,18 @@ status() {
 
 targets() { if [ -z "${1:-}" ] || [ "$1" = all ]; then echo "${ORDER[@]}"; else echo "$1"; fi; }
 
+COMPOSE=(docker compose -f "$FO/docker/compose.yaml")
+compose_svc() { case $1 in model|agent) echo "";; *) echo "$1";; esac; }
+
 case "${1:-status}" in
-  start)   for c in $(targets "${2:-}"); do start_one "$c" || { echo "stopping here: fix $c first"; exit 1; }; done ;;
-  stop)    t=($(targets "${2:-}")); for ((k=${#t[@]}-1; k>=0; k--)); do stop_one "${t[$k]}"; done ;;
-  restart) "$0" stop "${2:-all}"; "$0" start "${2:-all}" ;;
-  status)  status ;;
-  logs)    tail -n 40 -f "$LOGS/${2:?component}.log" ;;
+  # The stack runs in Docker (docker/compose.yaml). start/stop/logs drive compose; the model server and the
+  # agent sandbox are separate containers and are only checked here.
+  start)   healthy model || start_one model; "${COMPOSE[@]}" up -d ${2:+$(compose_svc "$2")}; sleep 2; start_one agent; status ;;
+  stop)    "${COMPOSE[@]}" stop ${2:+$(compose_svc "$2")} ;;
+  restart) "${COMPOSE[@]}" restart ${2:+$(compose_svc "$2")}; sleep 3; status ;;
+  build)   "${COMPOSE[@]}" build && "${COMPOSE[@]}" up -d ;;
+  status)  status; echo; "${COMPOSE[@]}" ps --format "table {{.Service}}\t{{.Status}}" ;;
+  logs)    "${COMPOSE[@]}" logs -f --tail 40 "${2:?component}" ;;
+  tmux-start) for c in $(targets "${2:-}"); do start_one "$c" || exit 1; done ;;   # old non-container mode
   *)       sed -n '2,25p' "$0"; exit 1 ;;
 esac
