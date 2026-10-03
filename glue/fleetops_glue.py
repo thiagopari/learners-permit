@@ -420,7 +420,8 @@ def on_ticket_webhook(body):
     card = {"event": "TASK_FAILED", "site": CONFIG["site_name"], "cell": where,
             "skill": facts.get("task") or tk.get("event_type"), "passed": 0, "run": 1,
             "robot": rname, "error_code": facts.get("error_code") or (tk.get("event_type") or "").upper(),
-            "failure_note": tk.get("reason"), "debrief": tk.get("reason"),
+            # the supervisor LLM's ticket text is the card's "Issue"; navbot's own LLM writes the debrief
+            "failure_note": tk.get("reason"),
             "ticket_id": tk["id"], "deadline": tk.get("needed_by")}
     r1 = navbot_post("/events", card)
     r2 = None
