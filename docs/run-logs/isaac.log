@@ -475,3 +475,10 @@ Warp 1.13.0 initialized:
 [fleetops 1424.7s] step 31500, 22.6 steps/s, sim t=1392s, pushes ok 10148 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
 [fleetops 1438.2s] step 31800, 22.6 steps/s, sim t=1406s, pushes ok 10248 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
 [fleetops 1451.7s] step 32100, 22.6 steps/s, sim t=1419s, pushes ok 10348 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1464.7s] step 32400, 22.6 steps/s, sim t=1432s, pushes ok 10442 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1477.5s] step 32700, 22.6 steps/s, sim t=1445s, pushes ok 10535 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.74 m, overlap steps 0
+[fleetops 1490.6s] step 33000, 22.6 steps/s, sim t=1458s, pushes ok 10629 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.73 m, overlap steps 0
+[fleetops 1503.8s] step 33300, 22.6 steps/s, sim t=1471s, pushes ok 10726 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.73 m, overlap steps 0
+[fleetops 1516.8s] step 33600, 22.6 steps/s, sim t=1484s, pushes ok 10821 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.73 m, overlap steps 0
+[fleetops 1530.2s] step 33900, 22.6 steps/s, sim t=1498s, pushes ok 10920 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.73 m, overlap steps 0
+[fleetops 1543.7s] step 34200, 22.6 steps/s, sim t=1511s, pushes ok 11019 failed 0, chassis z min 0.00 max 0.00 (n=20), closest ever 0.73 m, overlap steps 0
