@@ -305,7 +305,7 @@ def isaac_cams():
 
 
 def feeds_view(base):
-    feeds = [{"id": "map", "label": "Live floor map", "site": CONFIG["site"], "robot_id": None, "kind": "image",
+    feeds = [{"id": "map", "label": "Floor map", "site": CONFIG["site"], "robot_id": None, "kind": "image",
               "url": f"{base}/feeds/map.svg", "refresh_ms": 500, "proxy": True}]
     cams = isaac_cams()
     if cams:   # real Isaac Sim cameras: fixed views, then one chase camera per robot
