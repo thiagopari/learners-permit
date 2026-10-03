@@ -6,3 +6,11 @@ __pycache__/
 *.pyc
 old/
 config-backups/
+
+# Added when publishing to GitHub: runtime data and secrets stay out of the repo
+isaac/telemetry.jsonl
+**/.env
+**/*.token
+**/.venv/
+**/data/*.db*
+*.log

@@ -1,0 +1,63 @@
+# hack/cell: GR00T N1.7 (Spark profile) + LIBERO client env + tool-service env, for the Dell Pro Max GB10 (arm64).
+# Mirrors Isaac-GR00T's scripts/deployment/spark/Dockerfile, plus the handoff's section 4.8 changes.
+# Build context: the Isaac-GR00T checkout (with the LIBERO submodule and the LFS wheels pulled).
+FROM nvidia/cuda:13.0.0-devel-ubuntu24.04
+
+ENV NVIDIA_DRIVER_CAPABILITIES=all \
+    DEBIAN_FRONTEND=noninteractive \
+    MUJOCO_GL=egl \
+    PYOPENGL_PLATFORM=egl
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      python3 python3-pip python3-venv python3-dev \
+      build-essential yasm cmake ninja-build libtool git pkg-config curl ca-certificates \
+      libass-dev libfreetype6-dev libvorbis-dev \
+      autoconf automake texinfo tmux ffmpeg \
+      libegl1-mesa-dev libglu1-mesa libgl1 libglib2.0-0 \
+ && rm -rf /var/lib/apt/lists/*
+
+COPY . /opt/Isaac-GR00T
+WORKDIR /opt/Isaac-GR00T
+
+# GR00T's Spark install: uv sync into /opt/gr00t-venv, prebuilt aarch64 flash-attn and torchcodec wheels.
+# UV_NO_CACHE keeps uv's download cache out of the image layer. apt-get update first: install_deps.sh
+# probes `apt-cache show libnvpl-lapack0`, and with empty package lists it re-adds the CUDA repo that the
+# base image already has, which apt rejects as a conflicting Signed-By entry.
+ENV DOCKER_CONTAINER=1 \
+    UV_PROJECT_ENVIRONMENT=/opt/gr00t-venv \
+    UV_NO_CACHE=1 \
+    UV_LINK_MODE=copy \
+    PATH="/root/.local/bin:${PATH}"
+RUN apt-get update && bash scripts/deployment/spark/install_deps.sh && rm -rf /var/lib/apt/lists/*
+
+# Make GR00T's environment the default, so plain `python` works (never `uv run` on aarch64)
+ENV VIRTUAL_ENV=/opt/gr00t-venv
+ENV PATH="/opt/gr00t-venv/bin:/root/.local/bin:/usr/local/cuda/bin:${PATH}" \
+    TRITON_PTXAS_PATH=/usr/local/cuda/bin/ptxas \
+    CUDA_HOME=/usr/local/cuda-13.0 \
+    CUDA_PATH=/usr/local/cuda-13.0 \
+    CPATH=/usr/local/cuda-13.0/include \
+    C_INCLUDE_PATH=/usr/local/cuda-13.0/include \
+    CPLUS_INCLUDE_PATH=/usr/local/cuda-13.0/include \
+    LD_LIBRARY_PATH=/opt/gr00t-venv/lib/python3.12/site-packages/torch/lib:/opt/gr00t-venv/lib/python3.12/site-packages/nvidia/cu13/lib:/opt/gr00t-venv/lib/python3.12/site-packages/nvidia/cudss/lib:/opt/gr00t-venv/lib/python3.12/site-packages/nvidia/cudnn/lib
+
+# README: CUDA 13 platforms may need this Triton patch; it is a no-op when already fine
+RUN bash scripts/patch_triton_cuda13.sh || echo "Triton patch not applied (not needed for this Triton version)"
+
+# LIBERO client env (gr00t/eval/sim/LIBERO/libero_uv/.venv). Two changes for a Docker build:
+# .git is excluded from the build context, so skip the submodule command (LIBERO is already checked out),
+# and drop the final env.reset() check, which needs EGL on a real GPU. That check is the smoke test on the box.
+# The patched copy must sit next to the original: the script resolves LIBERO and its venv from its own folder.
+RUN sed -e 's|^git submodule update.*|# & (submodule already in the build context)|' \
+        -e "/^python - <<'PY'\$/,\$d" \
+        gr00t/eval/sim/LIBERO/setup_libero.sh > gr00t/eval/sim/LIBERO/setup_libero_docker.sh \
+ && bash gr00t/eval/sim/LIBERO/setup_libero_docker.sh
+
+# Separate small env for our tool service, so GR00T's pinned env stays untouched
+RUN uv venv /opt/toolsvc --python 3.12 \
+ && uv pip install --python /opt/toolsvc/bin/python fastapi "uvicorn[standard]" requests httpx pyyaml
+
+ENV HF_HOME=/hf \
+    HF_HUB_OFFLINE=1
+ENTRYPOINT []
+CMD ["bash"]

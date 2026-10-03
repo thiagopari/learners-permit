@@ -1,0 +1,1100 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><style>[hidden]{display:none!important}</style>
+<title>ShiftLead Pitch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one 16:9 stage scaled to the window with container-query units, transit-map stops as the progress line.
+   Under 760px wide it reflows into a scrolling document with speaker notes available inline. */
+:root {
+  --bg: #F1F2EE;
+  --bg-outer: #DEE1DC;
+  --surface: #FAFAF8;
+  --ink: #15191E;
+  --ink-2: #4A535D;
+  --ink-3: #7B848D;
+  --rule: #CBD0D1;
+  --amber: #E5A019;
+  --amber-soft: #F6E3B8;
+  --teal: #0B7A75;
+  --teal-soft: #D3EAE8;
+  --ok: #2E7A4C;
+  --warn: #8F5B00;
+  --tape-dark: #1A1E23;
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --font-display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", "DejaVu Sans Condensed", sans-serif;
+  --font-body: "Barlow", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #13171B; --bg-outer: #0B0D10; --surface: #1B2026; --ink: #E7E9E5; --ink-2: #A6AFB7; --ink-3: #737D86; --rule: #2D343B;
+    --amber: #EDB13F; --amber-soft: #3B2F15; --teal: #46B8B0; --teal-soft: #15302F; --ok: #5DBE86; --warn: #EDB13F;
+    --series-1: #3987e5; --series-2: #d95926; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #13171B; --bg-outer: #0B0D10; --surface: #1B2026; --ink: #E7E9E5; --ink-2: #A6AFB7; --ink-3: #737D86; --rule: #2D343B;
+  --amber: #EDB13F; --amber-soft: #3B2F15; --teal: #46B8B0; --teal-soft: #15302F; --ok: #5DBE86; --warn: #EDB13F;
+  --series-1: #3987e5; --series-2: #d95926; color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg-outer); color: var(--ink); font-family: var(--font-body); font-size: 16px; -webkit-font-smoothing: antialiased; }
+h1, h2, h3, p, ul, ol, figure, pre { margin: 0; }
+ul, ol { padding: 0; list-style: none; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---- deck frame ---- */
+.deck { height: 100%; display: flex; flex-direction: column; }
+.viewport { flex: 1 1 auto; min-height: 0; container-type: size; display: grid; place-items: center; }
+.stage {
+  position: relative; width: min(100cqw, calc(100cqh * 16 / 9)); aspect-ratio: 16 / 9;
+  container-type: size; background: var(--bg); overflow: hidden;
+  --t-mega: 8.4cqw; --t-h2: 3.55cqw; --t-h3: 2cqw; --t-lead: 1.8cqw; --t-body: 1.42cqw; --t-small: 1.17cqw; --t-label: .95cqw;
+  --pad-x: 6cqw; --pad-top: 7cqh; --pad-bottom: 11.5cqh; --gap: 2.5cqw;
+}
+.slide { position: absolute; inset: 0; container-type: size; display: none; }
+.slide.is-current { display: block; }
+.inner {
+  position: absolute; inset: 0; padding: var(--pad-top) var(--pad-x) var(--pad-bottom);
+  display: grid; grid-template-rows: auto minmax(0, 1fr); gap: var(--gap); font-size: var(--t-body); line-height: 1.4;
+}
+.notes { display: none; }
+
+/* ---- type ---- */
+.head { display: grid; gap: .9em; align-content: start; }
+.eyebrow { display: flex; align-items: center; gap: .75em; font-family: var(--font-mono); font-size: var(--t-label); font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); }
+.eyebrow::before { content: ""; width: .85em; height: .85em; background: var(--amber); flex: none; }
+h2 { font-family: var(--font-display); font-weight: 600; font-size: var(--t-h2); line-height: 1.04; text-wrap: balance; max-width: 40ch; }
+h3 { font-family: var(--font-display); font-weight: 600; font-size: var(--t-h3); line-height: 1.1; text-wrap: balance; }
+.lead { font-size: var(--t-lead); line-height: 1.32; color: var(--ink-2); max-width: 40ch; }
+.muted { color: var(--ink-2); }
+code { font-family: var(--font-mono); font-size: .92em; }
+
+/* ---- progress line: one stop per main slide ---- */
+.route { position: absolute; left: var(--pad-x); right: var(--pad-x); bottom: 4cqh; display: flex; align-items: center; gap: 1.6cqw;
+  font-family: var(--font-mono); font-size: var(--t-label); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.route .track { flex: 1; height: 2px; background: var(--rule); display: flex; justify-content: space-between; align-items: center; }
+.route i { width: .95cqw; height: .95cqw; border-radius: 50%; background: var(--bg); border: 2px solid var(--ink-3); }
+.route i.done { background: var(--ink-3); }
+.route i.here { background: var(--amber); border-color: var(--amber); transform: scale(1.4); }
+.route-n { font-variant-numeric: tabular-nums; min-width: 4.5em; text-align: right; }
+.stage[data-taped] .route { visibility: hidden; }
+
+/* ---- shared bits ---- */
+.tape { position: absolute; left: 0; right: 0; bottom: 0; height: 3.2cqh;
+  background: repeating-linear-gradient(135deg, var(--amber) 0 1.4cqw, var(--tape-dark) 1.4cqw 2.8cqw); }
+.todo { background: var(--amber-soft); color: var(--ink); padding: 0 .35em; border-radius: .2em; }
+.pill { display: inline-block; font-family: var(--font-mono); font-size: var(--t-label); font-weight: 500; letter-spacing: .06em; text-transform: uppercase;
+  padding: .15em .6em; border-radius: 99em; vertical-align: .12em; margin-left: .45em; }
+.pill.warn { background: var(--amber-soft); color: var(--warn); }
+.pill.people { background: var(--teal-soft); color: var(--teal); }
+.pill.ok { background: color-mix(in srgb, var(--ok) 16%, transparent); color: var(--ok); }
+[data-owner="code"] { --c: var(--ink); }
+[data-owner="supervisor"] { --c: var(--amber); }
+[data-owner="scheduler"] { --c: var(--teal); }
+.owner-key { display: inline-flex; align-items: center; gap: .45em; }
+.owner-key::before { content: ""; width: .8em; height: .8em; border-radius: 50%; background: var(--c); }
+
+/* ---- 1 title ---- */
+.s-title .inner { grid-template-rows: minmax(0, 1fr); grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); align-items: center; column-gap: 5cqw; }
+.title-copy { display: grid; gap: 1.15em; align-content: center; }
+.brand { font-family: var(--font-display); font-weight: 700; font-size: var(--t-mega); line-height: .84; letter-spacing: -.012em; text-transform: uppercase; }
+.tagline { font-family: var(--font-display); font-weight: 500; font-size: calc(var(--t-h2) * .86); line-height: 1.08; text-wrap: balance; }
+.team { font-family: var(--font-mono); font-size: var(--t-small); color: var(--ink-2); }
+.board { background: var(--surface); border: 1px solid var(--rule); border-radius: .5em; padding: 1.3em 1.4em; display: grid; gap: 1em; font-size: var(--t-small); }
+.board-label { font-family: var(--font-mono); font-size: var(--t-label); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); }
+.board-row { display: grid; grid-template-columns: 5.2em minmax(0, 1fr); gap: .25em 1em; padding-top: 1em; border-top: 1px solid var(--rule); }
+.board-row .id { font-family: var(--font-mono); font-weight: 500; }
+.board-row .what { font-weight: 600; }
+.board-row .detail { grid-column: 2; color: var(--ink-2); }
+
+/* ---- 2 problem ---- */
+.s-problem .inner { grid-template-rows: auto minmax(0, 1fr) auto auto; }
+.stat-line { font-size: var(--t-small); color: var(--ink-2); line-height: 1.4; }
+.stat-line b { color: var(--ink); font-weight: 600; }
+.stat-line .src { display: inline-flex; margin-left: .4em; }
+.cols3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--gap); align-content: center; }
+.cols3 > div { border-top: .22em solid var(--ink); padding-top: 1em; display: grid; gap: .55em; align-content: start; }
+.cols3 p { color: var(--ink-2); }
+.kicker { font-size: var(--t-lead); font-weight: 500; line-height: 1.3; }
+.mark { box-shadow: inset 0 -.34em 0 var(--amber-soft); }
+
+/* ---- 3 loop ---- */
+.s-loop .inner { grid-template-rows: auto minmax(0, 1fr) auto; }
+.loop { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); column-gap: 1.6em; align-content: center; }
+.stop { position: relative; display: grid; gap: .5em; align-content: start; padding-top: 2.5em; }
+.stop::before { content: ""; position: absolute; top: 0; left: 0; width: 1.5em; height: 1.5em; border-radius: 50%; background: var(--bg); border: .34em solid var(--c); z-index: 1; }
+.stop:not(:last-child)::after { content: ""; position: absolute; top: .6em; left: 1.5em; right: -1.6em; height: .3em; background: var(--ink-3); }
+.stop h3 { text-transform: uppercase; letter-spacing: .03em; }
+.owner { font-family: var(--font-mono); font-size: var(--t-label); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); display: flex; align-items: center; gap: .5em; }
+.owner::before { content: ""; width: .75em; height: .75em; border-radius: 50%; background: var(--c); }
+.stop p:last-child { color: var(--ink-2); font-size: var(--t-small); line-height: 1.42; }
+.loopback { font-size: var(--t-small); color: var(--ink-2); }
+
+/* ---- 4 demo ---- */
+.s-demo .inner { grid-template-rows: auto minmax(0, 1fr) auto; }
+.beats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.6em var(--gap); align-content: center; }
+.beat { border-top: .22em solid var(--c); padding-top: .85em; display: grid; gap: .4em; align-content: start; }
+.beat .n { font-family: var(--font-mono); font-size: var(--t-small); color: var(--ink-3); }
+.beat p { color: var(--ink-2); font-size: var(--t-small); line-height: 1.42; }
+.demo-foot { display: flex; flex-wrap: wrap; align-items: center; gap: .5em 1.6em; font-size: var(--t-small); color: var(--ink-2); }
+
+/* ---- 5 trust gate ---- */
+.trust { display: grid; grid-template-columns: minmax(0, 1fr) 27cqw; gap: var(--gap); min-height: 0; }
+.chart { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: .7em; min-height: 0; }
+.chart-head { display: grid; gap: .25em; font-size: var(--t-small); }
+.chart-head b { font-size: var(--t-body); font-weight: 600; }
+.chart-head .muted { font-size: var(--t-small); }
+.legend { display: flex; flex-wrap: wrap; gap: .3em 1.6em; color: var(--ink-2); margin-top: .35em; }
+.key { display: inline-flex; align-items: center; gap: .5em; }
+.key i { width: 1.5em; height: 2px; border-radius: 1em; background: var(--k); box-shadow: 0 0 0 .5px var(--k); }
+.plot { position: relative; min-height: 0; }
+.plot svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.c-grid { stroke: var(--rule); stroke-width: 1; }
+.c-tick { fill: var(--ink-3); font-family: var(--font-mono); font-size: 12px; }
+.c-thr { stroke: var(--ink-2); stroke-width: 1.25; }
+.c-thr-label { fill: var(--ink-2); font-family: var(--font-mono); font-size: 12px; }
+.c-line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.c-s1 { stroke: var(--series-1); } .c-s2 { stroke: var(--series-2); }
+.c-dot1 { fill: var(--series-1); stroke: var(--bg); stroke-width: 2; }
+.c-dot2 { fill: var(--series-2); stroke: var(--bg); stroke-width: 2; }
+.c-end { fill: var(--ink); font-family: var(--font-body); font-size: 14px; font-weight: 600; }
+.c-end-sub { fill: var(--ink-2); font-family: var(--font-body); font-size: 13px; }
+.c-note { fill: var(--ink-2); font-family: var(--font-body); font-size: 12.5px; }
+.c-cross { stroke: var(--ink-3); stroke-width: 1; }
+.c-hit { fill: transparent; cursor: crosshair; }
+.tooltip { position: absolute; pointer-events: none; z-index: 2; background: var(--surface); border: 1px solid var(--rule); border-radius: .4em; padding: .55em .75em;
+  font-size: var(--t-small); line-height: 1.45; box-shadow: 0 .35em 1.2em rgb(0 0 0 / .14); white-space: nowrap; }
+.tooltip b { font-weight: 600; }
+.tooltip .key i { width: .9em; }
+.facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.2em; border-top: 1px solid var(--rule); padding-top: .75em; }
+.fact { display: grid; gap: .15em; }
+.fact b { font-family: var(--font-display); font-weight: 600; font-size: var(--t-h3); line-height: 1.05; }
+.fact span { font-size: var(--t-small); color: var(--ink-2); line-height: 1.3; }
+.clips { display: grid; grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 1em; min-height: 0; }
+.clip { display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: .45em; min-height: 0; }
+.clip video { width: 100%; height: 100%; min-height: 0; object-fit: contain; background: var(--tape-dark); border-radius: .35em; display: block; }
+.clip figcaption { display: flex; justify-content: space-between; align-items: baseline; gap: 1em; font-size: var(--t-small); }
+.clip .res { font-family: var(--font-mono); font-weight: 500; }
+
+/* ---- 6 design rule ---- */
+.split { display: grid; grid-template-columns: minmax(0, 1fr) 1cqw minmax(0, 1fr); gap: var(--gap); min-height: 0; }
+.tape-v { background: repeating-linear-gradient(135deg, var(--amber) 0 .9cqw, var(--tape-dark) .9cqw 1.8cqw); border-radius: .15em; }
+.side { display: grid; gap: .3em; align-content: start; }
+.side .sub { font-family: var(--font-mono); font-size: var(--t-label); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.rules { display: grid; gap: .7em; margin-top: .9em; }
+.rules li { display: grid; gap: .05em; padding-left: 1.15em; position: relative; }
+.rules li::before { content: ""; position: absolute; left: 0; top: .52em; width: .45em; height: .45em; background: var(--c); }
+.rules b { font-weight: 600; }
+.rules span { color: var(--ink-2); font-size: var(--t-small); }
+
+/* ---- 7 local ---- */
+.local { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: calc(var(--gap) * 1.4); align-items: center; min-height: 0; }
+.arch { display: grid; gap: .7em; font-size: var(--t-small); }
+.ext { display: flex; align-items: center; gap: .8em; }
+.ext .chip { border: 1px solid var(--rule); background: var(--surface); padding: .45em .8em; border-radius: .4em; font-weight: 600; }
+.ext .muted { font-family: var(--font-mono); font-size: var(--t-label); letter-spacing: .08em; text-transform: uppercase; }
+.box { border: .16em solid var(--ink); border-radius: .5em; padding: .9em; display: grid; gap: .7em; }
+.box-label { font-family: var(--font-mono); font-size: var(--t-label); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); }
+.sandbox { border: 1px dashed var(--ink-3); border-radius: .4em; padding: .7em; display: grid; gap: .5em; }
+.tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6em; }
+.tile { background: var(--surface); border: 1px solid var(--rule); border-radius: .4em; padding: .6em .75em; display: grid; gap: .15em; }
+.tile b { font-weight: 600; }
+.tile span { color: var(--ink-2); line-height: 1.3; }
+.mem { display: grid; gap: .9em; align-content: center; }
+.membar { display: flex; gap: 2px; height: 2em; }
+.membar span { display: block; height: 100%; }
+.membar span:first-child { border-radius: .3em 0 0 .3em; }
+.membar span:last-child { border-radius: 0 .3em .3em 0; }
+.m1 { background: var(--ink); }
+.m2 { background: var(--ink-2); }
+.m3 { background: var(--ink-3); }
+.m4 { background: repeating-linear-gradient(135deg, var(--ink-3) 0 3px, transparent 3px 6px); }
+.m5 { background: transparent; box-shadow: inset 0 0 0 1px var(--rule); }
+.memlist { display: grid; gap: .4em; font-size: var(--t-small); }
+.memlist li { display: grid; grid-template-columns: 1.1em minmax(0, 1fr) auto; gap: .6em; align-items: center; }
+.memlist i { width: 1.1em; height: 1.1em; border-radius: .2em; display: block; }
+.memlist b { font-variant-numeric: tabular-nums; font-weight: 600; }
+.why { font-size: var(--t-body); line-height: 1.4; border-top: 1px solid var(--rule); padding-top: .8em; }
+
+/* ---- 8 any operation ---- */
+.s-any .inner { grid-template-rows: auto minmax(0, 1fr) auto; }
+.table-wrap { min-height: 0; align-self: center; }
+.ops { width: 100%; border-collapse: collapse; font-size: var(--t-small); }
+.ops th { text-align: left; font-family: var(--font-mono); font-size: var(--t-label); font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3);
+  padding: 0 1em .65em 0; border-bottom: .16em solid var(--ink); }
+.ops td { padding: .7em 1em .7em 0; border-bottom: 1px solid var(--rule); vertical-align: top; color: var(--ink-2); line-height: 1.35; }
+.ops td:first-child { font-family: var(--font-display); font-weight: 600; font-size: calc(var(--t-h3) * .82); color: var(--ink); white-space: nowrap; }
+.ops tr.today td { color: var(--ink); }
+.swap { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gap); font-size: var(--t-small); }
+.swap > div { display: grid; gap: .2em; padding: .75em 1em; border-radius: .4em; }
+.swap b { font-family: var(--font-mono); font-size: var(--t-label); letter-spacing: .1em; text-transform: uppercase; font-weight: 500; }
+.swap span { font-size: var(--t-body); }
+.swap .adapter { border: 1px solid var(--rule); }
+.swap .core { background: var(--ink); color: var(--bg); }
+
+/* ---- 9 close ---- */
+.s-close .inner { grid-template-rows: auto minmax(0, 1fr) auto; }
+.close { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 5cqw; align-items: center; }
+.close .tagline { font-size: calc(var(--t-h2) * 1.35); font-weight: 600; line-height: 1.02; }
+.next-wrap, .next { display: grid; gap: .9em; }
+.next-label { font-family: var(--font-mono); font-size: var(--t-label); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
+.next li { padding-left: 1.15em; position: relative; }
+.next li::before { content: ""; position: absolute; left: 0; top: .52em; width: .45em; height: .45em; background: var(--amber); }
+.credits { display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5em 2em; font-family: var(--font-mono); font-size: var(--t-label); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+
+/* ---- business model ---- */
+.tag { font-family: var(--font-mono); font-size: var(--t-label); font-weight: 500; letter-spacing: .06em; text-transform: uppercase;
+  padding: .08em .5em; border-radius: .25em; border: 1px solid currentColor; white-space: nowrap; }
+.tag.cited { color: var(--ink-2); }
+.tag.measured { color: var(--ok); }
+.tag.assumption { color: var(--warn); background: var(--amber-soft); border-color: transparent; }
+.src { font-size: var(--t-label); color: var(--ink-3); display: flex; flex-wrap: wrap; align-items: baseline; gap: .3em .6em; line-height: 1.35; }
+.biz { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: calc(var(--gap) * 1.4); min-height: 0; }
+.biz-blocks { display: grid; gap: 1.1em; align-content: center; }
+.biz-block { display: grid; grid-template-columns: 7em minmax(0, 1fr); gap: .3em 1.2em; padding-top: .9em; border-top: 1px solid var(--rule); }
+.biz-k { font-family: var(--font-mono); font-size: var(--t-label); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); padding-top: .3em; }
+.biz-v { line-height: 1.35; }
+.biz-block .src { grid-column: 2; }
+.hero { background: var(--surface); border: 1px solid var(--rule); border-radius: .5em; padding: 1.4em 1.5em; display: grid; gap: .6em; align-content: center; }
+.hero-n { font-family: var(--font-body); font-weight: 600; font-size: calc(var(--t-mega) * .95); line-height: .95; letter-spacing: -.02em; }
+.hero-cap { font-size: var(--t-lead); line-height: 1.3; }
+
+/* ---- backup tables ---- */
+.s-bt .inner { grid-template-rows: auto minmax(0, 1fr) auto; gap: 1.8cqw; }
+.bt { width: 100%; border-collapse: collapse; font-size: calc(var(--t-small) * .9); line-height: 1.3; }
+.bt th { text-align: left; font-family: var(--font-mono); font-size: var(--t-label); font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3);
+  padding: 0 .9em .55em 0; border-bottom: .16em solid var(--ink); vertical-align: bottom; }
+.bt td { padding: .55em .9em .55em 0; border-bottom: 1px solid var(--rule); vertical-align: top; color: var(--ink-2); }
+.bt td:first-child { color: var(--ink); font-weight: 600; }
+.bt .num { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--ink); }
+.bt td .tag { margin-right: .45em; }
+.bt tr.hl td { color: var(--ink); background: color-mix(in srgb, var(--amber) 10%, transparent); }
+.bt tr.hl td:first-child { padding-left: .5em; }
+.takeaway { font-size: var(--t-body); font-weight: 500; line-height: 1.38; display: flex; flex-wrap: wrap; align-items: baseline; gap: .3em .8em; }
+.takeaway .tk { font-family: var(--font-mono); font-size: var(--t-label); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); font-weight: 500; }
+.np-body a, .notes a { color: inherit; text-decoration: underline; text-underline-offset: .15em; }
+
+/* ---- backup slides ---- */
+.contract { display: grid; grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr); gap: calc(var(--gap) * 1.4); align-items: start; }
+.ticket { font-family: var(--font-mono); font-size: var(--t-small); line-height: 1.6; background: var(--surface); border: 1px solid var(--rule); border-radius: .5em; padding: 1em 1.2em; white-space: pre-wrap; overflow-wrap: anywhere; }
+.ticket .k { color: var(--ink-3); }
+.ticket .c { color: var(--ok); }
+.flow { display: grid; gap: 1.1em; }
+.states { display: flex; flex-wrap: wrap; align-items: center; gap: .45em; font-family: var(--font-mono); font-size: var(--t-small); }
+.state { padding: .3em .65em; border-radius: .35em; border: 1px solid var(--rule); background: var(--surface); }
+.state[data-owner] { border-color: var(--c); }
+.arrow { color: var(--ink-3); }
+.flow-label { font-family: var(--font-mono); font-size: var(--t-label); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.nums { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1fr) minmax(0, 1.3fr); gap: calc(var(--gap) * 1.2); align-items: start; }
+.mini { width: 100%; border-collapse: collapse; font-size: var(--t-small); font-variant-numeric: tabular-nums; }
+.mini caption { text-align: left; font-weight: 600; padding-bottom: .6em; caption-side: top; line-height: 1.3; }
+.mini th { text-align: left; font-family: var(--font-mono); font-size: var(--t-label); font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); padding: 0 .7em .45em 0; border-bottom: .14em solid var(--ink); }
+.mini td { padding: .45em .7em .45em 0; border-bottom: 1px solid var(--rule); color: var(--ink-2); }
+.mini td:first-child { color: var(--ink); }
+.mini tr.hl td { color: var(--ink); font-weight: 600; }
+.mini-note { font-size: var(--t-small); color: var(--ink-2); margin-top: .7em; line-height: 1.35; }
+
+/* ---- controls and speaker notes ---- */
+.controls { flex: none; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: .4rem;
+  padding: .45rem 1rem calc(.45rem + env(safe-area-inset-bottom, 0px)); background: var(--bg-outer); font-family: var(--font-mono); font-size: .78rem; color: var(--ink-2); }
+.controls button { font: inherit; color: var(--ink); background: transparent; border: 1px solid var(--rule); border-radius: .35rem; padding: .3rem .6rem; cursor: pointer; }
+.controls button:hover { background: var(--surface); }
+.controls button:focus-visible, .slide:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.controls button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.counter { min-width: 6.5em; text-align: center; font-variant-numeric: tabular-nums; }
+.controls .sep { width: 1px; height: 1.2rem; background: var(--rule); margin: 0 .3rem; }
+.notes-panel { flex: none; max-height: 36vh; overflow: auto; background: var(--surface); border-top: 1px solid var(--rule);
+  padding: .9rem 1.25rem; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .5rem 2rem; }
+.np-head { display: flex; flex-wrap: wrap; gap: .3rem 1rem; align-items: baseline; font-family: var(--font-mono); font-size: .8rem; color: var(--ink-3); text-transform: uppercase; letter-spacing: .08em; }
+.np-head b { color: var(--ink); }
+.np-body { grid-column: 1; font-size: 1rem; line-height: 1.5; max-width: 85ch; }
+.np-body > * + * { margin-top: .55em; }
+.np-body ol { list-style: none; display: grid; gap: .35em; }
+.np-body code { background: var(--bg); padding: .05em .3em; border-radius: .2em; font-size: .85em; overflow-wrap: anywhere; }
+.np-clock { grid-column: 2; grid-row: 1 / span 2; text-align: right; font-family: var(--font-mono); }
+.np-clock b { display: block; font-size: 1.6rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+.np-clock span { font-size: .75rem; color: var(--ink-3); }
+.np-clock.over b { color: var(--warn); }
+:fullscreen .controls, :fullscreen .notes-panel { display: none; }
+
+/* ---- overview (O key): every slide as a thumbnail ---- */
+.overview.deck { height: auto; }
+.overview .viewport { container-type: normal; display: block; }
+.overview .stage { width: auto; aspect-ratio: auto; container-type: normal; overflow: visible; background: transparent;
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding: 16px; }
+.overview .slide { display: block; position: relative; inset: auto; aspect-ratio: 16 / 9; background: var(--bg); cursor: pointer; outline: 1px solid var(--rule); }
+.overview .slide.is-current { outline: 3px solid var(--amber); }
+.overview .route { display: none; }
+
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+
+/* ---- narrow screens: a scrolling document ---- */
+@media (max-width: 760px) {
+  html, body { height: auto; }
+  body { background: var(--bg); }
+  .deck, .overview.deck { height: auto; display: block; }
+  .viewport { container-type: normal; display: block; }
+  .stage, .overview .stage { width: auto; aspect-ratio: auto; container-type: normal; overflow: visible; background: transparent; display: block; padding: 0;
+    --t-mega: 3.5rem; --t-h2: 1.65rem; --t-h3: 1.14rem; --t-lead: 1.1rem; --t-body: 1rem; --t-small: .9rem; --t-label: .7rem;
+    --pad-x: 16px; --pad-top: 2.25rem; --pad-bottom: 2.25rem; --gap: 1.25rem; }
+  .slide, .overview .slide { display: block; position: relative; inset: auto; aspect-ratio: auto; container-type: normal; outline: none; cursor: auto; border-bottom: 1px solid var(--rule); }
+  .inner { position: static; grid-template-rows: none; }
+  .route { display: none; }
+  .tape { position: static; height: 14px; }
+  .s-title .inner, .cols3, .loop, .beats, .trust, .split, .local, .close, .contract, .nums, .swap, .facts, .tiles, .biz, .biz-block { grid-template-columns: minmax(0, 1fr); }
+  .biz-block .src { grid-column: auto; }
+  .bt { min-width: 36rem; }
+  .s-title .inner, .s-problem .inner, .s-loop .inner, .s-demo .inner, .s-any .inner, .s-close .inner, .s-bt .inner { grid-template-rows: none; }
+  .stop { padding-top: 0; padding-left: 2.4em; padding-bottom: 1.1em; }
+  .stop:not(:last-child)::after { top: 1.5em; left: .6em; right: auto; width: .3em; height: auto; bottom: 0; }
+  .tape-v { height: 12px; }
+  .chart, .clips, .clip { grid-template-rows: none; }
+  .plot svg { height: auto; }
+  .clip video { height: auto; aspect-ratio: 512 / 294; }
+  .table-wrap { overflow-x: auto; }
+  .ops { min-width: 34rem; }
+  .controls { position: sticky; bottom: 0; border-top: 1px solid var(--rule); }
+  .controls .wide-only { display: none; }
+  .notes-panel { display: none !important; }
+  .show-notes .slide .notes { display: block; margin: 0 16px 2rem; padding: .9rem 1rem; background: var(--surface); border: 1px solid var(--rule); border-radius: .5rem; font-size: .95rem; line-height: 1.5; }
+  .show-notes .slide .notes > * + * { margin-top: .5em; }
+  .show-notes .slide .notes code { overflow-wrap: anywhere; font-size: .85em; }
+}
+</style>
+
+<div class="deck" id="deck">
+  <div class="viewport">
+    <main class="stage" id="stage" aria-roledescription="slide deck">
+
+      <!-- 1 -->
+      <section class="slide s-title" data-label="Title" data-time="0:00 – 0:15" aria-label="Title">
+        <div class="inner">
+          <div class="title-copy">
+            <p class="eyebrow">Dell Pro Max with GB10 Hackathon · Boston · Oct 3, 2026</p>
+            <h1 class="brand" data-name>ShiftLead</h1>
+            <p class="tagline">Finds the problem. Finds the person. Gets them there.</p>
+            <p class="lead">An always-on operations supervisor that lives in your team’s chat and runs entirely on one box. First deployment: a 20-robot warehouse.</p>
+            <p class="team">Team · <span class="todo">add names</span></p>
+          </div>
+          <div class="board">
+            <p class="board-label">From today’s run on the box</p>
+            <div class="board-row"><span class="id">E-0002</span><span class="what">Robot 7 stuck<span class="pill warn">warning</span></span><span class="detail">No movement for 4 s mid-carry, zone 0</span></div>
+            <div class="board-row"><span class="id">T-1</span><span class="what">Ticket to the Scheduler<span class="pill people">high</span></span><span class="detail">“Robot 7 stuck; reroute its job”</span></div>
+            <div class="board-row"><span class="id">C-3</span><span class="what">Drawer skill commissioned<span class="pill ok">gate open</span></span><span class="detail">15 of 15 trials, 97% sure it succeeds at least 80% of the time</span></div>
+          </div>
+        </div>
+        <div class="tape" aria-hidden="true"></div>
+        <aside class="notes">
+          <p><b>Before anyone speaks:</b> the teammate on Discord posts “@bot commission the drawer skill”. The run takes about 3 minutes, so the result lands near the end of the demo.</p>
+          <p>“We’re [team]. Every operation has the same unglamorous job: notice what broke, decide who should fix it, and get them there in time. ShiftLead does that job, entirely on this Dell Pro Max with GB10.”</p>
+        </aside>
+      </section>
+
+      <!-- 2 -->
+      <section class="slide s-problem" data-label="The problem" data-time="0:15 – 0:35" aria-label="The problem">
+        <div class="inner">
+          <header class="head">
+            <p class="eyebrow">The problem</p>
+            <h2>Every operation has things that break, and people who have to get there.</h2>
+          </header>
+          <div class="cols3">
+            <div><h3>Problems surface late</h3><p>Alarms sit on a dashboard nobody is watching. By the time someone looks, the order is already late.</p></div>
+            <div><h3>The handoff is manual</h3><p>Robot tools flag the incident and ping a chat channel. A person still decides who goes and checks the fix.</p></div>
+            <div><h3>New things go live on faith</h3><p>A new robot skill, route or process gets switched on after a few good runs instead of real evidence.</p></div>
+          </div>
+          <p class="stat-line"><b>81 minutes</b> on average to get production running again after a stoppage, up from 49 five years earlier.<span class="src"><span class="tag cited">Cited</span>Siemens, True Cost of Downtime 2024, large factories</span></p>
+          <p class="kicker"><span data-name>ShiftLead</span> takes that whole loop off the dispatcher’s plate, <span class="mark">without sending anything to a cloud model.</span></p>
+        </div>
+        <aside class="notes">
+          <p>“Today the robot’s own tools flag the problem and ping a chat channel. Then a dispatcher with four windows open, the alarm, the ticket queue, the calendar and a maps app, decides who goes. And recovery keeps getting slower: Siemens puts it at 81 minutes, up from 49.”</p><p>Don’t say nobody does travel-aware dispatch: Microsoft, Salesforce and ServiceNow do. Source: <a href="https://assets.new.siemens.com/siemens/assets/api/uuid:1b43afb5-2d07-47f7-9eb7-893fe7d0bc59/TCOD-2024_original.pdf" target="_blank" rel="noopener">Siemens 2024, p.11</a>.</p>
+        </aside>
+      </section>
+
+      <!-- 3 -->
+      <section class="slide s-loop" data-label="How it works" data-time="0:35 – 1:00" aria-label="How it works">
+        <div class="inner">
+          <header class="head">
+            <p class="eyebrow">How it works</p>
+            <h2>One loop, running all shift.</h2>
+          </header>
+          <ol class="loop">
+            <li class="stop" data-owner="code"><h3>Detect</h3><p class="owner">Code</p><p>Nine detectors read telemetry from all 20 robots, 8 times a second.</p></li>
+            <li class="stop" data-owner="supervisor"><h3>Decide</h3><p class="owner">Supervisor agent</p><p>Log it, reschedule it, or ticket it with evidence. Urgency comes from the orders at risk.</p></li>
+            <li class="stop" data-owner="scheduler"><h3>Dispatch</h3><p class="owner">Scheduler agent</p><p>Picks the right person, based on where they are and how long it takes them to get there.</p></li>
+            <li class="stop" data-owner="code"><h3>Verify</h3><p class="owner">Code</p><p>Anything new has to pass the trust gate before it touches real work.</p></li>
+            <li class="stop" data-owner="supervisor"><h3>Report</h3><p class="owner">Supervisor agent</p><p>Answers in Discord and posts the shift brief, inventory summary and action plan.</p></li>
+          </ol>
+          <p class="loopback">↻ Every ticket, answer and trial is logged, and the next pass starts from it.</p>
+        </div>
+        <aside class="notes">
+          <p>“It’s one loop. Code detects, with nine detectors over live telemetry eight times a second. The Supervisor agent decides what each problem needs and opens a ticket with evidence. The Scheduler agent picks the right person, given where they are and their commute. Anything new must pass a statistical trust gate. Everything reports back in Discord.”</p>
+          <p>Two agents with one ticket contract between them. Backup slide B1 covers it if asked.</p>
+        </aside>
+      </section>
+
+      <!-- 4 -->
+      <section class="slide s-demo" data-label="Live demo" data-time="1:00 – 3:10" aria-label="Live demo">
+        <div class="inner">
+          <header class="head">
+            <p class="eyebrow">Live demo</p>
+            <h2>A shift at the warehouse, live in Discord.</h2>
+          </header>
+          <ol class="beats">
+            <li class="beat" data-owner="supervisor"><span class="n">01</span><h3>Commission the new drawer skill</h3><p>Requested at the start of the pitch. Real GR00T trials have been running in the background since.</p></li>
+            <li class="beat" data-owner="supervisor"><span class="n">02</span><h3>Robot 7 stalls mid-carry</h3><p>Flagged in seconds. The Supervisor checks which orders are at risk and opens a ticket.</p></li>
+            <li class="beat" data-owner="scheduler"><span class="n">03</span><h3>The Scheduler sends a person</h3><p>Picks who goes, with their travel time and an ETA.</p></li>
+            <li class="beat" data-owner="supervisor"><span class="n">04</span><h3>Stock goes missing in zone 3</h3><p>The ticket carries bin-level counts attached by code, not typed by the model.</p></li>
+            <li class="beat" data-owner="supervisor"><span class="n">05</span><h3>“Why did robot 7 stop?”</h3><p>Answered from the robot’s own timeline of tasks, stops and errors.</p></li>
+            <li class="beat" data-owner="code"><span class="n">06</span><h3>The gate decides</h3><p>The new skill is proven or stays blocked. Then the shift recap and action plan.</p></li>
+          </ol>
+          <p class="demo-foot"><span class="owner-key" data-owner="supervisor">Supervisor agent</span><span class="owner-key" data-owner="scheduler">Scheduler agent</span><span class="owner-key" data-owner="code">Code</span><span>Everything runs on this box: the model, both agents, the robot policies and the physics sim.</span></p>
+        </div>
+        <aside class="notes">
+          <p><b>Roles:</b> A runs the presenter controls on the box. B types in Discord. Put Discord and the fleet dashboard side by side.</p>
+          <ol>
+            <li><b>1:00</b> Show Discord. Commissioning batches are already posting.</li>
+            <li><b>1:05</b> A: <code>curl -s -X POST localhost:8090/demo/inject -H 'Content-Type: application/json' -d '{"robot": 7, "fault": "stuck"}'</code> “Robot 7 just stalled mid-carry.”</li>
+            <li><b>~1:15</b> The Supervisor posts the event, the order at risk and the ticket. If nothing appears within 20 s, B asks “@bot anything need attention?”</li>
+            <li><b>1:35</b> The Scheduler picks up the ticket and posts who is going and their ETA.</li>
+            <li><b>2:00</b> A: <code>curl -s -X POST localhost:8090/demo/shrink -H 'Content-Type: application/json' -d '{"zone": 3, "units": 6}'</code> Mismatch ticket with bin counts.</li>
+            <li><b>2:25</b> B: “@bot why did robot 7 stop?”</li>
+            <li><b>2:45</b> B: “@bot recap the shift and give us the action plan.”</li>
+            <li><b>~3:00</b> The commissioning result lands. Pass: “the gate opens.” Fail or inconclusive: “that’s the gate doing its job, no evidence, no deployment.”</li>
+            <li><b>3:10</b> Back to the slides.</li>
+            <li><b>After:</b> A: <code>curl -s -X POST localhost:8090/demo/clear</code></li>
+          </ol>
+          <p><b>If the bot is silent for 20 s or anything breaks:</b> play the backup recording from the same beat and keep talking.</p>
+        </aside>
+      </section>
+
+      <!-- 5 -->
+      <section class="slide s-trust" data-label="The trust gate" data-time="3:10 – 3:35" aria-label="The trust gate">
+        <div class="inner">
+          <header class="head">
+            <p class="eyebrow">The trust gate</p>
+            <h2>Nothing new goes live until the evidence says so.</h2>
+          </header>
+          <div class="trust">
+            <figure class="chart">
+              <figcaption class="chart-head">
+                <b>Confidence that each policy succeeds at least 80% of the time</b>
+                <span class="muted">Run C-3 on this box: open the drawer, GR00T N1.7 policies in the LIBERO simulator</span>
+                <span class="legend">
+                  <span class="key" style="--k: var(--series-1)"><i></i>Candidate policy (libero_goal)</span>
+                  <span class="key" style="--k: var(--series-2)"><i></i>Current policy (libero_10)</span>
+                </span>
+              </figcaption>
+              <div class="plot" id="gatePlot">
+                <svg id="gateSvg" viewBox="0 0 640 250" preserveAspectRatio="xMidYMid meet" role="img"
+                     aria-label="Line chart. The candidate policy's confidence rises from 20% to 97% over 20 trials and crosses the 95% gate. The current policy falls to under 1% after failing 5 of 5."></svg>
+                <div class="tooltip" id="gateTip" hidden></div>
+              </div>
+              <div class="facts">
+                <p class="fact"><b>20 trials, 3 minutes</b><span>for the whole run, on this box</span></p>
+                <p class="fact"><b>95% sure of ≥ 80%</b><span>the only result that opens the gate</span></p>
+                <p class="fact"><b>0 of 5, then dropped</b><span>trials stop going to the losing policy</span></p>
+              </div>
+            </figure>
+            <div class="clips">
+              <figure class="clip">
+                <video src="clips/current-policy-fail.mp4" muted loop playsinline preload="auto" aria-label="Current policy failing to open the drawer"></video>
+                <figcaption><span>Current policy</span><span class="res">0 of 5</span></figcaption>
+              </figure>
+              <figure class="clip">
+                <video src="clips/candidate-policy-pass.mp4" muted loop playsinline preload="auto" aria-label="Candidate policy opening the drawer"></video>
+                <figcaption><span>Candidate policy</span><span class="res">15 of 15</span></figcaption>
+              </figure>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">
+          <p>“Same robot arm, same drawer task, two candidate policies. The current one failed 5 of 5 and the candidate went 15 for 15. The bandit stops spending trials on the loser, and the gate only opens when it’s 95% sure the success rate is at least 80%.”</p>
+          <p>If asked: 13 straight successes is the shortest run that opens it, and 9 of 10 is only 68%. In 3,000 simulated runs, a 95% policy passes 89% of the time in about 24 trials, a 75% policy just under the bar gets through 3.6% of the time, and a 40% policy never did. Don’t claim it “never” opens wrongly. Backup slide B2 has the tables.</p>
+        </aside>
+      </section>
+
+      <!-- 6 -->
+      <section class="slide s-rule" data-label="Code enforces" data-time="3:35 – 3:50" aria-label="The design rule">
+        <div class="inner">
+          <header class="head">
+            <p class="eyebrow">The design rule</p>
+            <h2>Code enforces. The model explains.</h2>
+          </header>
+          <div class="split">
+            <div class="side" data-owner="code">
+              <h3>Decided in code</h3>
+              <p class="sub">The model reads these and can’t override them</p>
+              <ul class="rules">
+                <li><b>Thresholds</b><span>Battery under 15%, motor over 80 °C, stopped over 2 s</span></li>
+                <li><b>Problem identity</b><span>One ID per problem, one live ticket per problem</span></li>
+                <li><b>Deadline risk</b><span>Projected finish against due time for every open order</span></li>
+                <li><b>Ticket states</b><span>Illegal transitions are rejected</span></li>
+                <li><b>Trust</b><span>The gate opens only at 95% confidence of at least 80% success</span></li>
+                <li><b>Reach</b><span>The agent’s sandbox can call its tools and nothing else</span></li>
+              </ul>
+            </div>
+            <div class="tape-v" aria-hidden="true"></div>
+            <div class="side" data-owner="supervisor">
+              <h3>Decided by the model</h3>
+              <p class="sub">Judgment and language</p>
+              <ul class="rules">
+                <li><b>What matters now</b><span>Which problems to act on, and which are one systemic issue</span></li>
+                <li><b>Where it goes</b><span>Log it, hand it to the Scheduler, or escalate to a person</span></li>
+                <li><b>How urgent</b><span>Priority and deadline, taken from the orders actually at risk</span></li>
+                <li><b>What to say</b><span>Plain-language answers, briefs and recaps for the team</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">
+          <p>“The design rule: code enforces, the model explains. Thresholds, detection, deadline risk, ticket states and the trust gate are all code, and the agent’s sandbox can only reach its own tools. The model does the judgment and the writing.” If asked: when the agent tries the presenter controls, it gets a 403.</p>
+        </aside>
+      </section>
+
+      <!-- 7 -->
+      <section class="slide s-local" data-label="100% local" data-time="3:50 – 4:10" aria-label="100% local">
+        <div class="inner">
+          <header class="head">
+            <p class="eyebrow">100% local</p>
+            <h2>The whole operation runs on one box.</h2>
+          </header>
+          <div class="local">
+            <div class="arch">
+              <div class="ext"><span class="chip">Discord · the team’s channel</span><span class="muted">chat messages only</span></div>
+              <div class="box">
+                <p class="box-label">Dell Pro Max with GB10 · 128 GB unified memory</p>
+                <div class="sandbox">
+                  <p class="box-label">OpenShell sandbox · NemoClaw</p>
+                  <div class="tile"><b>OpenClaw agents: Supervisor and Scheduler</b><span>Network allow-list: their own tools and the local model, nothing else</span></div>
+                </div>
+                <div class="tiles">
+                  <div class="tile"><b>Qwen3.6-35B-A3B</b><span>NVFP4 on vLLM, about 62 tokens/s</span></div>
+                  <div class="tile"><b>Tool service</b><span>Detectors, tickets, trust gate</span></div>
+                  <div class="tile"><b>GR00T N1.7 × 2</b><span>Robot policies and LIBERO physics</span></div>
+                  <div class="tile"><b>Warehouse sim</b><span>20 robots, 7 zones, live dashboard</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="mem">
+              <h3>Memory on the box, approximate</h3>
+              <div class="membar" role="img" aria-label="Of 128 GB: LLM 57 GB, robot policies 20 GB, system 11 GB, trials 8 GB, about 32 GB headroom">
+                <span class="m1" style="flex: 0 0 calc(57 / 128 * 100% - 2px)"></span>
+                <span class="m2" style="flex: 0 0 calc(20 / 128 * 100% - 2px)"></span>
+                <span class="m3" style="flex: 0 0 calc(11 / 128 * 100% - 2px)"></span>
+                <span class="m4" style="flex: 0 0 calc(8 / 128 * 100% - 2px)"></span>
+                <span class="m5" style="flex: 1 1 auto"></span>
+              </div>
+              <ul class="memlist">
+                <li><i class="m1"></i><span>LLM weights and cache</span><b>57 GB</b></li>
+                <li><i class="m2"></i><span>Two GR00T robot policies</span><b>20 GB</b></li>
+                <li><i class="m3"></i><span>System, sim, tool service, agents</span><b>11 GB</b></li>
+                <li><i class="m4"></i><span>Physics trials while commissioning</span><b>8 GB</b></li>
+                <li><i class="m5"></i><span>Headroom</span><b>~32 GB</b></li>
+              </ul>
+              <p class="why">Every model call, the telemetry, the robot footage and where your people are stay on the box. Only chat messages go out to Discord.</p>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">
+          <p>“All of it runs on this one box: Qwen3.6 on vLLM at about 62 tokens a second, two GR00T robot policies and two simulators, in 128 GB of unified memory with headroom. Operations data, robot footage and where your people are never go to a cloud model.”</p>
+        </aside>
+      </section>
+
+      <!-- 7b -->
+      <section class="slide s-biz" data-label="Business model" data-time="4:10 – 4:30" aria-label="Business model">
+        <div class="inner">
+          <header class="head">
+            <p class="eyebrow">Business model</p>
+            <h2>One box and one subscription per site</h2>
+          </header>
+          <div class="biz">
+            <div class="biz-blocks">
+              <div class="biz-block"><p class="biz-k">Who pays</p><p class="biz-v">Robot companies’ field service teams, who pay for every trip and uptime promise.</p><p class="src"><span class="tag cited">Cited</span>Locus job posting · Symbotic 10-K</p></div>
+              <div class="biz-block"><p class="biz-k">Price</p><p class="biz-v">$1,000 per site per month: the core, one industry pack, unlimited people.</p><p class="src"><span class="tag assumption">Assumption</span>our proposed price</p></div>
+              <div class="biz-block"><p class="biz-k">Runs on</p><p class="biz-v">One Dell Pro Max with GB10 per site, bought through standard Dell channels.</p><p class="src"><span class="tag cited">Cited</span>$6.2k–$9k list price, dell.com, Oct 3</p></div>
+            </div>
+            <div class="hero">
+              <p class="biz-k">Break-even</p>
+              <p class="hero-n">8 min</p>
+              <p class="hero-cap">of avoided site downtime a month pays for the subscription and the box.</p>
+              <p class="src"><span class="tag assumption">Assumption</span>$10k per downtime hour (Honeywell Intelligrated: an average DC “can be more than $10k per hour”), box spread over 3 years.</p>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">
+          <p>“<span data-name>ShiftLead</span> is priced per site: a thousand dollars a month, running on a GB10 the customer buys through standard Dell channels. First buyers: robot companies’ field service teams. At about ten thousand dollars per downtime hour, eight saved minutes a month pays for both.”</p>
+          <p><b>Optional Boston line:</b> “…robot companies’ field service teams, several a short drive from here.” Never say “our customers”, and say they “have hired” field technicians, not “are hiring”.</p>
+          <p><b>Break-even:</b> ($1,000 + $9,007 ÷ 36 months) ÷ ($10,000 ÷ 60) = $1,250 ÷ $167 per minute = 7.5 min, rounded up to 8. With the cheapest config ($6,177) it’s 7.0 min. Counting only idle labor ($2,353 an hour, a Honeywell case), break-even is 30–32 min a month. $10k an hour is a whole-site figure, which is why the slide says site downtime, not robot downtime.</p>
+          <p><b>Price anchors:</b> about 24% of a dispatcher’s median wage ($50,340 a year, BLS). 2.5–5.7% of renting a 20-robot fleet (Sacra estimates). Below Dynamics 365 Field Service for a 12-person team, about $1,560 a month before Azure and integration. Salesforce’s telemetry add-on alone lists at $15,000 per org per month. 36-month term per site; the subscription is software only.</p>
+          <p><b>Sources:</b> <a href="https://builtin.com/job/director-field-services/7976188" target="_blank" rel="noopener">Locus posting</a> · <a href="https://www.sec.gov/Archives/edgar/data/1837240/000183724025000278/sym-20250927.htm" target="_blank" rel="noopener">Symbotic 10-K</a> · <a href="https://www.dell.com/en-us/shop/desktop-computers/spd/dellpromaxwithgb10fcm1253" target="_blank" rel="noopener">Dell store</a> · <a href="https://automation.honeywell.com/us/en/products/warehouse-automation/solutions-by-strategy/connected-distribution-center/increase-reliability" target="_blank" rel="noopener">Honeywell Intelligrated</a> · <a href="https://www.bls.gov/oes/2025/may/oes435032.htm" target="_blank" rel="noopener">BLS dispatchers</a> · <a href="https://sacra.com/c/locus-robotics" target="_blank" rel="noopener">Sacra on Locus</a> · <a href="https://www.microsoft.com/en-us/dynamics-365/products/field-service/pricing" target="_blank" rel="noopener">Microsoft pricing</a> · <a href="https://www.salesforce.com/service/field-service-management/pricing/" target="_blank" rel="noopener">Salesforce pricing</a></p>
+        </aside>
+      </section>
+
+      <!-- 8 -->
+      <section class="slide s-any" data-label="Any operation" data-time="4:30 – 4:50" aria-label="Beyond the warehouse">
+        <div class="inner">
+          <header class="head">
+            <p class="eyebrow">Beyond the warehouse</p>
+            <h2>Swap the adapter. Keep the core.</h2>
+          </header>
+          <div class="table-wrap">
+            <table class="ops">
+              <thead><tr><th>Operation</th><th>Code flags</th><th>Who gets sent</th><th>Proven before it goes live</th></tr></thead>
+              <tbody>
+                <tr class="today"><td>Warehouse<span class="pill warn">today</span></td><td>Stuck robot, overheating motor, missing stock</td><td>The floor tech who can get there first</td><td>A new robot skill or route</td></tr>
+                <tr><td>Facilities</td><td>HVAC alarm, elevator fault, door left open</td><td>The nearest qualified technician</td><td>A new contractor or repair procedure</td></tr>
+                <tr><td>Hospital</td><td>Infusion pump fault, supply room running low</td><td>The biomed tech or charge nurse on shift</td><td>A new device or protocol</td></tr>
+                <tr><td>Retail</td><td>Stockout, late delivery, freezer warming up</td><td>The store or district manager</td><td>A new supplier or store layout</td></tr>
+                <tr><td>Utilities</td><td>Outage, sensor fault on a line</td><td>The field crew with the shortest drive</td><td>A new switching plan or crew</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="swap">
+            <div class="adapter"><b>Adapter, per operation</b><span>Telemetry feed · detectors · what a trial is</span></div>
+            <div class="core"><b>Core, unchanged</b><span>Events · tickets · people and travel routing · trust gate · briefs</span></div>
+          </div>
+        </div>
+        <aside class="notes">
+          <p>“The warehouse is our first deployment, not the product. Swap the adapter: the telemetry feed, the detectors and what counts as a trial. Keep the core: events, tickets, people and travel routing, the trust gate and the briefs. Facilities, hospitals, retail and utilities run the same loop.”</p><p>If asked: the US has 71,800 medical equipment repairers and only 11% work for hospitals (<a href="https://www.bls.gov/oes/" target="_blank" rel="noopener">BLS 49-9062, 2025</a>). Since January 2026, EPA requires grocery refrigerant leaks to be repaired within 30 days, with verification tests. Both figures are single-checked.</p>
+        </aside>
+      </section>
+
+      <!-- 9 -->
+      <section class="slide s-close" data-label="Close" data-time="4:50 – 5:00" aria-label="Close">
+        <div class="inner">
+          <header class="head"><p class="eyebrow"><span data-name>ShiftLead</span></p></header>
+          <div class="close">
+            <p class="tagline">Finds the problem. Finds the person. Gets them there.</p>
+            <div class="next-wrap">
+              <p class="next-label">What’s next</p>
+              <ul class="next">
+                <li>A second adapter: facilities work orders</li>
+                <li>Live calendars and transit feeds for the Scheduler</li>
+                <li>Robot failures logged as training data for the next policy, on the same box</li>
+              </ul>
+            </div>
+          </div>
+          <div class="credits"><span>Team · <span class="todo">add names</span></span><span>Dell Pro Max with GB10 · NemoClaw · OpenClaw · OpenShell · Qwen3.6 · GR00T N1.7</span></div>
+        </div>
+        <div class="tape" aria-hidden="true"></div>
+        <aside class="notes">
+          <p>“<span data-name>ShiftLead</span> finds the problem, finds the person and gets them there. Thank you.” Then Q&amp;A. Backups after this slide: B1 ticket contract, B2 gate numbers, B3 market, B4 competition, B5 why local.</p><p><b>“Salesforce and Microsoft already do this.”</b> They’re our benchmark for dispatch. With them, robot alarm to work order is a cloud integration project, and Salesforce’s telemetry add-on alone lists at $15k per org per month. We ship the loop ready-made on one box. After a fix the Supervisor re-checks the robot’s live data, and nothing new goes live until the trust gate opens. If they already have a field service tool, we push our tickets into it. (B4)</p><p><b>“Hosted Qwen is cheaper. Why a box?”</b> Per token, yes: about $0.5k–$2.3k a year for a typical site. But then worker locations and plant data leave the site, which Connecticut and California rules, the EU AI Act and CISA’s OT guidance push against. The same box also runs the robot policies. (B5)</p><p><b>“Locus already uses Salesforce Service Cloud.”</b> Good, then we feed it: robot alarm to a ticket with evidence and a proposed person, pushed into Service Cloud. We’re the part between the robot and the field service tool.</p><p><b>“Who pays for the box?”</b> The customer buys it through standard Dell channels. Our subscription is software only, on a 3-year term that matches the box’s life.</p><p><b>“Is $10k per hour real?”</b> It’s Honeywell Intelligrated’s figure: downtime at an average distribution center “can be more than $10k per hour”. Counting only idle labor, break-even is about 30 minutes of avoided downtime a month.</p><p><b>“What if the internet goes down?”</b> Detection, tickets and the trust gate keep running on the box. Only the chat channel needs the internet.</p><p><b>“How does this grow beyond robots?”</b> Industry packs on the same core. Hospitals first: 71,800 US medical equipment repairers, a third employed by equipment sellers who travel between sites. Then grocery refrigeration, where EPA has required leak repairs within 30 days since January 2026.</p><p><b>Never claim</b> a ticket can’t close without evidence (it can; the Supervisor re-checks afterwards), or that nobody else does travel-aware dispatch.</p>
+        </aside>
+      </section>
+
+      <!-- B1 -->
+      <section class="slide backup s-contract" data-label="Backup: the ticket contract" data-time="Q&amp;A" aria-label="Backup: the ticket contract">
+        <div class="inner">
+          <header class="head">
+            <p class="eyebrow">Backup · How the agents coordinate</p>
+            <h2>Two agents, one ticket between them.</h2>
+          </header>
+          <div class="contract">
+<pre class="ticket"><span class="k">POST /tickets</span>
+{
+  <span class="k">"event_id":</span>   "E-0002",
+  <span class="k">"event_type":</span> "stuck",
+  <span class="k">"robot_id":</span>   7,
+  <span class="k">"reason":</span>     "Robot 7 stuck; reroute its job",
+  <span class="k">"priority":</span>   "high",
+  <span class="k">"needed_by":</span>  "12:30",
+  <span class="k">"evidence":</span>   <span class="c">attached by code: the event's facts
+                and the open orders in its zone</span>
+}
+<span class="k">→ 201</span>  T-1 open · webhook wakes the Scheduler</pre>
+            <div class="flow">
+              <p class="flow-label">Main path</p>
+              <div class="states"><span class="state" data-owner="supervisor">open</span><span class="arrow">→</span><span class="state" data-owner="scheduler">acknowledged</span><span class="arrow">→</span><span class="state" data-owner="scheduler">rescheduled</span><span class="arrow">→</span><span class="state" data-owner="supervisor">resolved</span></div>
+              <p class="flow-label">When it doesn’t work out</p>
+              <div class="states"><span class="state">failed</span><span class="arrow">→</span><span class="state" data-owner="supervisor">escalated</span><span class="arrow">→</span><span class="state">a person takes it</span></div>
+              <ul class="rules">
+                <li data-owner="scheduler"><b>Scheduler</b><span>Acknowledges, reschedules, sets who is going and their ETA</span></li>
+                <li data-owner="supervisor"><b>Supervisor</b><span>Opens tickets, resolves them, or escalates to a person</span></li>
+                <li data-owner="code"><b>Code</b><span>Rejects illegal state changes, keeps one live ticket per problem, logs every change with who made it, and wakes the other agent</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">
+          <p>For “how do the agents talk to each other?”: tickets over HTTP on the tool service. Every change wakes the other agent through a webhook, and code rejects illegal state changes.</p>
+        </aside>
+      </section>
+
+      <!-- B2 -->
+      <section class="slide backup s-nums" data-label="Backup: gate numbers" data-time="Q&amp;A" aria-label="Backup: the numbers behind the gate">
+        <div class="inner">
+          <header class="head">
+            <p class="eyebrow">Backup · The numbers behind the gate</p>
+            <h2>Strict on purpose, and checked in simulation.</h2>
+          </header>
+          <div class="nums">
+            <div>
+              <table class="mini">
+                <caption>A perfect streak has to be long</caption>
+                <thead><tr><th>Result</th><th>Confidence</th></tr></thead>
+                <tbody>
+                  <tr><td>9 of 10</td><td>68%</td></tr>
+                  <tr><td>10 of 10</td><td>91%</td></tr>
+                  <tr class="hl"><td>13 of 13</td><td>96%, opens</td></tr>
+                  <tr><td>19 of 20</td><td>94%</td></tr>
+                  <tr><td>45 of 50</td><td>96%, opens</td></tr>
+                </tbody>
+              </table>
+              <p class="mini-note">Confidence that the true success rate is at least 80%. 13 of 13 is the shortest perfect run that opens the gate.</p>
+            </div>
+            <div>
+              <table class="mini">
+                <caption>3,000 simulated runs per row</caption>
+                <thead><tr><th>Candidate’s true rate</th><th>Gate opened</th><th>Avg trials</th></tr></thead>
+                <tbody>
+                  <tr><td>95%</td><td>89%</td><td>24</td></tr>
+                  <tr><td>85%</td><td>25%</td><td>33</td></tr>
+                  <tr class="hl"><td>75%</td><td>3.6%</td><td>29</td></tr>
+                  <tr><td>70%</td><td>0.8%</td><td>25</td></tr>
+                  <tr><td>40%</td><td>0%</td><td>8</td></tr>
+                </tbody>
+              </table>
+              <p class="mini-note">Current policy at 5%, batches of 4, capped at 40 trials. Near the bar the gate errs toward staying closed.</p>
+            </div>
+            <div>
+              <table class="mini" id="c3table">
+                <caption>Run C-3 on the box (the chart)</caption>
+                <thead><tr><th>Batch</th><th>Elapsed</th><th>Candidate</th><th>Current</th><th>Confidence</th></tr></thead>
+                <tbody>
+                  <tr><td>1</td><td>1:19</td><td>0 of 0</td><td>0 of 4</td><td>20%</td></tr>
+                  <tr><td>2</td><td>1:47</td><td>3 of 3</td><td>0 of 5</td><td>59%</td></tr>
+                  <tr><td>3</td><td>2:13</td><td>7 of 7</td><td>0 of 5</td><td>83%</td></tr>
+                  <tr><td>4</td><td>2:35</td><td>11 of 11</td><td>0 of 5</td><td>93%</td></tr>
+                  <tr class="hl"><td>5</td><td>2:56</td><td>15 of 15</td><td>0 of 5</td><td>97%, opens</td></tr>
+                </tbody>
+              </table>
+              <p class="mini-note">Confidence shown for the candidate. The first batch is slow because failed episodes run to the 720-step limit.</p>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">
+          <p>For “how do you know the gate is safe?”: walk through the middle table. A 75% policy, just under the bar, still gets through 3.6% of the time, so say “rarely”, never “never”.</p>
+        </aside>
+      </section>
+
+      <!-- B3 -->
+      <section class="slide backup s-bt" data-label="Backup: market" data-time="Q&amp;A" aria-label="Backup: market">
+        <div class="inner">
+          <header class="head">
+            <p class="eyebrow">Backup · Market</p>
+            <h2>Robot fleets first, then any physical operation</h2>
+          </header>
+          <div class="table-wrap">
+            <table class="bt">
+              <thead><tr><th>Layer</th><th>Count</th><th>At $1,000 per site per month</th><th>Source</th></tr></thead>
+              <tbody>
+                <tr><td>Logistics robots sold worldwide, 2024</td><td class="num">102,900 (+14%)</td><td>—</td><td><span class="tag cited">Cited</span>IFR, Oct 2025</td></tr>
+                <tr><td>US warehouses</td><td class="num">23,848</td><td>—</td><td><span class="tag cited">Cited</span>BLS QCEW, Q1 2026, private, preliminary</td></tr>
+                <tr class="hl"><td>First market: US warehouses running robot fleets</td><td class="num">about 4,770 (20% assumed)</td><td class="num">about $57M a year</td><td><span class="tag assumption">Assumption</span></td></tr>
+                <tr><td>Next pack: US hospitals</td><td class="num">6,100</td><td class="num">about $73M a year</td><td><span class="tag cited">Cited</span>AHA 2026 · revenue is an assumption</td></tr>
+                <tr><td>Every physical operation: US maintenance and repair workers</td><td class="num">6.09M</td><td>—</td><td><span class="tag cited">Cited</span>BLS OEWS, May 2025</td></tr>
+                <tr><td>Field service software spend</td><td class="num">$4.7B (2024) → $9.2B (2030)</td><td>—</td><td><span class="tag cited">Cited</span>Verdantix</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="takeaway"><span class="tk">Takeaway</span><span>Three-year goal: 2–5% of robot-fleet sites, which is 95–239 sites and $1.1M–$2.9M a year.</span><span class="tag assumption">Assumption</span></p>
+        </div>
+        <aside class="notes">
+          <p><b>Calcs:</b> 23,848 × 20% = 4,770 sites, × $12,000 a year = $57M. 6,100 × $12,000 = $73M. 2–5% of 4,770 = 95–239 sites = $1.1M–$2.9M a year.</p>
+          <p><b>The 20% share is unsourced:</b> no published share of US warehouses running robot fleets was found, so it’s labeled an assumption (sensitivity range 10–30%). QCEW misses distribution centers run by wholesalers and retailers, so the site count is a floor. Report summaries put field service software at $11.8B–$24.3B by 2030; we use only Verdantix.</p>
+          <p><b>Momentum:</b> ServiceTitan IPO (Dec 2024); MaintainX raised $150M at a $2.5B valuation (Jul 2025); Samsara at $2.125B ARR, up 30%.</p>
+          <p><b>Sources:</b> <a href="https://ifr.org/ifr-press-releases/news/service-robots-see-global-growth-boom" target="_blank" rel="noopener">IFR</a> · <a href="https://data.bls.gov/timeseries/ENUUS000205493" target="_blank" rel="noopener">BLS QCEW</a> · <a href="https://www.aha.org/statistics/fast-facts-us-hospitals" target="_blank" rel="noopener">AHA Fast Facts</a> · <a href="https://www.bls.gov/oes/2025/may/oes490000.htm" target="_blank" rel="noopener">BLS OEWS</a> · <a href="https://www.verdantix.com/venture/report/market-size-and-forecast--field-service-management-software-2024-2030-global" target="_blank" rel="noopener">Verdantix</a></p>
+        </aside>
+      </section>
+
+      <!-- B4 -->
+      <section class="slide backup s-bt" data-label="Backup: competition" data-time="Q&amp;A" aria-label="Backup: competition">
+        <div class="inner">
+          <header class="head">
+            <p class="eyebrow">Backup · Competition</p>
+            <h2>Others dispatch. We close the loop on site.</h2>
+          </header>
+          <div class="table-wrap">
+            <table class="bt">
+              <thead><tr><th>Product</th><th>Covers</th><th>Gap for this job</th><th>List price</th></tr></thead>
+              <tbody>
+                <tr><td>Salesforce Field Service</td><td>Skills- and traffic-aware scheduling; telemetry add-on</td><td>Cloud integration project; no evidence-based fix check found</td><td>$175–$650 per user/mo; Connected Assets $15,000 per org/mo</td></tr>
+                <tr><td>Microsoft Dynamics 365 Field Service</td><td>IoT alarm → work order → travel-optimized dispatch</td><td>Cloud only (on-premises retired 2022); integration project</td><td>$105 per user/mo + $30 per optimized resource/mo</td></tr>
+                <tr><td>ServiceNow, incl. Private Stack</td><td>Skills and location dispatch; self-hosted option (2026)</td><td>A whole-platform program</td><td>Not public</td></tr>
+                <tr><td>InOrbit, Formant (robot ops)</td><td>Detect robot incidents</td><td>Notify Slack or PagerDuty; no who-goes or travel time</td><td>Not public</td></tr>
+                <tr><td>PagerDuty</td><td>Alert routing, AI agents</td><td>Routes by on-call schedule, not location</td><td>$21 per user/mo, annual</td></tr>
+                <tr class="hl"><td><span data-name>ShiftLead</span></td><td>Robot alarm → ticket with code-attached evidence → right person + ETA → re-check after the fix; trust gate for anything new</td><td>One industry pack so far; the fix re-check is done by the agent, not yet a hard gate</td><td>$1,000 per site/mo <span class="tag assumption">Assumption</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="takeaway"><span class="tk">Takeaway</span><span>Travel-aware dispatch already exists. What we add is the ready-made loop from robot alarm to a checked fix, with a trust gate for anything new, running on one box.</span></p>
+        </div>
+        <aside class="notes">
+          <p><b>Don’t say “nobody does travel-aware dispatch.”</b> Microsoft, Salesforce and ServiceNow all match on skills and location and estimate travel time.</p>
+          <p><b>On the fix check, say “we haven’t seen it”, not “nobody does it”.</b> None of the products reviewed accepts a fix based on post-fix evidence; they close when the technician marks the job done.</p>
+          <p><b>Be exact about our own fix check.</b> A ticket can be resolved without evidence. When the Scheduler or a person resolves one, the Supervisor is woken to re-check the robot or zone in live data. The hard, code-enforced gate is the trust gate for new skills and routes.</p>
+          <p><b>On-site AI isn’t unique:</b> ServiceNow Private Stack and Siemens Industrial Copilot run on site too. Our point is the whole loop, ready-made on one box, without an IT program. If a judge says InOrbit or Formant will add dispatch: they expose webhooks, so we can sit behind them as the part that decides who goes and checks the fix.</p>
+          <p><b>Sources:</b> <a href="https://www.salesforce.com/service/field-service-management/pricing/" target="_blank" rel="noopener">Salesforce pricing</a> · <a href="https://www.salesforce.com/service/field-service-management/field-service-route-optimization/" target="_blank" rel="noopener">Salesforce routing</a> · <a href="https://www.salesforce.com/service/field-service-management/asset-management/" target="_blank" rel="noopener">Connected Assets</a> · <a href="https://www.microsoft.com/en-us/dynamics-365/products/field-service/pricing" target="_blank" rel="noopener">Microsoft pricing</a> · <a href="https://learn.microsoft.com/en-us/dynamics365/field-service/connected-field-service-architecture" target="_blank" rel="noopener">Connected Field Service</a> · <a href="https://www.microsoft.com/en-us/dynamics-365/blog/?p=129624" target="_blank" rel="noopener">on-premises retirement</a> · <a href="https://www.servicenow.com/community/product-launch-blogs/private-stack-deploy-the-full-servicenow-ai-platform-on-your/ba-p/3524144" target="_blank" rel="noopener">ServiceNow Private Stack</a> · <a href="https://press.siemens.com/global/en/pressrelease/siemens-drives-ai-adoption-industrial-operations-x-and-nvidia-accelerated-industrial" target="_blank" rel="noopener">Siemens Industrial Copilot</a> · <a href="https://developer.inorbit.ai/docs" target="_blank" rel="noopener">InOrbit</a> · <a href="https://docs.formant.io/docs/incident-management" target="_blank" rel="noopener">Formant</a> · <a href="https://support.pagerduty.com/docs/escalation-policy-vs-schedule" target="_blank" rel="noopener">PagerDuty schedules</a> · <a href="https://www.pagerduty.com/pricing/" target="_blank" rel="noopener">PagerDuty pricing</a></p>
+        </aside>
+      </section>
+
+      <!-- B5 -->
+      <section class="slide backup s-bt" data-label="Backup: why local" data-time="Q&amp;A" aria-label="Backup: why local">
+        <div class="inner">
+          <header class="head">
+            <p class="eyebrow">Backup · Why local</p>
+            <h2>Local, because the data has to stay on site</h2>
+          </header>
+          <div class="table-wrap">
+            <table class="bt">
+              <thead><tr><th>Reason</th><th>Evidence</th><th>Source</th></tr></thead>
+              <tbody>
+                <tr><td>Where workers are is regulated</td><td>Connecticut §31-48d requires written notice of monitoring; California treats precise geolocation as sensitive; under the EU AI Act, AI that monitors and evaluates workers is high-risk</td><td><span class="tag cited">Cited</span></td></tr>
+                <tr><td>Plant networks stay offline</td><td>CISA, May 2025: “Remove OT connections to the public internet.”</td><td><span class="tag cited">Cited</span></td></tr>
+                <tr><td>Internet down ≠ operations down</td><td>Detection, tickets and the trust gate run on the box; only chat messages go out through Discord</td><td>Design</td></tr>
+                <tr><td>One box covers a site</td><td>Busiest 10 minutes today: 9.8 model calls a minute, none queued, about 13× a typical site’s average</td><td><span class="tag measured">Measured</span><span class="tag assumption">Assumption</span>typical site</td></tr>
+                <tr><td>Cost against frontier APIs</td><td>A typical site’s load costs $7k–$9k a year on mid-tier frontier APIs, against $2.2k–$3.4k a year for the box over 3 years</td><td><span class="tag cited">Cited</span>prices · calc</td></tr>
+                <tr><td>Honest footnote</td><td>Hosted copies of our open model cost less, $0.5k–$2.3k a year, but the data leaves the site</td><td><span class="tag cited">Cited</span>prices · calc</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="takeaway"><span class="tk">Takeaway</span><span>We run locally because the data must stay on site. Against frontier APIs, the box also pays for itself in about 8–16 months.</span></p>
+        </div>
+        <aside class="notes">
+          <p><b>Typical site, projected from today’s measurements:</b> 1,065 model calls a day (100 handled events, briefs and chat), 32.3M prompt tokens a day with 83% cache hits (measured hit rate), 0.55M output tokens a day.</p>
+          <p><b>Measured on this box, 12:09–14:43 ET:</b> 249 model calls, about 30K prompt tokens and 514 output tokens per call, about 9 calls per agent wake-up. Busiest 10 minutes: 9.8 calls a minute, up to 4 at once, nothing queued. Live agent calls had a median of 6.75 s and a p95 of 49 s; 3.4 s is a short tool-calling turn.</p>
+          <p><b>Cloud cost per year for that load:</b> Claude Sonnet 5.5 $7,957 ($8,957 with cache-write premiums); gpt-6.1-sol $6,979–$7,979; Gemini 3.1 Pro Preview $8,357 before cache storage; hosted Qwen3.6-35B-A3B $485–$2,308 (OpenRouter endpoints; DeepInfra about $1,369).</p>
+          <p><b>Box cost per year:</b> $6,177–$9,007 over 3 years, plus $165–$360 a year in power (140–280 W around the clock at the US commercial average). That’s an upper bound: the GPU measured 58–60 W under agent load today. Payback against frontier APIs: 8–16 months. Don’t compare with NVIDIA’s $4,699 DGX Spark directly.</p>
+          <p><b>Fine print:</b> Connecticut’s penalties are maximums ($500 / $1,000 / $3,000). EU AI Act high-risk obligations were postponed to 2 Dec 2027 (law-firm summary, not checked on EUR-Lex). Running locally doesn’t remove notice duties; we present the trust gate and audit trail as compliance features.</p>
+          <p><b>Sources:</b> <a href="https://www.cga.ct.gov/current/pub/chap_557.htm" target="_blank" rel="noopener">Connecticut statute</a> · <a href="https://cppa.ca.gov/faq.html" target="_blank" rel="noopener">CPPA FAQ</a> · <a href="https://artificialintelligenceact.eu/annex/3/" target="_blank" rel="noopener">EU AI Act Annex III</a> · <a href="https://www.cisa.gov/resources-tools/resources/primary-mitigations-reduce-cyber-threats-operational-technology" target="_blank" rel="noopener">CISA</a> · <a href="https://platform.claude.com/docs/en/about-claude/pricing" target="_blank" rel="noopener">Anthropic pricing</a> · <a href="https://developers.openai.com/api/docs/pricing" target="_blank" rel="noopener">OpenAI pricing</a> · <a href="https://ai.google.dev/gemini-api/docs/pricing" target="_blank" rel="noopener">Gemini pricing</a> · <a href="https://openrouter.ai/api/v1/models/qwen/qwen3.6-35b-a3b/endpoints" target="_blank" rel="noopener">OpenRouter</a> · <a href="https://deepinfra.com/Qwen/Qwen3.6-35B-A3B" target="_blank" rel="noopener">DeepInfra</a> · <a href="https://www.eia.gov/electricity/monthly/epm_table_grapher.php?t=epmt_5_3" target="_blank" rel="noopener">EIA</a> · measurements in ~/hack/business/research/F-local-measurements.md</p>
+        </aside>
+      </section>
+
+    </main>
+  </div>
+
+  <div class="notes-panel" id="notesPanel" hidden>
+    <p class="np-head"><b id="npTitle"></b><span id="npTime"></span></p>
+    <div class="np-body" id="npBody"></div>
+    <p class="np-clock" id="npClock"><b id="npElapsed">0:00</b><span>of 5:00 · R resets</span></p>
+  </div>
+
+  <nav class="controls" aria-label="Slide controls">
+    <button type="button" id="prevBtn" aria-label="Previous slide">←</button>
+    <span class="counter" id="counter" aria-live="polite">01 / 09</span>
+    <button type="button" id="nextBtn" aria-label="Next slide">→</button>
+    <span class="sep wide-only"></span>
+    <button type="button" id="notesBtn" aria-pressed="false">Notes · N</button>
+    <button type="button" id="overviewBtn" class="wide-only" aria-pressed="false">All slides · O</button>
+    <button type="button" id="themeBtn">Light / dark · D</button>
+    <button type="button" id="fsBtn" class="wide-only">Full screen · F</button>
+  </nav>
+</div>
+
+<script>
+(() => {
+  const NAME = "ShiftLead"; // the product name used across the deck: change it here
+  for (const el of document.querySelectorAll("[data-name]")) el.textContent = NAME;
+
+  const deck = document.getElementById("deck");
+  const stage = document.getElementById("stage");
+  const slides = Array.from(stage.querySelectorAll(".slide"));
+  const mainCount = slides.filter(s => !s.classList.contains("backup")).length;
+  const narrow = window.matchMedia("(max-width: 760px)");
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const $ = id => document.getElementById(id);
+  const panel = $("notesPanel"), counter = $("counter");
+  let cur = 0, startedAt = null;
+
+  // Progress line: one stop per main slide.
+  const route = document.createElement("div");
+  route.className = "route";
+  route.setAttribute("aria-hidden", "true");
+  route.innerHTML = `<span>${NAME}</span><span class="track">${"<i></i>".repeat(mainCount)}</span><span class="route-n"></span>`;
+  stage.appendChild(route);
+  const stops = route.querySelectorAll(".track i");
+  const routeN = route.querySelector(".route-n");
+
+  const pad = n => String(n).padStart(2, "0");
+  const label = k => slides[k].classList.contains("backup") ? `Backup B${k - mainCount + 1}` : `${pad(k + 1)} / ${pad(mainCount)}`;
+  const overviewOn = () => deck.classList.contains("overview");
+
+  function show(k, scroll) {
+    cur = Math.max(0, Math.min(slides.length - 1, k));
+    const single = !narrow.matches && !overviewOn();
+    slides.forEach((s, j) => {
+      s.classList.toggle("is-current", j === cur);
+      if (single && j !== cur) s.setAttribute("aria-hidden", "true"); else s.removeAttribute("aria-hidden");
+    });
+    stops.forEach((d, j) => { d.classList.toggle("done", j < cur); d.classList.toggle("here", j === cur); });
+    if (slides[cur].querySelector(".tape")) stage.setAttribute("data-taped", ""); else stage.removeAttribute("data-taped");
+    routeN.textContent = counter.textContent = label(cur);
+    const s = slides[cur], notes = s.querySelector(".notes");
+    $("npTitle").textContent = s.dataset.label || "";
+    $("npTime").textContent = s.dataset.time || "";
+    $("npBody").innerHTML = notes ? notes.innerHTML : "";
+    try { history.replaceState(null, "", "#s" + (cur + 1)); } catch (e) {}
+    if (cur > 0 && startedAt === null) startedAt = Date.now();
+    syncVideos();
+    if (scroll && narrow.matches) s.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+  }
+
+  function syncVideos() {
+    for (const v of stage.querySelectorAll("video")) {
+      const visible = narrow.matches || (!overviewOn() && slides[cur].contains(v));
+      if (visible && !reduceMotion) v.play().catch(() => {}); else v.pause();
+    }
+  }
+  if (reduceMotion) for (const v of stage.querySelectorAll("video")) v.controls = true;
+
+  function toggleNotes() {
+    const on = narrow.matches ? !document.body.classList.contains("show-notes") : panel.hidden;
+    document.body.classList.toggle("show-notes", on);
+    panel.hidden = narrow.matches ? true : !on;
+    $("notesBtn").setAttribute("aria-pressed", String(on));
+  }
+  function toggleOverview(force) {
+    if (narrow.matches) return;
+    const on = typeof force === "boolean" ? force : !overviewOn();
+    deck.classList.toggle("overview", on);
+    $("overviewBtn").setAttribute("aria-pressed", String(on));
+    slides.forEach(s => on ? s.setAttribute("tabindex", "0") : s.removeAttribute("tabindex"));
+    show(cur);
+    if (on) slides[cur].scrollIntoView({ block: "center" });
+  }
+  function toggleTheme() {
+    const root = document.documentElement;
+    const dark = root.dataset.theme ? root.dataset.theme === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    root.dataset.theme = dark ? "light" : "dark";
+  }
+  function toggleFullscreen() {
+    try {
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+      else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
+    } catch (e) {}
+  }
+
+  $("prevBtn").addEventListener("click", () => show(cur - 1, true));
+  $("nextBtn").addEventListener("click", () => show(cur + 1, true));
+  $("notesBtn").addEventListener("click", toggleNotes);
+  $("overviewBtn").addEventListener("click", () => toggleOverview());
+  $("themeBtn").addEventListener("click", toggleTheme);
+  $("fsBtn").addEventListener("click", toggleFullscreen);
+  slides.forEach((s, j) => {
+    s.addEventListener("click", () => { if (overviewOn()) { toggleOverview(false); show(j); } });
+    s.addEventListener("keydown", e => { if (overviewOn() && e.key === "Enter") { e.preventDefault(); toggleOverview(false); show(j); } });
+  });
+
+  document.addEventListener("keydown", e => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const k = e.key;
+    if ((k === "Enter" || k === " ") && e.target.closest("button, .slide[tabindex]")) return;
+    if (k === "ArrowRight" || k === "PageDown" || (k === " " && !e.shiftKey)) { e.preventDefault(); show(cur + 1, true); }
+    else if (k === "ArrowLeft" || k === "PageUp" || (k === " " && e.shiftKey)) { e.preventDefault(); show(cur - 1, true); }
+    else if (k === "Home") { e.preventDefault(); show(0, true); }
+    else if (k === "End") { e.preventDefault(); show(mainCount - 1, true); }
+    else if (k === "n" || k === "N") toggleNotes();
+    else if (k === "o" || k === "O") toggleOverview();
+    else if (k === "d" || k === "D") toggleTheme();
+    else if (k === "f" || k === "F") toggleFullscreen();
+    else if (k === "r" || k === "R") startedAt = cur > 0 ? Date.now() : null;
+    else if (k === "Escape" && overviewOn()) toggleOverview(false);
+  });
+
+  setInterval(() => {
+    const s = startedAt === null ? 0 : Math.floor((Date.now() - startedAt) / 1000);
+    $("npElapsed").textContent = `${Math.floor(s / 60)}:${pad(s % 60)}`;
+    $("npClock").classList.toggle("over", s > 300);
+  }, 500);
+
+  narrow.addEventListener("change", () => { if (narrow.matches) toggleOverview(false); show(cur); });
+
+  // ---- trust gate chart: run C-3, drawn to scale ----
+  function pAtLeast(s, f, thr = 0.8) {           // P(rate >= thr) under Beta(1+s, 1+f)
+    const n = s + f + 1; let p = 0, c = 1;
+    for (let k = 0; k <= s; k++) { if (k > 0) c = c * (n - k + 1) / k; p += c * thr ** k * (1 - thr) ** (n - k); }
+    return p;
+  }
+  const run = [ // cumulative successes/trials per policy after each batch of run C-3
+    { trials: 0,  at: "start", cand: [0, 0],   cur: [0, 0] },
+    { trials: 4,  at: "1:19",  cand: [0, 0],   cur: [0, 4] },
+    { trials: 8,  at: "1:47",  cand: [3, 3],   cur: [0, 5] },
+    { trials: 12, at: "2:13",  cand: [7, 7],   cur: [0, 5] },
+    { trials: 16, at: "2:35",  cand: [11, 11], cur: [0, 5] },
+    { trials: 20, at: "2:56",  cand: [15, 15], cur: [0, 5] },
+  ].map(r => ({ ...r, p1: pAtLeast(r.cand[0], r.cand[1] - r.cand[0]), p2: pAtLeast(r.cur[0], r.cur[1] - r.cur[0]) }));
+  const pct = p => p < 0.01 ? "<1%" : Math.round(p * 100) + "%";
+
+  const svg = $("gateSvg"), tip = $("gateTip"), plot = $("gatePlot");
+  const W = 640, H = 250, m = { l: 40, r: 150, t: 12, b: 30 };
+  const x = t => m.l + (t / 20) * (W - m.l - m.r);
+  const y = p => m.t + (1 - p) * (H - m.t - m.b);
+  const NS = "http://www.w3.org/2000/svg";
+  const el = (name, attrs, text) => {
+    const n = document.createElementNS(NS, name);
+    for (const [a, v] of Object.entries(attrs)) n.setAttribute(a, v);
+    if (text != null) n.textContent = text;
+    svg.appendChild(n); return n;
+  };
+  for (const p of [0, 0.25, 0.5, 0.75, 1]) {
+    el("line", { class: "c-grid", x1: m.l, x2: W - m.r, y1: y(p), y2: y(p) });
+    el("text", { class: "c-tick", x: m.l - 8, y: y(p) + 3.5, "text-anchor": "end" }, Math.round(p * 100) + "%");
+  }
+  for (const t of [0, 4, 8, 12, 16, 20]) el("text", { class: "c-tick", x: x(t), y: H - m.b + 16, "text-anchor": "middle" }, t);
+  el("text", { class: "c-tick", x: W - m.r, y: H - 2, "text-anchor": "end" }, "trials run");
+  el("line", { class: "c-thr", x1: m.l, x2: W - m.r, y1: y(0.95), y2: y(0.95) });
+  el("text", { class: "c-thr-label", x: m.l + 6, y: y(0.95) - 6 }, "Gate opens at 95%");
+  const path = key => run.map((r, i) => `${i ? "L" : "M"}${x(r.trials).toFixed(1)},${y(r[key]).toFixed(1)}`).join("");
+  el("path", { class: "c-line c-s2", d: path("p2") });
+  el("path", { class: "c-line c-s1", d: path("p1") });
+  el("text", { class: "c-note", x: x(8) + 6, y: y(0) - 8 }, "No more trials after 0 of 5");
+  const last = run[run.length - 1];
+  el("circle", { class: "c-dot2", cx: x(20), cy: y(last.p2), r: 4.5 });
+  el("circle", { class: "c-dot1", cx: x(20), cy: y(last.p1), r: 4.5 });
+  el("text", { class: "c-end", x: x(20) + 12, y: y(last.p1) + 1 }, "Candidate");
+  el("text", { class: "c-end-sub", x: x(20) + 12, y: y(last.p1) + 16 }, `15 of 15 · ${pct(last.p1)}`);
+  el("text", { class: "c-end", x: x(20) + 12, y: y(last.p2) - 12 }, "Current");
+  el("text", { class: "c-end-sub", x: x(20) + 12, y: y(last.p2) + 3 }, `0 of 5 · ${pct(last.p2)}`);
+
+  // Hover: crosshair and tooltip at the nearest batch.
+  const cross = el("line", { class: "c-cross", y1: m.t, y2: H - m.b, visibility: "hidden" });
+  const h1 = el("circle", { class: "c-dot1", r: 4.5, visibility: "hidden" });
+  const h2 = el("circle", { class: "c-dot2", r: 4.5, visibility: "hidden" });
+  const hit = el("rect", { class: "c-hit", x: m.l - 10, y: m.t, width: W - m.l - m.r + 20, height: H - m.t - m.b });
+  function hover(evt) {
+    const box = svg.getBoundingClientRect();
+    const scale = Math.min(box.width / W, box.height / H);
+    const offX = (box.width - W * scale) / 2, offY = (box.height - H * scale) / 2;
+    const vx = (evt.clientX - box.left - offX) / scale;
+    const r = run.reduce((a, b) => Math.abs(x(b.trials) - vx) < Math.abs(x(a.trials) - vx) ? b : a);
+    for (const [node, attrs] of [[cross, { x1: x(r.trials), x2: x(r.trials) }], [h1, { cx: x(r.trials), cy: y(r.p1) }], [h2, { cx: x(r.trials), cy: y(r.p2) }]]) {
+      for (const [a, v] of Object.entries(attrs)) node.setAttribute(a, v);
+      node.setAttribute("visibility", "visible");
+    }
+    tip.innerHTML = `<b>After ${r.trials} trials</b>${r.trials ? ` · ${r.at}` : ""}<br>` +
+      `<span class="key" style="--k: var(--series-1)"><i></i>Candidate ${r.cand[0]} of ${r.cand[1]} · ${pct(r.p1)}</span><br>` +
+      `<span class="key" style="--k: var(--series-2)"><i></i>Current ${r.cur[0]} of ${r.cur[1]} · ${pct(r.p2)}</span>`;
+    tip.hidden = false;
+    const pb = plot.getBoundingClientRect();
+    const px = box.left - pb.left + offX + x(r.trials) * scale, py = box.top - pb.top + offY + y(Math.max(r.p1, r.p2)) * scale;
+    const left = px + 14 + tip.offsetWidth > pb.width ? px - 14 - tip.offsetWidth : px + 14;
+    tip.style.left = Math.max(0, left) + "px";
+    tip.style.top = Math.max(0, Math.min(py - 10, pb.height - tip.offsetHeight)) + "px";
+  }
+  hit.addEventListener("pointermove", hover);
+  hit.addEventListener("pointerleave", () => { tip.hidden = true; for (const n of [cross, h1, h2]) n.setAttribute("visibility", "hidden"); });
+
+  // Start from the hash: #s4 opens slide 4, #overview opens the thumbnail grid.
+  const m4 = /^#s(\d+)$/.exec(location.hash);
+  show(m4 ? parseInt(m4[1], 10) - 1 : 0);
+  if (location.hash === "#overview") toggleOverview(true);
+})();
+</script>
+
+</html>

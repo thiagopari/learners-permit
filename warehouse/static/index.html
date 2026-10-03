@@ -1,0 +1,135 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FleetOps — Warehouse</title>
+<style>
+:root{--bg:#0a0e14;--panel:#111824;--line:#1e2a3a;--txt:#e6edf3;--dim:#7d8da3;
+--accent:#38bdf8;--ok:#34d399;--warn:#fbbf24;--crit:#f87171;--carry:#a78bfa;--charge:#22d3ee;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font:14px/1.4 ui-monospace,"SF Mono",Menlo,monospace;overflow:hidden}
+#app{display:grid;grid-template-columns:1fr 320px;height:100vh}
+#stage{position:relative;background:
+ radial-gradient(1200px 600px at 30% -10%,#122033 0%,transparent 60%),var(--bg)}
+canvas{display:block;width:100%;height:100%}
+#hdr{position:absolute;top:0;left:0;right:0;display:flex;gap:24px;align-items:center;
+ padding:14px 20px;background:linear-gradient(#0a0e14ee,#0a0e1400);z-index:2}
+#hdr h1{font-size:15px;letter-spacing:.14em;font-weight:600}
+#hdr h1 b{color:var(--accent)}
+.kpi{display:flex;flex-direction:column;line-height:1.1}
+.kpi span{font-size:10px;color:var(--dim);letter-spacing:.1em;text-transform:uppercase}
+.kpi b{font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
+#side{background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden}
+.sec{padding:14px 16px;border-bottom:1px solid var(--line)}
+.sec h2{font-size:10px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase;margin-bottom:10px}
+#events{flex:1;overflow-y:auto}
+.ev{display:flex;gap:8px;align-items:center;padding:7px 9px;margin-bottom:6px;border-radius:7px;
+ background:#0d1420;border-left:3px solid var(--dim);font-size:12px;animation:in .3s ease}
+.ev.critical{border-color:var(--crit)}.ev.warning{border-color:var(--warn)}
+.ev .d{color:var(--dim);margin-left:auto;font-size:10px}
+@keyframes in{from{opacity:0;transform:translateX(8px)}to{opacity:1}}
+.zbar{height:6px;border-radius:3px;background:#0d1420;overflow:hidden;margin-top:4px}
+.zbar i{display:block;height:100%;background:linear-gradient(90deg,var(--crit),var(--warn),var(--ok))}
+.zrow{font-size:11px;margin-bottom:8px}.zrow .n{color:var(--dim)}
+#comm{font-size:12px}
+#comm .row{display:flex;justify-content:space-between;padding:3px 0;font-variant-numeric:tabular-nums}
+#comm .v{color:var(--accent)}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:600}
+.pill.pass{background:#052e22;color:var(--ok)}.pill.run{background:#0b2438;color:var(--accent)}
+button{background:#12243a;color:var(--txt);border:1px solid var(--line);border-radius:7px;
+ padding:7px 12px;font:inherit;font-size:12px;cursor:pointer;transition:.15s}
+button:hover{border-color:var(--accent);background:#152a44}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+</style></head><body>
+<div id="app">
+ <div id="stage">
+  <div id="hdr">
+   <h1>FLEET<b>OPS</b> · WAREHOUSE</h1>
+   <div class="kpi"><span>Robots</span><b id="k-bots">—</b></div>
+   <div class="kpi"><span>Picks</span><b id="k-picks">—</b></div>
+   <div class="kpi"><span>Throughput</span><b id="k-tp">—</b></div>
+   <div class="kpi"><span>Alerts</span><b id="k-alerts" style="color:var(--warn)">—</b></div>
+   <div class="kpi"><span>Tick</span><b id="k-tick">—</b></div>
+  </div>
+  <canvas id="c"></canvas>
+ </div>
+ <div id="side">
+  <div class="sec"><h2>Live Events — Supervisor feed</h2></div>
+  <div id="events" class="sec" style="border:0"></div>
+  <div class="sec"><h2>Zone stock</h2><div id="zones"></div></div>
+  <div class="sec"><h2>Commissioning gate</h2>
+    <div id="comm"><div class="row"><span>status</span><span class="pill run" id="c-st">idle</span></div></div>
+    <div class="btns" style="margin-top:10px">
+     <button onclick="commission()">Run commission</button>
+     <button onclick="inject()">Inject fault</button>
+     <button onclick="clearf()">Clear</button>
+    </div>
+  </div>
+ </div>
+</div>
+<script>
+const C=document.getElementById('c'),X=C.getContext('2d');
+let L=null,T=null,DPR=Math.min(2,devicePixelRatio||1),trails={};
+function resize(){const s=C.parentElement.getBoundingClientRect();C.width=s.width*DPR;C.height=s.height*DPR;}
+addEventListener('resize',resize);resize();
+const COL={pick:'#38bdf8',carry:'#a78bfa',charge:'#22d3ee',idle:'#64748b'};
+async function layout(){L=await (await fetch('/api/layout')).json();}
+async function poll(){try{T=await (await fetch('/api/telemetry')).json();ui();}catch(e){}}
+function cell(){const pad=40;const w=(C.width-pad*2)/L.w,h=(C.height-pad*2)/L.h;return{s:Math.min(w,h),pad};}
+function draw(){
+ if(!L||!T){requestAnimationFrame(draw);return;}
+ const {s,pad}=cell();X.clearRect(0,0,C.width,C.height);
+ // floor grid
+ X.strokeStyle='#0f1824';X.lineWidth=1;
+ for(let x=0;x<=L.w;x++){X.beginPath();X.moveTo(pad+x*s,pad);X.lineTo(pad+x*s,pad+L.h*s);X.stroke();}
+ for(let y=0;y<=L.h;y++){X.beginPath();X.moveTo(pad,pad+y*s);X.lineTo(pad+L.w*s,pad+y*s);X.stroke();}
+ // racks
+ X.fillStyle='#172234';for(const [x,y] of L.blocked){X.fillRect(pad+x*s+1,pad+y*s+1,s-2,s-2);}
+ // stations / docks
+ X.fillStyle='#1d3a2e';for(const [x,y] of L.stations){X.fillRect(pad+x*s,pad+y*s,s,s);}
+ X.fillStyle='#113040';for(const [x,y] of L.docks){X.fillRect(pad+x*s,pad+y*s,s,s);}
+ // robots + trails
+ for(const r of T.robots){
+  const px=pad+r.x*s+s/2,py=pad+r.y*s+s/2;
+  (trails[r.id]=trails[r.id]||[]).push([px,py]);if(trails[r.id].length>22)trails[r.id].shift();
+  const tr=trails[r.id];X.beginPath();
+  for(let i=0;i<tr.length;i++){i?X.lineTo(tr[i][0],tr[i][1]):X.moveTo(tr[i][0],tr[i][1]);}
+  X.strokeStyle=(r.ok?COL[r.task]:'#f87171')+'44';X.lineWidth=2;X.stroke();
+  // body
+  const rad=Math.max(5,s*0.33);
+  X.beginPath();X.arc(px,py,rad,0,7);X.fillStyle=r.ok?COL[r.task]:'#f87171';X.fill();
+  if(!r.ok){X.beginPath();X.arc(px,py,rad+4,0,7);X.strokeStyle='#f87171';X.lineWidth=2;X.stroke();}
+  // battery ring
+  X.beginPath();X.arc(px,py,rad+3,-1.57,-1.57+6.28*r.battery/100);
+  X.strokeStyle=r.battery<20?'#f87171':'#34d399';X.lineWidth=2;X.stroke();
+  X.fillStyle='#0a0e14';X.font=`${Math.max(8,rad)}px ui-monospace`;X.textAlign='center';X.textBaseline='middle';
+  X.fillText(r.id,px,py);
+ }
+ requestAnimationFrame(draw);
+}
+function ui(){
+ document.getElementById('k-bots').textContent=T.robots.length;
+ document.getElementById('k-picks').textContent=T.picks;
+ document.getElementById('k-tick').textContent=T.t;
+ document.getElementById('k-tp').textContent=(T.picks/Math.max(1,T.t)*8*60|0)+'/min';
+ const al=T.events.length;document.getElementById('k-alerts').textContent=al;
+ const E=document.getElementById('events');
+ E.innerHTML=T.events.slice(0,12).map(e=>`<div class="ev ${e.sev}">
+   <span>${e.type.toUpperCase()}${e.robot!=null?' · R'+e.robot:''} — ${e.detail}</span>
+   <span class="d">t${e.t}</span></div>`).join('')||'<div style="color:var(--dim);font-size:12px">all nominal</div>';
+ // zones
+ const Z={};for(const e of T.events)if(e.type==='inventory')Z[e.zone]=e.detail;
+ const zs=[...Array(6).keys()].map(i=>{const bad=Z[i];const pct=bad?25:70+Math.random()*25;
+  return `<div class="zrow"><span class="n">zone ${i}</span> ${bad?'<span style="color:var(--warn)">'+bad+'</span>':'ok'}
+   <div class="zbar"><i style="width:${pct}%"></i></div></div>`;}).join('');
+ document.getElementById('zones').innerHTML=zs;
+}
+async function commission(){
+ const st=document.getElementById('c-st');st.textContent='running';st.className='pill run';
+ const r=await (await fetch('/api/commission?rate=0.95')).json();
+ const c=document.getElementById('comm');
+ c.innerHTML=r.log.map(l=>`<div class="row"><span>${l.s}/${l.s+l.f}</span><span class="v">P=${l.p}</span></div>`).join('')+
+  `<div class="row" style="margin-top:6px"><span>decision</span><span class="pill ${r.decision==='pass'?'pass':'run'}">${r.decision} · ${r.trials} trials</span></div>`;
+}
+async function inject(){const id=(Math.random()*20|0);await fetch('/api/inject',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({robot:id,fault:Math.random()<.5?'stuck':'overheat'})});}
+async function clearf(){await fetch('/api/clear',{method:'POST'});}
+layout().then(()=>{poll();setInterval(poll,250);draw();});
+</script></body></html>
