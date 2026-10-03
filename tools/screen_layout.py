@@ -58,8 +58,10 @@ def find(substr):
     import re
     out = subprocess.run(["xwininfo", "-root", "-tree"], capture_output=True, text=True).stdout
     best = None
-    for m in re.finditer(r'^\s*(0x[0-9a-f]+) "([^"]*)": \([^)]*\)\s+(\d+)x(\d+)', out, re.M):
-        wid, title, w, h = int(m.group(1), 16), m.group(2), int(m.group(3)), int(m.group(4))
+    for m in re.finditer(r'^\s*(0x[0-9a-f]+) "([^"]*)": \(([^)]*)\)\s+(\d+)x(\d+)', out, re.M):
+        wid, title, cls, w, h = int(m.group(1), 16), m.group(2), m.group(3), int(m.group(4)), int(m.group(5))
+        if "mutter-x11-frames" in cls or not cls.strip():        # GNOME's frame around a window, not the window
+            continue
         if substr.lower() in title.lower() and w > 200 and h > 200 and (best is None or w * h > best[1]):
             best = (wid, w * h)
     return best[0] if best else None
@@ -75,17 +77,19 @@ def place(win, x, y, w, h):
     X.XFlush(d)
 
 
-dash = find("FleetOps") or find("Fleet & Field") or find("Command center")
+# match the dashboard by ITS OWN page title only: never "any Firefox window" (that grabbed someone's browser once)
+DASH_TITLE = "Fleet & Field"
+dash = find(DASH_TITLE)
 if dash is None and not args.no_open:
     prof = os.path.expanduser("~/fleetops/run/ff-dash")
     os.makedirs(prof, exist_ok=True)
     subprocess.Popen(["firefox", "--new-instance", "--profile", prof, args.url],
                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
-    for _ in range(40):
+    for _ in range(60):
         time.sleep(0.5)
-        dash = find("Mozilla Firefox")
+        dash = find(DASH_TITLE)
         if dash:
-            time.sleep(2)
+            time.sleep(1.5)
             break
 isaac = find("Isaac Sim")
 split = int(SW * args.split) if isaac else 0
