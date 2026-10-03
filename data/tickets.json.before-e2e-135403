@@ -1,0 +1,291 @@
+[
+ {
+  "id": "T-1",
+  "event_type": "inventory_mismatch",
+  "robot_id": null,
+  "zone": 2,
+  "reason": "zone 2: 3 bins report empty (SKU-1056, SKU-1066, SKU-1070), 9 units missing. Order O-1005 (8 units, 11 min to due) and O-1006 (5 units, 15 min to due) affected.",
+  "evidence": {
+   "event": {
+    "id": "E-0001",
+    "status": "active",
+    "type": "inventory_mismatch",
+    "robot_id": null,
+    "zone": 2,
+    "severity": "warning",
+    "detail": "zone 2: 3 bins differ from the system count (+9 units missing)",
+    "facts": {
+     "bins": [
+      {
+       "bin": [
+        10.0,
+        -6.0
+       ],
+       "sku": "SKU-1056",
+       "qty": 0,
+       "expected": 2,
+       "side": "right",
+       "fast": true
+      },
+      {
+       "bin": [
+        10.0,
+        4.0
+       ],
+       "sku": "SKU-1066",
+       "qty": 0,
+       "expected": 5,
+       "side": "right",
+       "fast": true
+      },
+      {
+       "bin": [
+        10.0,
+        8.0
+       ],
+       "sku": "SKU-1070",
+       "qty": 0,
+       "expected": 2,
+       "side": "right",
+       "fast": true
+      }
+     ],
+     "units_missing": 9,
+     "robots_that_found_empty_bins": []
+    },
+    "first_seen": "13:43:17",
+    "active_for_s": 35,
+    "orders_in_zone": [
+     {
+      "id": "O-1005",
+      "zone": 2,
+      "units": 8,
+      "picked": 0,
+      "due": "13:54:49",
+      "minutes_to_due": 10.9,
+      "zone_rate_per_min": 1.5,
+      "rate_is_estimate": true,
+      "projected_finish": "13:49:12",
+      "at_risk": false,
+      "late": false
+     },
+     {
+      "id": "O-1006",
+      "zone": 2,
+      "units": 5,
+      "picked": 0,
+      "due": "13:58:37",
+      "minutes_to_due": 14.8,
+      "zone_rate_per_min": 1.5,
+      "rate_is_estimate": true,
+      "projected_finish": "13:52:32",
+      "at_risk": false,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": "13:54:49",
+  "priority": "high",
+  "status": "open",
+  "event_id": "E-0001",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:43:52",
+  "updated_at": "13:43:52",
+  "history": [
+   {
+    "at": "13:43:52",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "zone 2: 3 bins report empty (SKU-1056, SKU-1066, SKU-1070), 9 units missing. Order O-1005 (8 units, 11 min to due) and O-1006 (5 units, 15 min to due) affected."
+   }
+  ]
+ },
+ {
+  "id": "T-2",
+  "event_type": "stuck",
+  "robot_id": 7,
+  "zone": 1,
+  "reason": "Robot 7 stuck in zone 1: DRIVE_FAULT, no movement 14s while carrying SKU-1025. Order O-1003 (8 units, 10.6 min to due) at risk.",
+  "evidence": {
+   "event": {
+    "id": "E-0002",
+    "status": "active",
+    "robot_id": 7,
+    "zone": 1,
+    "type": "stuck",
+    "severity": "critical",
+    "detail": "no movement for 32s during carry (the robot reports DRIVE_FAULT: it cannot move)",
+    "facts": {
+     "stopped_for_s": 32,
+     "task": "carry",
+     "job_id": "J-130",
+     "goal": [
+      6.1,
+      -17.9
+     ],
+     "position": [
+      5.0,
+      8.53
+     ],
+     "carrying": "SKU-1025",
+     "error_code": "DRIVE_FAULT",
+     "waiting_for_traffic": false,
+     "waiting_s": 31.9,
+     "known_cause": "the robot reports DRIVE_FAULT: it cannot move"
+    },
+    "first_seen": "13:43:27",
+    "active_for_s": 30,
+    "orders_in_zone": [
+     {
+      "id": "O-1003",
+      "zone": 1,
+      "units": 8,
+      "picked": 1,
+      "due": "13:54:15",
+      "minutes_to_due": 10.3,
+      "zone_rate_per_min": 1.5,
+      "rate_is_estimate": true,
+      "projected_finish": "13:48:37",
+      "at_risk": false,
+      "late": false
+     },
+     {
+      "id": "O-1004",
+      "zone": 1,
+      "units": 7,
+      "picked": 0,
+      "due": "14:04:32",
+      "minutes_to_due": 20.6,
+      "zone_rate_per_min": 1.5,
+      "rate_is_estimate": true,
+      "projected_finish": "13:53:17",
+      "at_risk": false,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": "13:54:15",
+  "priority": "high",
+  "status": "open",
+  "event_id": "E-0002",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:43:57",
+  "updated_at": "13:49:51",
+  "history": [
+   {
+    "at": "13:43:57",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Robot 7 stuck in zone 1: DRIVE_FAULT, no movement 14s while carrying SKU-1025. Order O-1003 (8 units, 10.6 min to due) at risk."
+   },
+   {
+    "at": "13:49:51",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "E-0004: Robot 7 still stuck (new occurrence). Now on pick task at bin [5.0,12.0] for SKU-1049 (qty 5, fast), position [5.0,9.34] in aisle 1. DRIVE_FAULT persists, 14s stopped. Orders at risk: O-1003 (8 units, 9.5 min to due) and O-1004 (7 units, 16.9 min to due), zone rate 0.0. Systemic: robot 7 drive fault in zone 1."
+   }
+  ]
+ },
+ {
+  "id": "T-3",
+  "event_type": "deadlock",
+  "robot_id": null,
+  "zone": 1,
+  "reason": "Deadlock in zone 1: robots 1 and 7 stopped within 1.5 m of each other. Robot 7 first stopped due to DRIVE_FAULT (carrying SKU-1025), robot 1 queued behind. Order O-1003 (8 units, 10.3 min to due) and O-1004 (7 units, 20.6 min to due) affected. Systemic issue rooted in E-0002.",
+  "evidence": {
+   "event": {
+    "id": "E-0003",
+    "status": "cleared",
+    "type": "deadlock",
+    "robot_id": null,
+    "robot_ids": [
+     1,
+     7,
+     12
+    ],
+    "zone": 1,
+    "severity": "critical",
+    "detail": "3 robots stopped within 1.5 m of each other in zone 1; robot 7 stopped first (the robot reports DRIVE_FAULT: it cannot move)",
+    "facts": {
+     "first_stopped": 7,
+     "first_stopped_cause": "the robot reports DRIVE_FAULT: it cannot move",
+     "queued_behind": [
+      1,
+      12
+     ],
+     "positions": {
+      "1": [
+       5.0,
+       7.4
+      ],
+      "7": [
+       5.0,
+       8.53
+      ],
+      "12": [
+       5.0,
+       6.25
+      ]
+     }
+    },
+    "first_seen": "13:43:48",
+    "active_for_s": 32,
+    "cleared_at": "13:44:20",
+    "orders_in_zone": [
+     {
+      "id": "O-1003",
+      "zone": 1,
+      "units": 8,
+      "picked": 1,
+      "due": "13:54:15",
+      "minutes_to_due": 9.9,
+      "zone_rate_per_min": 0.94,
+      "rate_is_estimate": false,
+      "projected_finish": "13:51:48",
+      "at_risk": false,
+      "late": false
+     },
+     {
+      "id": "O-1004",
+      "zone": 1,
+      "units": 7,
+      "picked": 0,
+      "due": "14:04:32",
+      "minutes_to_due": 20.2,
+      "zone_rate_per_min": 0.94,
+      "rate_is_estimate": false,
+      "projected_finish": "13:59:15",
+      "at_risk": false,
+      "late": false
+     }
+    ]
+   }
+  },
+  "needed_by": "13:54:15",
+  "priority": "high",
+  "status": "open",
+  "event_id": "E-0003",
+  "assignee": null,
+  "eta": null,
+  "created_at": "13:44:21",
+  "updated_at": "13:50:41",
+  "history": [
+   {
+    "at": "13:44:21",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "Deadlock in zone 1: robots 1 and 7 stopped within 1.5 m of each other. Robot 7 first stopped due to DRIVE_FAULT (carrying SKU-1025), robot 1 queued behind. Order O-1003 (8 units, 10.3 min to due) and O-1004 (7 units, 20.6 min to due) affected. Systemic issue rooted in E-0002."
+   },
+   {
+    "at": "13:50:41",
+    "actor": "supervisor",
+    "status": "open",
+    "note": "E-0005: Deadlock renewed \u2014 5 robots stopped in aisle 1 (x=5 m). Root: robot 7 DRIVE_FAULT (pick task for SKU-1049, bin [5.0,12.0]). Queued behind: robots 1, 12, 18, 19. Orders at risk: O-1003 (8 units, 8.2 min to due) and O-1004 (7 units, 15.6 min to due). Same systemic issue as T-2, T-3."
+   }
+  ]
+ }
+]

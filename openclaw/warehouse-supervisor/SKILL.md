@@ -70,7 +70,8 @@ EOF
 1. Read the event from `/fleet`: `type`, `severity`, `facts`, `orders_in_zone`.
 2. Route it:
    - Self-resolving, for example `low_battery` with `facts.heading_to_charger: true`, or an event that has already cleared: mention it, no ticket.
-   - Needs a schedule change (`stuck`, `off_trajectory`, `deadlock`, `overheat`, `repeated_errors`, `throughput_drop`): open a ticket for the Scheduler.
+   - Needs a schedule change (`stuck`, `drive_fault`, `off_trajectory`, `deadlock`, `overheat`, `repeated_errors`, `throughput_drop`): open a ticket for the Scheduler.
+     `drive_fault` means the robot reports a drive fault while parked (charging, at a station, or at a bin): it will block that dock or slot, and its next job must be reassigned.
    - Inventory problem (`inventory_mismatch`, `low_stock`): open a ticket. The bins and counts are attached as evidence automatically when you pass `event_id`.
 3. Always pass `event_id`. A second ticket for the same event returns the existing one with `"duplicate": true`.
    A `deadlock` event is one jam: `facts.first_stopped` is the robot that stopped first, with its cause, `queued_behind` lists the robots waiting behind it, and `location` says where. Ticket the jam once, naming the first-stopped robot's cause (for example its `DRIVE_FAULT`) and the blocked location; do not ticket each queued robot.

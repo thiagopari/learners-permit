@@ -462,6 +462,16 @@ def robot_conditions(ts):
                                                     f"moving but no closer to its goal for {OFF_TRACK_S:.0f}s",
                                                     facts={"task": row["task"], "goal": row.get("goal"),
                                                            "position": [row["x"], row["y"]]})
+        if row.get("error") == "DRIVE_FAULT" and ("stuck", rid) not in cond:
+            # A robot that breaks down while parked (charging, at a station, dwelling at a bin) is never "stuck":
+            # it has nowhere to go yet. Flag the fault itself, so it is seen before the robot blocks a dock or slot.
+            at = where(row["x"], row["y"])
+            cond[("drive_fault", rid)] = dict(base, type="drive_fault", severity="critical",
+                                             detail=f"reports DRIVE_FAULT while {row['task']}" + (f" at {at}" if at else "")
+                                                    + "; it cannot move when its next job starts",
+                                             facts={"task": row["task"], "job_id": row.get("job_id"), "goal": row.get("goal"),
+                                                    "position": [row["x"], row["y"]], "location": at,
+                                                    "carrying": carried_sku(row.get("carrying")), "battery_pct": row["battery"]})
         errs = [code for t0, code in tr.err_onsets if ts - t0 <= REPEAT_WINDOW_S]
         if len(errs) >= REPEAT_ERRORS:
             cond[("repeated_errors", rid)] = dict(base, type="repeated_errors", severity="warning",
