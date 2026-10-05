@@ -5,7 +5,7 @@ Exact commands with sources are in [RUNBOOK.md](RUNBOOK.md); this page is the or
 Plan, budget and cut lines: [PLAN.md](PLAN.md).
 
 ## Where things stand
-- **Done, and tested on any machine (56 tests):**
+- **Done, and tested on any machine (62 tests):**
   - `permit/`: one `/run` choke point with the Cedar policy, licences on Hyperion's gate (cap 100, scope, drift
     revocation), single-use approvals bound to one command, the Nemotron planner client, and the Tavily
     datasheet check (block-only).
@@ -24,7 +24,7 @@ as its minimum, RoboLab recommends 48 GB, and RoboLab's TiledCamera hangs on lap
 ```bash
 git clone git@github.com:thiagopari/learners-permit.git && cd learners-permit
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
-.venv/bin/python -m pytest -q tests        # expect: 56 passed
+.venv/bin/python -m pytest -q tests        # expect: 62 passed
 .venv/bin/python demo/four_beats.py        # refuse → earn → block → revoke
 ```
 
@@ -60,29 +60,49 @@ If the model isn't found, the model lists only us-central1, so try
 for the bonus.
 
 ## Step 3: the Nebius GPU VM (cut line Oct 8)
-RUNBOOK §5.2:
-1. Install the CLI and create a profile.
-2. Create the VM: `--resources-platform gpu-rtx6000-a --resources-preset 1gpu-24vcpu-218gb`, image family
-   `ubuntu24.04-cuda13.0` (driver 580), 300 GiB disk.
-3. `nvidia-smi` should show an RTX PRO 6000 with 96 GB.
+1. Once: `nebius profile create` (browser login, RUNBOOK §5.2). Put `NEBIUS_PROJECT_ID` (a project in uk-south2 or
+   eu-south1) and `HF_TOKEN` in `~/.config/learners-permit.env`.
+2. `cloud/vm.sh create`: an RTX PRO 6000 (96 GB) on `ubuntu24.04-cuda13.0`, 150 GiB disk, `--recovery-policy fail`, and
+   the idle guard. Add `LP_SPOT=1` for spot.
+3. **Check once that a poweroff really stops billing (5 min, about $0.15):** `cloud/vm.sh ssh`, then
+   `sudo systemctl poweroff`, and two minutes later `cloud/vm.sh status` must say `STOPPED`. If it says anything
+   else, run `cloud/vm.sh stop` and don't rely on the idle guard. Then `cloud/vm.sh start`.
+4. `cloud/vm.sh setup` installs and checks everything (Step 4). It follows the log and ends with
+   `setup exit status: 0`.
 
-Costs about $1.80/h, so **stop the VM whenever you're not using it**. A stopped VM still counts against quota.
+**Money** (checked 2026-10-05 against docs.nebius.com):
+- $1.80/h on demand, $0.95/h spot, billed per second while running. A stopped VM bills only its disk, $0.071 per
+  GiB-month (150 GiB is about $10.65 a month), and still counts against quota. `cloud/vm.sh delete` at the end
+  deletes the boot disk too.
+- **Never `sudo shutdown` a VM to save money unless it has `--recovery-policy fail`.** Nebius treats a shutdown from
+  inside as a failure, restarts the VM, and keeps billing. The policy can only be set at creation, so create the VM
+  with `cloud/vm.sh`.
+- The idle guard powers the VM off after 30 minutes with no GPU work, no CPU load, no typing and no setup running:
+  about 35 minutes (roughly $1) in the worst case. To hold it off, `sudo touch /run/lp-keepalive` (a reboot clears it).
 
-## Step 4: GR00T + RoboLab on the VM, then reproduce the baselines (cut line Oct 9)
-1. **GR00T (RUNBOOK §1.1–1.5):**
-   - `git clone --recurse-submodules https://github.com/NVIDIA/Isaac-GR00T && uv sync --python 3.12`
-   - `uv run hf auth login`
-   - Start the server **with `--host 127.0.0.1`**; its default listens on every interface:
-     ```bash
-     uv run python gr00t/eval/run_gr00t_server.py --model-path nvidia/GR00T-N1.7-DROID \
-       --embodiment-tag OXE_DROID_RELATIVE_EEF_RELATIVE_JOINT --device cuda --host 127.0.0.1 --port 5555 --use-sim-policy-wrapper
-     ```
-2. **RoboLab (RUNBOOK §2.1–2.3):**
-   - Install git-lfs **before** cloning.
-   - `uv sync --extra isaac50` (plain `uv sync` installs no simulator).
-   - Smoke test on `BananaOnPlateTask`, then run 40 envs of `BananasInBinThreeTotalTask` and `RedDishesInBinTask`.
-3. **Done when:** your numbers are near NVIDIA's (about 38/40 and 15/40). **Write your numbers into PLAN.md and quote
-   those**, not NVIDIA's. Physics differ between Isaac Sim 5.0 and 5.1, and on Blackwell.
+## Step 4: what setup checks, then reproduce the baselines (cut line Oct 9)
+`cloud/setup_vm.sh` is re-runnable; its log is `~/lp-setup.log` and the versions it used are in `~/lp-versions.txt`.
+Every GPU step has a time limit. In order:
+- The driver is at least 580.95.05 (Isaac Lab #3477), and Vulkan sees the GPU.
+- GR00T N1.7: `uv sync --python 3.12`, a check that torch has Blackwell (sm_120) kernels, and the downloads of
+  Cosmos-Reason2-2B and GR00T-N1.7-DROID.
+- RoboLab: `uv venv --python 3.11`, `uv sync --extra isaac50`, the git-lfs assets, and RoboLab's own install test
+  (one full episode).
+- This repo's tests; then the GR00T server on 127.0.0.1:5555 and **2 episodes of `BananaOnPlateTask` through
+  `permit.runners.robolab`**, the runner's first real run.
+
+Then reproduce the baselines, in tmux on the VM:
+```bash
+cd ~/Isaac-GR00T && uv run python gr00t/eval/run_gr00t_server.py --model-path nvidia/GR00T-N1.7-DROID \
+  --embodiment-tag OXE_DROID_RELATIVE_EEF_RELATIVE_JOINT --device cuda --host 127.0.0.1 --port 5555 --use-sim-policy-wrapper
+# in a second window: 40 episodes of each task, through the same runner the gate uses
+cd ~/learners-permit && for t in BananasInBinThreeTotalTask RedDishesInBinTask; do ROBOLAB_DIR=~/RoboLab \
+  .venv/bin/python -c "from permit import runners; r = runners.robolab('$t', {'a': 5555}, timeout=7200)({'a': 40})['a']
+print('$t', sum(r), '/ 40')"; done
+```
+Keep `--host 127.0.0.1`: the server's default listens on every interface. **Done when** your numbers are near
+NVIDIA's (about 38/40 and 15/40). **Write your numbers and `~/lp-versions.txt` into PLAN.md and quote those**, not
+NVIDIA's: physics differ between Isaac Sim 5.0 and 5.1, and on Blackwell.
 
 ## Step 5: Learner's Permit against real GR00T (cut line Oct 11, the must-ship)
 On the VM, with the GR00T server up:

@@ -656,6 +656,8 @@ ssh $USER@$VM_IP
 nvidia-smi                       # expect RTX PRO 6000 Blackwell, 96 GB, driver 580.x
 ```
 
+**Checked 2026-10-05 with CLI 0.12.284 and docs.nebius.com:** all the flags above exist; `instance delete` "also deletes all the managed disks"; a `shutdown` inside the VM counts as a failure, so under the default recovery policy the VM restarts and keeps billing (create with `--recovery-policy fail`, as `cloud/vm.sh` does); disks can grow later (`nebius compute disk update --size-gibibytes`), so `cloud/vm.sh` starts at 150 GiB. Use `cloud/vm.sh` rather than this block.
+
 Do not use `root`/`admin` as the cloud-init user (docs). 300 GiB is my sizing (Isaac Sim pip wheels, ~7 GB RoboLab assets, HF weights, outputs; the docs example uses 50 GiB, **UNVERIFIED** that 300 is right). For 8 GPUs (DROID recipe) use `--resources-preset 8gpu-192vcpu-1744gb`.
 
 Stop/delete: `nebius compute instance stop --id $VM_ID` (still counts against quota); `nebius compute instance delete --id $VM_ID`. Check `nebius compute disk list --parent-id $PROJECT_ID` afterwards for a leftover boot disk (**UNVERIFIED** whether managed boot disks are deleted with the VM). The workbench docs say npa-managed GPU VMs are preemptible by default (`--no-preemptible` to disable); a raw `nebius compute instance create` as above is not.

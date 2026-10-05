@@ -157,7 +157,7 @@ Both ideas fit without compromise, because each supplies what the other is missi
   - **Skip [E]:** GR00T-Dreams/Cosmos world models are beyond a $200 budget.
 - **GPUs [V]:**
   - **Isaac Sim needs RT cores; H100/A100 can't render.**
-  - Nebius L40S: $1.55/h ($0.74 spot). RTX PRO 6000: $1.80/h ($0.79 spot). H100: $4.50/h since Oct 1, for training only ([prices](https://nebius.com/prices)).
+  - Nebius L40S: $1.55/h ($0.74 spot). RTX PRO 6000: $1.80/h ($0.95 spot, checked Oct 5). H100: $4.50/h since Oct 1, for training only ([prices](https://nebius.com/prices)).
 - **Eval cost [E]:** about **$6–14 per 1,000 episodes**; measure the real figure in Tier 1.
   - **Report every success rate with a confidence interval.** Arena's own numbers show why: 0.88 on 17 episodes became 0.605 on 200. Hyperion's Bayesian gate is built for exactly this.
 - **Known bug to avoid [V]:** with `n_envs>1`, `rollout_policy.py` keeps the first episodes to finish, which inflates success rates. Use one env per run, or fix the bug.
@@ -204,7 +204,8 @@ Both ideas fit without compromise, because each supplies what the other is missi
 
 ## Nebius setup (checked Oct 4)
 - **One GPU type for everything: RTX PRO 6000.** It has RT cores for Isaac Sim and 96 GB for GR00T fine-tuning (which needs 40 GB+).
-  - Price: $1.80/h on demand, **from $0.79/h spot**. $100 buys about 55 h on demand, or up to about 126 h spot.
+  - Price: $1.80/h on demand, **$0.95/h spot** (Nebius pricing page, checked Oct 5). $100 buys about 55 h on demand or
+    105 h spot, less the disk: $0.071 per GiB-month whether the VM runs or not (150 GiB is about $10.65 a month).
   - Only the L40S ($1.55/h) and RTX PRO 6000 have RT cores. **H100/H200/B200/B300 can't render Isaac Sim.**
   - H100 went from $3.85 to $4.50/h on Oct 1.
 - **Region and quota trap:** new accounts get **0 RTX PRO 6000 quota in us-central1**, but 32 in **uk-south2 / eu-south1**; L40S quota is 2 in eu-north1. **Launch in uk-south2 or eu-south1,** and request quota on day 1.
