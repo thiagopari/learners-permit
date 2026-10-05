@@ -6,6 +6,7 @@
                    (both also take "repeat": n episodes under one decision, so a sim shift doesn't boot Isaac n times)
   POST /approvals  {"skill","args","for","repeat"}    supervisor: single-use token bound to that exact command + person
   POST /commission {"skill","arms","tier","scope"}    supervisor: run the gate, then issue or refuse a licence
+                                                     (409 if a crash interrupted that sweep: resend with "resume")
   POST /perturb    {"skill","arm","rate"}             supervisor, mock runner only: change a true success rate (demo)
   POST /sensors    {"human_in_zone"}                  supervisor: stand-in for the cell's presence sensor
   GET  /  /licences  /audit                           console and state
@@ -144,15 +145,21 @@ class Permit:
             return a["by"]
         return None
 
-    def commission(self, user, skill, arms=None, tier="supervised", scope=None):
+    def sweep(self, skill, arms=None, tier="supervised", scope=None):
+        """The defaults a commission uses, and that sweep's interrupted progress, if any."""
+        arms = arms or list(self.skills[skill]["arms"])
+        scope = scope or {"speed_pct": [DEFAULT_SPEED]}
+        return arms, scope, self.licences.sweeps.get(self.licences.sweep_key(skill, arms, tier, scope, self.runner))
+
+    def commission(self, user, skill, arms=None, tier="supervised", scope=None, resume=None):
         if authz.PEOPLE.get(user) != "supervisor":
             raise PermissionError("only a supervisor can commission")
         if not self.lock.acquire(timeout=self.lock_timeout):
             raise RuntimeError("cell busy")
         try:
-            arms = arms or list(self.skills[skill]["arms"])
+            arms, scope, _ = self.sweep(skill, arms, tier, scope)
             lic = self.licences.commission(skill, arms, self.run_batch(skill), tier=tier, batch=self.batch,
-                                           scope=scope or {"speed_pct": [DEFAULT_SPEED]})
+                                           scope=scope, source=self.runner, resume=resume)
             self.log(actor=user, action="commission", skill=skill, arms=arms, tier=tier, status=lic["status"],
                      counts=f"{lic['successes']}/{lic['trials']}", p=lic["p"])
             return lic
@@ -211,9 +218,17 @@ def serve(permit, port):
                 if self.path == "/commission":
                     if not supervisor:
                         raise PermissionError("only a supervisor can commission")
+                    tier, resume = body.get("tier", "supervised"), body.get("resume")
+                    if resume is not None and not isinstance(resume, bool):
+                        raise ValueError("resume must be true or false")
+                    _, _, interrupted = permit.sweep(body["skill"], body.get("arms"), tier, body.get("scope"))
+                    if interrupted and resume is None:
+                        return self.reply(409, {"error": f"a sweep of {body['skill']} was interrupted after "
+                                                f"{len(interrupted['log'])} batches; resend with \"resume\": true "
+                                                "to continue it, or false to start over"})
                     threading.Thread(target=permit.commission, daemon=True,
-                                     args=(user, body["skill"], body.get("arms"), body.get("tier", "supervised"),
-                                           body.get("scope"))).start()
+                                     args=(user, body["skill"], body.get("arms"), tier, body.get("scope"),
+                                           resume)).start()
                     return self.reply(202, {"commissioning": body["skill"], "watch": "/licences and /audit"})
                 if self.path == "/perturb" and supervisor and permit.runner == "mock":
                     permit.rates[body["skill"]][body["arm"]] = float(body["rate"])

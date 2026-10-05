@@ -41,7 +41,7 @@ Rules the code enforces (`permit/`, tested in `tests/`):
 ## Run it (any machine, no GPU, no keys)
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
-.venv/bin/python -m pytest -q tests        # 52 tests
+.venv/bin/python -m pytest -q tests        # 56 tests
 .venv/bin/python demo/four_beats.py        # refuse → earn → block → revoke (mock runner)
 .venv/bin/python -m permit.server          # console at http://127.0.0.1:8099
 ```
@@ -71,7 +71,7 @@ Optional real services:
 | Path | What |
 |---|---|
 | `permit/` | **New:** Learner's Permit control plane, Cedar policy, licences, planner, Tavily check, runners |
-| `console/`, `demo/`, `tests/` | **New:** licence console, four-beat demo, 52 tests |
+| `console/`, `demo/`, `tests/` | **New:** licence console, four-beat demo, 56 tests |
 | `cell/bandit.py` | Hyperion's commissioning gate, reused (plus a `min_trials` parameter for the 99% tier) |
 | everything else | Hyperion (prior work): repo map in [docs/hyperion-README.md](docs/hyperion-README.md), the GB10 submission README in [docs/hyperion-gb10-readme.md](docs/hyperion-gb10-readme.md) |
 

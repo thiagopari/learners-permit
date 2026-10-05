@@ -238,4 +238,67 @@ def test_robolab_runner_kills_the_whole_group_on_timeout(tmp_path, monkeypatch):
     monkeypatch.setattr(runners.os, "killpg", lambda pid, sig: killed.append(pid))
     with pytest.raises(RuntimeError, match="timed out"):
         runners.robolab("RedDishesInBinTask", {"a": 5555}, timeout=1, root=str(tmp_path))({"a": 4})
-    assert killed == [4242]
+    assert killed == [4242, 4242]  # the launch and its one retry
+
+
+def test_robolab_runner_retries_a_crashed_launch_once(tmp_path, monkeypatch):
+    FakeRoboLab.root, launches = tmp_path, []
+
+    class CrashOnce(FakeRoboLab):
+        def __init__(self, cmd, cwd, env, **kw):
+            launches.append(cmd)
+            if len(launches) > 1:
+                super().__init__(cmd, cwd, env, **kw)
+            self.returncode, self.pid = (1 if len(launches) == 1 else 0), 0
+    monkeypatch.setattr(runners.subprocess, "Popen", CrashOnce)
+    assert runners.robolab("RedDishesInBinTask", {"ft": 5556}, root=str(tmp_path))({"ft": 3}) == {"ft": [1, 0, 0]}
+    folder = lambda cmd: cmd[cmd.index("--output-folder-name") + 1]  # noqa: E731
+    assert len(launches) == 2 and folder(launches[0]) != folder(launches[1])  # the retry never reuses a folder
+
+
+def crash_after(batches):
+    """A perfect policy whose runner dies after `batches` batches, the way a preempted VM would."""
+    calls = []
+
+    def run_batch(alloc):
+        calls.append(alloc)
+        if len(calls) > batches:
+            raise RuntimeError("VM preempted")
+        return {a: [1] * n for a, n in alloc.items()}
+    return run_batch, calls
+
+
+def test_interrupted_sweep_keeps_its_batches_and_resumes_only_when_asked(p):
+    dies, _ = crash_after(2)
+    p.run_batch = lambda skill: dies
+    with pytest.raises(RuntimeError, match="preempted"):
+        p.commission("sue", "bananas_in_bin")
+    assert len(p.sweep("bananas_in_bin")[2]["log"]) == 2
+    assert len(json.load(open(p.licences.sweeps_path)).popitem()[1]["log"]) == 2  # on disk, for a restarted server
+    with pytest.raises(ValueError, match="interrupted after 2 batches"):
+        p.commission("sue", "bananas_in_bin")
+    works, calls = crash_after(99)
+    p.run_batch = lambda skill: works
+    lic = p.commission("sue", "bananas_in_bin", resume=True)
+    assert lic["status"] == "licensed" and lic["trials"] == 16 and lic["resumed"] == 1 and len(calls) == 2
+    assert p.sweep("bananas_in_bin")[2] is None
+
+
+def test_resume_false_discards_the_interrupted_sweep(p):
+    dies, _ = crash_after(2)
+    p.run_batch = lambda skill: dies
+    with pytest.raises(RuntimeError):
+        p.commission("sue", "bananas_in_bin")
+    works, calls = crash_after(99)
+    p.run_batch = lambda skill: works
+    lic = p.commission("sue", "bananas_in_bin", resume=False)
+    assert lic["trials"] == 16 and lic["resumed"] == 0 and len(calls) == 4
+
+
+def test_a_sweep_resumes_only_into_the_same_runner(p):
+    dies, _ = crash_after(1)
+    p.run_batch = lambda skill: dies
+    with pytest.raises(RuntimeError):
+        p.commission("sue", "bananas_in_bin")
+    p.runner = "robolab"  # same skill, arms and scope; real episodes must not continue a mock sweep
+    assert p.sweep("bananas_in_bin")[2] is None

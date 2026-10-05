@@ -5,7 +5,7 @@ Exact commands with sources are in [RUNBOOK.md](RUNBOOK.md); this page is the or
 Plan, budget and cut lines: [PLAN.md](PLAN.md).
 
 ## Where things stand
-- **Done, and tested on any machine (52 tests):**
+- **Done, and tested on any machine (56 tests):**
   - `permit/`: one `/run` choke point with the Cedar policy, licences on Hyperion's gate (cap 100, scope, drift
     revocation), single-use approvals bound to one command, the Nemotron planner client, and the Tavily
     datasheet check (block-only).
@@ -24,7 +24,7 @@ as its minimum, RoboLab recommends 48 GB, and RoboLab's TiledCamera hangs on lap
 ```bash
 git clone git@github.com:thiagopari/learners-permit.git && cd learners-permit
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
-.venv/bin/python -m pytest -q tests        # expect: 52 passed
+.venv/bin/python -m pytest -q tests        # expect: 56 passed
 .venv/bin/python demo/four_beats.py        # refuse → earn → block → revoke
 ```
 
@@ -101,6 +101,10 @@ curl -X POST localhost:8099/orders -H 'Authorization: Bearer demo-olga' -d '{"te
 - **Batches:** commissioning runs 20 episodes per RoboLab launch. Each launch boots Isaac Sim, roughly 10–20 min per
   launch (RUNBOOK §2.3), and a decision takes 1–5 launches.
 - **Live runs:** use `"repeat": n` on `/run` or `/agent/run` to run n episodes under one decision.
+- **Crashes and preemption:** every finished batch is checkpointed to `permit/data/sweeps.json`, and a failed
+  RoboLab launch is retried once. If a sweep still dies, `/commission` answers 409 for it until you resend with
+  `"resume": true` (continue from the last finished batch) or `false` (start over). Start over if an arm's
+  checkpoint changed since the crash; continuing would mix two policies' trials in one licence.
 - **The first real run is the moment of truth for `runners.robolab`.** If it raises "expected N episodes, got M",
   read the RoboLab output it prints. The parser follows RUNBOOK §2.4: `success` per row, de-duplicated by
   `(env_name, episode)`.

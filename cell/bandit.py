@@ -19,13 +19,19 @@ def p_at_least(s, f, thr=THR):
     return sum(comb(n, k) * thr**k * (1 - thr) ** (n - k) for k in range(s + 1))
 
 
-def commission(arms, run_batch, thr=THR, conf=CONF, batch=4, max_trials=40, on_batch=None, rng=random, min_trials=0):
+def commission(arms, run_batch, thr=THR, conf=CONF, batch=4, max_trials=40, on_batch=None, rng=random, min_trials=0,
+               start=None):
     """arms: candidate policy ids. run_batch({arm: n_episodes}) -> {arm: [1, 0, ...]}, run in parallel.
     on_batch(entry) is called after every batch so a dashboard can show progress.
     min_trials: no early "fail" before this many trials. With a high bar (e.g. 0.99) the prior alone already sits
-    below 1 - conf, so without it a perfect policy fails after its first batch. Added for Learner's Permit."""
+    below 1 - conf, so without it a perfect policy fails after its first batch. Added for Learner's Permit.
+    start: {"successes", "failures", "log"} of an interrupted sweep to continue; its finished batches still count."""
     s, f = dict.fromkeys(arms, 0), dict.fromkeys(arms, 0)
     log = []
+    if start:
+        s.update(start["successes"])
+        f.update(start["failures"])
+        log = list(start["log"])
     while sum(s.values()) + sum(f.values()) < max_trials:
         picks = [max(arms, key=lambda a: rng.betavariate(1 + s[a], 1 + f[a])) for _ in range(batch)]
         t0 = time.time()

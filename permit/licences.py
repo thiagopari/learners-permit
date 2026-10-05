@@ -17,27 +17,76 @@ TIERS = {"supervised": {"thr": 0.80, "cap": 100, "min_trials": 0, "revoke_below"
 LIVE_WINDOW, LIVE_MIN = 20, 8
 
 
+def _load(path):
+    return json.load(open(path)) if os.path.exists(path) else {}
+
+
+def _save(path, data):
+    """Write, then rename: a crash or a spot preemption mid-write leaves the old file, never a truncated one."""
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    with open(path + ".tmp", "w") as f:
+        json.dump(data, f, indent=1)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(path + ".tmp", path)
+
+
 class Licences:
     def __init__(self, path):
         self.path = path
-        self.data = json.load(open(path)) if os.path.exists(path) else {}
+        self.data = _load(path)
+        # Sweeps a crash interrupted, checkpointed after every batch. Each RoboLab batch is 10-20 GPU minutes.
+        self.sweeps_path = os.path.join(os.path.dirname(path), "sweeps.json")
+        self.sweeps = _load(self.sweeps_path)
 
     def save(self):
-        os.makedirs(os.path.dirname(self.path) or ".", exist_ok=True)
-        with open(self.path, "w") as f:
-            json.dump(self.data, f, indent=1)
+        _save(self.path, self.data)
 
-    def commission(self, skill, arms, run_batch, tier="supervised", scope=None, batch=4, on_batch=None):
+    @staticmethod
+    def sweep_key(skill, arms, tier, scope, source):
+        """A resume is only valid for the same skill, arms, tier, scope and runner (never mock trials into a real sweep)."""
+        return json.dumps([skill, sorted(arms), tier, scope or {}, source], sort_keys=True)
+
+    def commission(self, skill, arms, run_batch, tier="supervised", scope=None, batch=4, on_batch=None,
+                   source="mock", resume=None):
+        """resume: None refuses if this sweep was interrupted, True continues it, False discards it. Resuming is a
+        person's call: if an arm's checkpoint changed since the crash, continuing would mix two policies' trials."""
         t = TIERS[tier]
+        key = self.sweep_key(skill, arms, tier, scope, source)
+        prog = self.sweeps.get(key)
+        if prog and resume is None:
+            raise ValueError(f"{skill}: a sweep was interrupted after {len(prog['log'])} batches; "
+                             "pass resume=true to continue it or resume=false to start over")
+        if prog and resume is False:  # drop it now, so a crash in the first new batch can't bring it back
+            self.sweeps.pop(key)
+            _save(self.sweeps_path, self.sweeps)
+            prog = None
+        if not prog:
+            prog = {"successes": dict.fromkeys(arms, 0), "failures": dict.fromkeys(arms, 0), "log": [], "resumed": 0}
+        start = prog if prog["log"] else None
+        if start:
+            prog["resumed"] += 1
+
+        def checkpoint(entry):
+            for arm, outcomes in entry["ran"].items():
+                prog["successes"][arm] += sum(outcomes)
+                prog["failures"][arm] += len(outcomes) - sum(outcomes)
+            prog["log"].append(entry)
+            self.sweeps[key] = prog
+            _save(self.sweeps_path, self.sweeps)
+            if on_batch:
+                on_batch(entry)
         res = commission(list(arms), run_batch, thr=t["thr"], batch=batch, max_trials=t["cap"],
-                         min_trials=t["min_trials"], on_batch=on_batch)
+                         min_trials=t["min_trials"], on_batch=checkpoint, start=start)
+        if self.sweeps.pop(key, None) is not None:
+            _save(self.sweeps_path, self.sweeps)
         s, f = res["successes"], res["failures"]
         best = res.get("policy") or max(arms, key=lambda a: p_at_least(s[a], f[a], t["thr"]))
         lic = {"status": "licensed" if res["decision"] == "pass" else "refused", "decision": res["decision"],
                "tier": tier, "thr": t["thr"], "revoke_below": t["revoke_below"], "policy": best,
                "successes": s[best], "trials": s[best] + f[best], "p": round(p_at_least(s[best], f[best], t["thr"]), 4),
                "scope": scope or {}, "issued": time.strftime("%Y-%m-%d %H:%M:%S"), "live": [],
-               "log": [e["line"] for e in res["log"]]}
+               "log": [e["line"] for e in res["log"]], "resumed": prog["resumed"]}
         self.data[skill] = lic
         self.save()
         return lic
