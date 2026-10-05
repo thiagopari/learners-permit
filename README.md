@@ -79,6 +79,8 @@ Optional real services:
 Hyperion was built on **2026-10-03** at the Dell × NVIDIA GB10 hackathon in Boston by Thiago Pari, Ferbin, Megha
 and Amal. The hackathon window opened Aug 26, and the commit history records the dates. All four agreed to
 open-source it.
+The team's own upload, with each author's Oct 3 commits, is public at
+[github.com/mochi-bunny/navfix](https://github.com/mochi-bunny/navfix).
 
 New in Learner's Permit:
 - Enforcing the gate in code (in Hyperion it was only a prompt).
