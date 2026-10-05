@@ -1,3 +1,7 @@
+> Copied from the team's repo, [github.com/mochi-bunny/navfix](https://github.com/mochi-bunny/navfix), as it stood
+> on 2026-10-03 at 17:58 EDT. Its "App Map" and "Getting Started" describe that repo's layout; this repo's
+> layout is in [hyperion-README.md](hyperion-README.md).
+
 # Hyperion
 
 <p align="left">
