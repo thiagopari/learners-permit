@@ -14,3 +14,7 @@ isaac/telemetry.jsonl
 **/.venv/
 **/data/*.db*
 *.log
+
+# Learner's Permit runtime state
+permit/data/
+.pytest_cache/

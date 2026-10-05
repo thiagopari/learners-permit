@@ -1,98 +1,88 @@
-# FleetOps: a warehouse fleet run by two local LLMs on one Dell Pro Max GB10
+# Learner's Permit
 
-Twenty NVIDIA Nova Carter robots work a warehouse in Isaac Sim. A **supervisor LLM** watches the fleet,
-decides what needs a person, and opens tickets. A **scheduler side in Discord** turns those tickets into
-cards and approvals for the people on shift, with its own LLM writing the plain-English debriefs. A live
-command-center dashboard shows all of it. Everything runs on this box: no model call leaves it.
+> A Nemotron agent may command a GR00T skill only after Nebius-run trials prove it, only within the conditions
+> tested, and it loses the licence the moment live results slip.
 
-Design rule: **code enforces, models explain.** Detection, spacing, junction locks, ticket states and the
-commissioning gate are computed in code; the LLMs decide what to say, what to escalate, and to whom.
+Built for the **Nebius × NVIDIA Global AI Hackathon** (Physical AI track). It grows out of **Hyperion**, an AI ops
+supervisor for robot fleets built on 2026-10-03 (see [Prior work](#prior-work)).
 
-## What runs where
+## Why
+Published robot policies that turn vision and language into actions (VLA policies) reach roughly 75–95% on
+sorting and kitting; production picking expects about 99.9%. Someone has to decide which skills an AI may
+trigger, on what, and for how long. Here that decision is made in code and backed by evidence:
 
+- **Licences are earned.** A skill is commanded by the AI only after an evaluation sweep shows
+  P(success rate ≥ 0.8) ≥ 0.95. That is a Bayesian sequential test: Hyperion's gate, `cell/bandit.py`, unchanged.
+- **Licences are scoped.** They cover only the conditions that were tested (colours, phrasings, payloads).
+- **Licences are revocable.** Once live runs slip, the licence is pulled automatically.
+- **Roles are enforced, not prompted.** One Cedar policy at one endpoint. The role comes from the session,
+  never from the LLM.
+
+## How it works
 ```
- Isaac Sim GUI (this screen) ─┐                        ┌─> dashboard :8095  (this screen, and the LAN)
-   or headless sim container ─┼─push─> sim bridge :3001 ┤
-                              │        (telemetry,      └─> supervisor tool service :8090 ──ticket──> glue :7100
-                              │         events, faults)       │  detectors, tickets,                    │   │
-                              │                               │  trust gate (bandit)                     │   └─> navbot :8787 ─> Discord
-                              │                               └─wake─> SUPERVISOR LLM (OpenClaw agent,   │        #red-room #approvals
-                              │                                        NemoClaw sandbox "navfix")        │        #monitor-bot
-                              └──────────── demo faults (inject / clear / shrink) <──────────────────────┘   ✅/❌ ─> ticket updates
- Both LLMs: Qwen3.6-35B-A3B NVFP4 on vLLM (container vllm-qwen, :8000), local.
+person ─order─▶ Nemotron planner ─skill calls─▶ POST /run ◀── the only path to the robot
+                (Token Factory)                  │ Cedar: role × skill × object × bin × speed × hours × person in cell
+                                                 │ licence: proven for this scope? (gate on Nebius eval sweeps)
+                                                 │ Tavily datasheet: can only BLOCK (too heavy → denied, source cited)
+                                                 ▼
+                                         GR00T N1.7 policy (Isaac Sim / RoboLab) ─live results─▶ revoke on drift
 ```
+Rules the code enforces (`permit/`, tested in `tests/`):
+- **Identity:** the planner sees only the skill catalogue. Any role, approver or extra argument it emits is dropped.
+- **Approvals:** a supervisor's approval is a single-use token, bound to one exact command and valid for 10 minutes.
+- **Modes:** the AI never changes modes or speed limits, even with an approval.
+- **Fail closed:** missing context means deny. A person in the cell caps everyone at 25% speed.
+- **The web can only narrow:** a datasheet can block a pick but never allow one.
 
-| Part | Who built it | Runs as | Port |
-|---|---|---|---|
-| Fleet logic: one-way traffic, junction locks, inventory, faults, JSON event log | integration | `sim/fleet.py` (pure Python) | - |
-| Isaac Sim warehouse, 20 Nova Carters, fault beacons | integration | `isaac/warehouse_live.py` on this screen | - |
-| Headless sim (when Isaac is not open) | integration | container `sim` | - |
-| Sim bridge | integration | container `bridge` | 3001 |
-| Supervisor tool service + skill | Thiago (handover), integration fixes | container `supervisor` | 8090 |
-| **Supervisor LLM** | Thiago | OpenClaw in NemoClaw sandbox `navfix`, thinking on | 18789 |
-| Glue: dashboard sources, Discord forwarding, live fleet log | integration | container `glue` | 7100 |
-| Dashboard (command center) | Megha, Amal (UI) | container `dashboard` | 8095 |
-| navbot + **scheduler-side LLM** (debriefs, headlines) | Megha | container `navbot` | 8787 |
-| Model | - | container `vllm-qwen` | 8000 |
-
-## Run it
-
+## Run it (any machine, no GPU, no keys)
 ```bash
-cd ~/fleetops
-./fleetops.sh start         # model check, then the six containers in dependency order, then the agent check
-./fleetops.sh isaac         # Isaac Sim GUI on this screen becomes the sim (the headless sim stops)
-python3 tools/screen_layout.py   # Isaac left, dashboard right
-./fleetops.sh status
-./fleetops.sh headless      # close Isaac, headless sim back
-./fleetops.sh reset-demo    # back up and clear tickets + trust history before a run
-./fleetops.sh build         # after a code change: rebuild the image and redeploy
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+.venv/bin/python -m pytest -q tests        # 31 tests
+.venv/bin/python demo/four_beats.py        # refuse → earn → block → revoke (mock runner)
+.venv/bin/python -m permit.server          # console at http://127.0.0.1:8099
 ```
-
-Containers restart on their own after a reboot (`restart: unless-stopped`). Secrets live in
-`secrets/fleetops.env` and `~/navfix/navbot/.env` (owner-only, never in the image or in git).
-
-## Demo faults
-
-From the dashboard's control page, or:
-
+API calls (demo session tokens: `demo-sue` supervisor, `demo-olga` operator, `demo-max` maintenance):
 ```bash
-curl -X POST localhost:8090/demo/inject -H 'Content-Type: application/json' -d '{"robot": 7, "fault": "stuck"}'     # or overheat / low_battery
-curl -X POST localhost:8090/demo/shrink -H 'Content-Type: application/json' -d '{"zone": 2, "units": 6}'          # stock goes missing
-curl -X POST localhost:8090/demo/clear
+curl -X POST localhost:8099/commission -H 'Authorization: Bearer demo-sue' -d '{"skill":"bananas_in_bin"}'
+curl -X POST localhost:8099/orders -H 'Authorization: Bearer demo-olga' -d '{"text":"Put the bananas in the bin"}'
 ```
+Optional real services:
+- `NEBIUS_API_KEY` switches the planner to Nemotron on Token Factory (`NEMOTRON_MODEL`, default `nvidia/nemotron-3-super-120b-a12b`).
+- `TAVILY_API_KEY` turns on the datasheet check.
+- Without them, the server says so and uses offline stand-ins.
 
-Measured on this box (containerised stack): fault detected in **2 s**; the supervisor LLM opens a ticket in
-**15-75 s** (longer when a jam forms and it reasons about the root cause); the dashboard shows it immediately;
-Discord cards follow within **4 s**.
+## Status (2026-10-04)
+- **Done:**
+  - Control plane: `permit/server.py`, plus the Cedar policy and its tests.
+  - Licences on Hyperion's gate (cap raised from 40 to 100 trials).
+  - Nemotron planner client and Tavily check.
+  - Console, mock runner, and the four-beat demo.
+- **Next (Linux laptop + Nebius):**
+  - The RoboLab runner with GR00T N1.7-DROID.
+  - Reproduce the zero-shot baselines.
+  - Nebius eval sweeps and the fine-tune.
+- **Read next:** [docs/LINUX_HANDOFF.md](docs/LINUX_HANDOFF.md). Plan, budget and cut lines: [docs/PLAN.md](docs/PLAN.md).
 
-## Checks
-
-```bash
-tools/e2e.sh stuck              # fault -> detection -> ticket -> dashboard -> Discord, timed
-tools/ask_agent.sh "How many robots are waiting for traffic?"   # supervisor LLM Q&A
-python3 sim/test_fleet.py 1800 7  # 30 sim-minutes of traffic: overlaps, deadlocks, throughput
-curl localhost:7100/fleetlog?minutes=5   # live fleet log (JSON) for the scheduler side
-```
-
-## Repository map
-
-This repository collects everything built for the Dell x NVIDIA GB10 hackathon (Boston, October 3, 2026) under the project name Hyperion.
-
-| Path | What it is |
+## Repo map
+| Path | What |
 |---|---|
-| `/` (root) | FleetOps: the warehouse fleet, dashboard feeds, glue and Isaac Sim integration (docker compose in `docker/`) |
-| `agent/` | The agent's OpenClaw workspace from the NemoClaw sandbox: standing orders (`AGENTS.md`), policy, persona, heartbeat and the `warehouse-supervisor` skill |
-| `cell/` | The supervisor tool service, its OpenClaw skill and the bandit trust gate (`bandit.py`) |
-| `navfix/` | The Discord navbot and the ops dashboard |
-| `warehouse/` | The warehouse simulator |
-| `isaac/` | The Isaac Sim warehouse scene |
-| `infra/` | `Dockerfile.cell` (GR00T N1.7 + LIBERO for arm64), the plug-in drive scripts, and `runtime-config.md` (how the containers ran on the GB10) |
-| `docs/business/` | Business research: pain and ROI, market, competition, why local, verticals, measurements, pricing, fact-checks |
-| `docs/planning/`, `docs/notes/` | The team brief, the business analysis, the integration plan and the setup handoff |
-| `docs/pitch/` | Pitch page and clips |
-| `docs/run-logs/`, `docs/test-runs/` | Service logs and end-to-end test results (tickets and trust-gate state) from the day |
-| `docs/media/rollouts/` | GR00T N1.7 rollout clips from the LIBERO simulator |
+| `permit/` | **New:** Learner's Permit control plane, Cedar policy, licences, planner, Tavily check, runners |
+| `console/`, `demo/`, `tests/` | **New:** licence console, four-beat demo, 31 tests |
+| `cell/bandit.py` | Hyperion's commissioning gate, reused unchanged |
+| everything else | Hyperion (prior work; its README is [docs/hyperion-README.md](docs/hyperion-README.md)) |
 
-Demo videos, all rollout clips and an Isaac telemetry snapshot are attached to the [v1.0-hackathon release](https://github.com/thiagopari/hyperion/releases/tag/v1.0-hackathon).
+## Prior work
+Hyperion was built on **2026-10-03** at the Dell × NVIDIA GB10 hackathon in Boston by Thiago Pari, Ferbin, Megha
+and Amal. The hackathon window opened Aug 26, and the commit history records the dates. All four agreed to
+open-source it.
 
-Secrets (`.env`, tokens, `openclaw.json`), model checkpoints and runtime databases are deliberately not in the repository.
+New in Learner's Permit:
+- Enforcing the gate in code (in Hyperion it was only a prompt).
+- Cedar RBAC at a single choke point.
+- Per-skill, per-scope licences with drift revocation.
+- The Nemotron planner on Token Factory, and the Tavily datasheet check.
+- GR00T N1.7 skills in Isaac Sim with Nebius evaluation.
+
+## License
+Apache-2.0 for this repository's code. No model weights are included; GR00T and Nemotron are under NVIDIA's
+model licenses.

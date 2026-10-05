@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Learner's Permit</title>
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --ink:#1b1f24; --mute:#5f6b7a; --line:#dde2e8;
+          --ok:#1a7f37; --no:#c0362c; --warn:#9a6700; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0f1216; --card:#171b21; --ink:#e6e9ed; --mute:#98a2ae; --line:#2a313a;
+            --ok:#3fb950; --no:#f0605a; --warn:#d29922; } }
+  body { margin:0; padding:16px; background:var(--bg); color:var(--ink); font:14px/1.45 system-ui, sans-serif; }
+  h1 { font-size:18px; margin:0 0 4px; } p.sub { margin:0 0 16px; color:var(--mute); }
+  .cards { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:12px; margin-bottom:20px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px; }
+  .card h2 { font-size:15px; margin:0 0 6px; }
+  .badge { display:inline-block; padding:1px 8px; border-radius:99px; font-weight:600; font-size:12px; color:#fff; }
+  .licensed { background:var(--ok); } .refused, .revoked { background:var(--no); } .none { background:var(--mute); }
+  .kv { color:var(--mute); } .kv b { color:var(--ink); font-weight:600; }
+  table { width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--line); border-radius:10px; }
+  th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--mute); font-weight:600; font-size:12px; }
+  td.allow { color:var(--ok); font-weight:600; } td.deny { color:var(--no); font-weight:600; }
+  .wrap { overflow-x:auto; }
+</style>
+</head>
+<body>
+<h1>Learner's Permit</h1>
+<p class="sub">The AI may command a skill only after trials prove it, only within the scope tested, and only until live results slip.</p>
+<div class="cards" id="cards"></div>
+<div class="wrap"><table>
+  <thead><tr><th>time</th><th>who</th><th>what</th><th>decision</th><th>why / result</th></tr></thead>
+  <tbody id="audit"></tbody>
+</table></div>
+<script>
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+async function tick() {
+  try {
+    const lic = await (await fetch("/licences")).json();
+    document.getElementById("cards").innerHTML = Object.entries(lic).map(([skill, l]) => {
+      const live = l.live || [], wins = live.reduce((a, b) => a + b, 0);
+      return `<div class="card"><h2>${esc(skill)}</h2>
+        <span class="badge ${esc(l.status)}">${esc(l.status)}</span>
+        <div class="kv">policy <b>${esc(l.policy)}</b> · tier <b>${esc(l.tier)}</b></div>
+        <div class="kv">trials <b>${l.successes}/${l.trials}</b> · P(rate ≥ ${l.thr}) <b>${l.p}</b></div>
+        <div class="kv">live <b>${wins}/${live.length}</b>${l.reason ? ` · ${esc(l.reason)}` : ""}</div></div>`;
+    }).join("") || '<p class="sub">No licences yet. A supervisor commissions a skill to start.</p>';
+    const audit = await (await fetch("/audit")).json();
+    document.getElementById("audit").innerHTML = audit.reverse().map(e => {
+      const what = e.action ? `${e.action} ${e.skill ?? ""} ${e.text ? "“" + e.text + "”" : ""}` : `${e.skill} ${JSON.stringify(e.args || {})}`;
+      const why = (e.reasons || []).join("; ") || e.result || (e.status ? `${e.status} ${e.counts ?? ""} p=${e.p ?? ""}` : "");
+      const who = e.requester ? `${e.actor} for ${e.requester}` : e.actor;
+      return `<tr><td>${esc(e.t)}</td><td>${esc(who)}</td><td>${esc(what)}</td>
+        <td class="${esc(e.decision)}">${esc(e.decision || "")}</td><td>${esc(why)}</td></tr>`;
+    }).join("");
+  } catch (err) { /* server restarting; try again next tick */ }
+}
+tick(); setInterval(tick, 1500);
+</script>
+</body>
+</html>

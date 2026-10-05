@@ -1,0 +1,20 @@
+{
+  "bananas_in_bin": {
+    "instruction": "put the bananas in the bin",
+    "object_class": "banana",
+    "bin": "bin",
+    "max_mass_kg": 1.0,
+    "robolab_task": "BananasInBin",
+    "arms": {"n17_droid": 5555},
+    "mock_rates": {"n17_droid": 0.95}
+  },
+  "red_dishes_in_bin": {
+    "instruction": "put the red dishes in the bin",
+    "object_class": "dish",
+    "bin": "bin",
+    "max_mass_kg": 1.0,
+    "robolab_task": "RedDishesInBin",
+    "arms": {"n17_droid": 5555, "n17_droid_ft": 5556},
+    "mock_rates": {"n17_droid": 0.375, "n17_droid_ft": 0.92}
+  }
+}
