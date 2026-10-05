@@ -1,0 +1,8 @@
+# Secret scan: gitleaks git .   (reviewed 2026-10-05; history had no real secrets)
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Demo session tokens are public by design (README); navbot's docs use placeholder keys"
+regexTarget = "match"
+regexes = ['''Bearer demo-(sue|olga|max)\b''', '''X-Bot-Key: (change-me|<BOT_SHARED_KEY>)''']

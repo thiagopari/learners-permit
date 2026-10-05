@@ -5,7 +5,7 @@ Exact commands with sources are in [RUNBOOK.md](RUNBOOK.md); this page is the or
 Plan, budget and cut lines: [PLAN.md](PLAN.md).
 
 ## Where things stand
-- **Done, and tested on any machine (62 tests):**
+- **Done, and tested on any machine (64 tests):**
   - `permit/`: one `/run` choke point with the Cedar policy, licences on Hyperion's gate (cap 100, scope, drift
     revocation), single-use approvals bound to one command, the Nemotron planner client, and the Tavily
     datasheet check (block-only).
@@ -24,7 +24,7 @@ as its minimum, RoboLab recommends 48 GB, and RoboLab's TiledCamera hangs on lap
 ```bash
 git clone git@github.com:thiagopari/learners-permit.git && cd learners-permit
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
-.venv/bin/python -m pytest -q tests        # expect: 62 passed
+.venv/bin/python -m pytest -q tests        # expect: 64 passed
 .venv/bin/python demo/four_beats.py        # refuse → earn → block → revoke
 ```
 
@@ -91,15 +91,18 @@ Every GPU step has a time limit. In order:
 - This repo's tests; then the GR00T server on 127.0.0.1:5555 and **2 episodes of `BananaOnPlateTask` through
   `permit.runners.robolab`**, the runner's first real run.
 
-Then reproduce the baselines, in tmux on the VM:
+Then measure, unattended (start both and walk away; the idle guard stops the VM about 30 minutes after they finish):
 ```bash
-cd ~/Isaac-GR00T && uv run python gr00t/eval/run_gr00t_server.py --model-path nvidia/GR00T-N1.7-DROID \
-  --embodiment-tag OXE_DROID_RELATIVE_EEF_RELATIVE_JOINT --device cuda --host 127.0.0.1 --port 5555 --use-sim-policy-wrapper
-# in a second window: 40 episodes of each task, through the same runner the gate uses
-cd ~/learners-permit && for t in BananasInBinThreeTotalTask RedDishesInBinTask; do ROBOLAB_DIR=~/RoboLab \
-  .venv/bin/python -c "from permit import runners; r = runners.robolab('$t', {'a': 5555}, timeout=7200)({'a': 40})['a']
-print('$t', sum(r), '/ 40')"; done
+tmux new -d -s gr00t 'cd ~/Isaac-GR00T && uv run python gr00t/eval/run_gr00t_server.py --model-path nvidia/GR00T-N1.7-DROID \
+  --embodiment-tag OXE_DROID_RELATIVE_EEF_RELATIVE_JOINT --device cuda --host 127.0.0.1 --port 5555 --use-sim-policy-wrapper'
+tmux new -d -s measure 'cd ~/learners-permit && ROBOLAB_DIR=~/RoboLab .venv/bin/python cloud/measure.py'
 ```
+`cloud/measure.py` runs 40 episodes of each task in the default scene, and 20 of bananas under 2 randomized
+backgrounds, the revoke beat's perturbation, through the same runner the gate uses. Rows go to
+`~/lp-measurements.jsonl`. **The revoke beat works if the perturbed rate is about 50% or lower** (revoked in about
+9 live runs). At 60% it takes about 19 runs and fails 17% of the time; then port RoboLab's lighting variation to
+GR00T instead.
+
 Keep `--host 127.0.0.1`: the server's default listens on every interface. **Done when** your numbers are near
 NVIDIA's (about 38/40 and 15/40). **Write your numbers and `~/lp-versions.txt` into PLAN.md and quote those**, not
 NVIDIA's: physics differ between Isaac Sim 5.0 and 5.1, and on Blackwell.
@@ -128,6 +131,8 @@ curl -X POST localhost:8099/orders -H 'Authorization: Bearer demo-olga' -d '{"te
 - **The first real run is the moment of truth for `runners.robolab`.** If it raises "expected N episodes, got M",
   read the RoboLab output it prints. The parser follows RUNBOOK §2.4: `success` per row, de-duplicated by
   `(env_name, episode)`.
+- **Revoke beat on real GR00T:** `curl -X POST localhost:8099/perturb -H 'Authorization: Bearer demo-sue' -d '{"background_seed": 1}'` changes the scene without telling any licence, then live `/run`s slip until revocation. `{"background_seed": null}` restores it.
+- **Footage:** start the server with `LP_VIDEO=viewport` so the demo's own runs record clips, instead of paying for separate footage runs.
 - **Before anything leaves localhost,** set `PERMIT_SESSIONS` to real tokens; the demo tokens are printed in the public README.
   The server binds 127.0.0.1 only.
 
@@ -144,19 +149,14 @@ curl -X POST localhost:8099/orders -H 'Authorization: Bearer demo-olga' -d '{"te
    If it never beats the baseline, the video shows the gate refusing it. That's still a valid result.
 
 ## Step 7: video and submission (Oct 26–29)
-- **Video:** the 4 beats from the console, plus RoboLab clips (`--video-mode all`). **Label sim footage as simulation.**
+- **Video:** the 4 beats from the console, plus the clips the demo runs recorded (`LP_VIDEO=viewport`, Step 5). **Label sim footage as simulation.**
   No third-party trademarks (no "Gemini"). Under 3 min, on YouTube.
 - **Go public:**
   ```bash
-  gitleaks git .
+  gitleaks git .   # .gitleaks.toml allows only the public demo tokens and doc placeholders
   gh repo edit thiagopari/learners-permit --visibility public --accept-visibility-change-consequences
   ```
-- **Turn on CI:** the Mac's gh login lacked the `workflow` scope.
-  ```bash
-  gh auth refresh -h github.com -s workflow
-  mkdir -p .github/workflows && git mv docs/ci/tests.yml .github/workflows/tests.yml
-  git commit -m "Enable CI" && git push
-  ```
+- **CI** runs the tests on every push (`.github/workflows/tests.yml`, enabled Oct 5).
 - **Devpost:** Physical AI track, city **Boston**. Paste the prior-work note from the README. Add tool feedback.
 
 ## Gotchas collected so far

@@ -21,12 +21,12 @@ def mock(rates, seconds_per_batch=0.0):
     return sim_runner(rates, seconds_per_batch=seconds_per_batch)
 
 
-def robolab(task, ports, video="none", timeout=3600, root=None, retries=1):
+def robolab(task, ports, video="none", timeout=3600, root=None, retries=1, extra_args=()):
     """Each arm is a GR00T policy server on its own port. One RoboLab process per arm and batch runs n parallel envs,
     one episode each, and records every episode (success or time-out). Unlike LIBERO's rollout_policy.py, nothing
     is dropped for finishing late. Success is read from output/<folder>/episode_results.jsonl, never the exit code.
     A failed launch is retried `retries` times in a fresh folder: the whole launch is discarded, never part of it,
-    so a crash can't select which episodes count."""
+    so a crash can't select which episodes count. extra_args go to RoboLab as given (e.g. a randomized background)."""
     root = root or os.environ.get("ROBOLAB_DIR", os.path.expanduser("~/RoboLab"))
 
     def launch(arm, n):
@@ -34,7 +34,7 @@ def robolab(task, ports, video="none", timeout=3600, root=None, retries=1):
         cmd = ["uv", "run", "python", "policies/gr00t/run.py", "--headless", "--remote-host", "127.0.0.1",
                "--remote-port", str(ports[arm]), "--task", task, "--num-envs", str(n), "--num-runs", "1",
                "--open-loop-horizon", "8", "--instruction-type", "default", "--video-mode", video,
-               "--output-folder-name", folder]
+               "--output-folder-name", folder, *extra_args]
         p = subprocess.Popen(cmd, cwd=root, env={**os.environ, "OMNI_KIT_ACCEPT_EULA": "Y"}, text=True,
                              stdout=subprocess.PIPE, stderr=subprocess.STDOUT, start_new_session=True)
         try:

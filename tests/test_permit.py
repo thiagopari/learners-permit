@@ -302,3 +302,34 @@ def test_a_sweep_resumes_only_into_the_same_runner(p):
         p.commission("sue", "bananas_in_bin")
     p.runner = "robolab"  # same skill, arms and scope; real episodes must not continue a mock sweep
     assert p.sweep("bananas_in_bin")[2] is None
+
+
+def test_a_perturbed_scene_reaches_robolab_and_never_resumes_a_default_scene_sweep(p, monkeypatch):
+    seen = []
+    monkeypatch.setattr(runners, "robolab", lambda task, arms, **kw: seen.append(kw) or (lambda alloc: {}))
+    p.runner = "robolab"
+    p.run_batch("bananas_in_bin")
+    p.scene = {"background_seed": 7}
+    p.run_batch("bananas_in_bin")
+    assert seen[0]["extra_args"] == [] and seen[1]["extra_args"] == ["--randomize-background", "--background-seed", "7"]
+    p.scene = {}
+    dies, _ = crash_after(1)
+    p.run_batch = lambda skill: dies
+    with pytest.raises(RuntimeError):
+        p.commission("sue", "bananas_in_bin")
+    assert p.sweep("bananas_in_bin")[2] is not None
+    p.scene = {"background_seed": 7}  # the world changed: that sweep's trials don't describe this scene
+    assert p.sweep("bananas_in_bin")[2] is None
+
+
+def test_robolab_runner_passes_extra_args_through(tmp_path, monkeypatch):
+    FakeRoboLab.root, cmds = tmp_path, []
+
+    class Recording(FakeRoboLab):
+        def __init__(self, cmd, cwd, env, **kw):
+            cmds.append(cmd)
+            super().__init__(cmd, cwd, env, **kw)
+    monkeypatch.setattr(runners.subprocess, "Popen", Recording)
+    extra = ["--randomize-background", "--background-seed", "3"]
+    runners.robolab("RedDishesInBinTask", {"ft": 5556}, root=str(tmp_path), extra_args=extra)({"ft": 1})
+    assert cmds[0][-3:] == extra

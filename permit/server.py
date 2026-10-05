@@ -7,7 +7,8 @@
   POST /approvals  {"skill","args","for","repeat"}    supervisor: single-use token bound to that exact command + person
   POST /commission {"skill","arms","tier","scope"}    supervisor: run the gate, then issue or refuse a licence
                                                      (409 if a crash interrupted that sweep: resend with "resume")
-  POST /perturb    {"skill","arm","rate"}             supervisor, mock runner only: change a true success rate (demo)
+  POST /perturb    {"skill","arm","rate"}             supervisor, mock runner: change a true success rate (demo)
+                   {"background_seed": n | null}      supervisor, robolab runner: randomize the scene's background
   POST /sensors    {"human_in_zone"}                  supervisor: stand-in for the cell's presence sensor
   GET  /  /licences  /audit                           console and state
 
@@ -47,11 +48,19 @@ class Permit:
         self.sensors = {"human_in_zone": False}
         self.approvals = {}
         self.lock, self.lock_timeout = threading.RLock(), lock_timeout  # one cell, one command at a time
+        self.scene = {}  # the world the cell works in: /perturb changes it and no licence is told (the revoke beat)
+        self.video = os.environ.get("LP_VIDEO", "none")  # "viewport": the demo's own runs record its footage
 
     def run_batch(self, skill):
         if self.runner == "mock":
             return runners.mock(self.rates[skill], self.mock_delay)
-        return runners.robolab(self.skills[skill]["robolab_task"], self.skills[skill]["arms"])
+        extra = ["--randomize-background", "--background-seed", str(self.scene["background_seed"])] if self.scene else []
+        return runners.robolab(self.skills[skill]["robolab_task"], self.skills[skill]["arms"], video=self.video,
+                               extra_args=extra)
+
+    def source(self):
+        """Where trials come from: the runner, plus the scene if it's perturbed. A sweep never resumes across a change."""
+        return self.runner + (":" + json.dumps(self.scene, sort_keys=True) if self.scene else "")
 
     def log(self, **entry):
         entry = {"t": time.strftime("%H:%M:%S"), **entry}
@@ -112,7 +121,8 @@ class Permit:
                 result = ("success" if outcomes[0] else "failure") if repeat == 1 else f"{sum(outcomes)}/{repeat} succeeded"
         entry = self.log(actor=user, requester=requester, skill=skill, args=args, repeat=repeat, approver=approver,
                          decision="allow" if ok else "deny", reasons=reasons, context=ctx, datasheet=sheet,
-                         result=result, licence=(self.licences.data.get(skill) or {}).get("status", "none"))
+                         result=result, licence=(self.licences.data.get(skill) or {}).get("status", "none"),
+                         **({"scene": self.scene} if self.scene else {}))
         if not ok and user == authz.AGENT:
             entry["escalate"] = {"skill": skill, "args": args, "repeat": repeat, "for": requester,
                                  "command_hash": command_hash(skill, args, repeat, requester)}
@@ -149,7 +159,7 @@ class Permit:
         """The defaults a commission uses, and that sweep's interrupted progress, if any."""
         arms = arms or list(self.skills[skill]["arms"])
         scope = scope or {"speed_pct": [DEFAULT_SPEED]}
-        return arms, scope, self.licences.sweeps.get(self.licences.sweep_key(skill, arms, tier, scope, self.runner))
+        return arms, scope, self.licences.sweeps.get(self.licences.sweep_key(skill, arms, tier, scope, self.source()))
 
     def commission(self, user, skill, arms=None, tier="supervised", scope=None, resume=None):
         if authz.PEOPLE.get(user) != "supervisor":
@@ -159,7 +169,7 @@ class Permit:
         try:
             arms, scope, _ = self.sweep(skill, arms, tier, scope)
             lic = self.licences.commission(skill, arms, self.run_batch(skill), tier=tier, batch=self.batch,
-                                           scope=scope, source=self.runner, resume=resume)
+                                           scope=scope, source=self.source(), resume=resume)
             self.log(actor=user, action="commission", skill=skill, arms=arms, tier=tier, status=lic["status"],
                      counts=f"{lic['successes']}/{lic['trials']}", p=lic["p"])
             return lic
@@ -230,9 +240,16 @@ def serve(permit, port):
                                      args=(user, body["skill"], body.get("arms"), tier, body.get("scope"),
                                            resume)).start()
                     return self.reply(202, {"commissioning": body["skill"], "watch": "/licences and /audit"})
-                if self.path == "/perturb" and supervisor and permit.runner == "mock":
-                    permit.rates[body["skill"]][body["arm"]] = float(body["rate"])
-                    return self.reply(200, permit.rates[body["skill"]])
+                if self.path == "/perturb" and supervisor:
+                    if permit.runner == "mock":
+                        permit.rates[body["skill"]][body["arm"]] = float(body["rate"])
+                        return self.reply(200, permit.rates[body["skill"]])
+                    seed = body.get("background_seed")
+                    if seed is not None and (isinstance(seed, bool) or not isinstance(seed, int)):
+                        raise ValueError("background_seed must be an integer, or null for the default scene")
+                    permit.scene = {} if seed is None else {"background_seed": seed}
+                    permit.log(actor=user, action="perturb", scene=permit.scene)
+                    return self.reply(200, permit.scene)
                 if self.path == "/sensors" and supervisor:
                     permit.sensors["human_in_zone"] = bool(body["human_in_zone"])
                     return self.reply(200, permit.sensors)
