@@ -108,7 +108,7 @@ Both ideas fit without compromise, because each supplies what the other is missi
   - Overall: $20k / $10k / $6k.
   - Track winners: a Jetson Orin Nano.
   - Bonus: **Best Use of Tavily, $3k**.
-  - **City Winner: $500 × 20.** The rules say "Entrants attending" a city event, but Devpost's resources page says you **don't** need to attend. Confirm with the organizers.
+  - **City Winner: $500 × 20.** The Official Rules limit it to entrants who attended a listed Builders & Brews event, and Boston is on the list (re-checked Oct 5). Our teammate attended, so pick Boston on the form.
   - **City, Tavily and Feedback are all Bonus Awards, and a project can win only one**, so aim for **Tavily ($3k)** over City ($500).
   - Feedback prize: $100.
 - **Team size:** no maximum; solo is allowed.
@@ -270,6 +270,43 @@ Workstreams:
 - **Each RoboLab call boots Isaac Sim, so commissioning uses batches of 20 episodes,** not 4. With 20/20, P(rate ≥ 0.8) = 0.991, so a perfect skill passes in one launch.
 - **Fine-tune data risk:** RoboLab's exporter writes LeRobot v3 with joint-position state, not DROID's 17-D v2 layout, so expect a conversion step. Validate 5 episodes first (`docs/RUNBOOK.md` §3.3).
 - **Quota:** the default RTX PRO 6000 quota is 32 GPUs in uk-south2/eu-south1, so the Oct 8 cut line is just "confirm the quota row shows 32".
+
+## Update (Oct 5): the rules, re-read live
+Checked against the [overview](https://nebiusglobalaihackathon.devpost.com/) and the
+[Official Rules](https://nebiusglobalaihackathon.devpost.com/rules) on Oct 5.
+
+**What the rules add to our plan:**
+1. **Give Nemotron a visible second job.**
+   - Why: the first judging criterion asks "how effectively does it use Nebius Token Factory or AI Cloud model(s), and NVIDIA Nemotron". Today Nemotron only turns an order into skill calls.
+   - Proposal for the must-ship (team to confirm): Nemotron also explains every refusal, block and revocation to the supervisor in plain English, from the audit record, and the video shows it.
+   - This restores, in minimal form, the "summarize" step of the Brain layer above. It costs pennies on Token Factory.
+2. **Run one evaluation sweep as a Nebius Serverless Job.**
+   - Why: the Physical AI track text says "Use Nebius Serverless Jobs to run simulations, generate synthetic data, evaluate robot policies".
+   - Cost: jobs bill at the same per-second Compute prices as a VM, and a finished job leaves no idle machine, so this adds no budget.
+   - Work: it needs our stack as a container image. The job's container disk is wiped when it finishes, so results must go to Object Storage or a shared filesystem, which are billed separately.
+   - The platform is picked from the Compute VM types (the docs' example uses `gpu-l40s-a`). Whether `gpu-rtx6000-a` is offered for jobs is still to check.
+3. **Each teammate joins the Nebius Builder Program**, which the rules say gives "credits for Nebius Token Factory, Tavily, and Nebius Academy".
+4. **Everyone whose Hyperion code we reuse is on the team.** The submission must "be solely owned by you, your Team ... with no other person or entity having any right or interest in it".
+
+**Facts confirmed:**
+- **Sponsor and support clause:**
+  - The Sponsor is Nebius B.V. alone.
+  - The "financial or preferential support" clause covers Nebius and Devpost, so Hyperion being built on Dell/NVIDIA loan hardware is fine.
+- **Prizes:** each project is eligible for one Overall Award or one Track Award, plus one Bonus Award.
+- **The video:**
+  - It must show the project working and how we used Token Factory and the NVIDIA models.
+  - Judges aren't required to watch beyond 3 minutes.
+  - No third-party trademarks or copyrighted music without permission.
+- **The README** needs setup instructions and clear guidance for running the project. It must highlight the NVIDIA models, where Token Factory helped, and any other Nebius services. The form also asks for feedback on Token Factory, AI Cloud and the NVIDIA tools.
+- **Testing and access:**
+  - The project must stay free to test until judging ends (Dec 15).
+  - Physical AI needs no demo URL.
+  - If we show hardware that isn't widely available, the Sponsor may ask for physical access to it.
+- **Open source:** components are allowed if we follow their licenses and build on top of them.
+- **Admin:**
+  - Everything in English.
+  - One Representative submits for the team.
+  - No changes after Oct 30, 10:00 AM PT.
 
 ## Budget
 > **Credits confirmed (Oct 4):** a teammate attended Boston, so you have the $100 AI Cloud + $100 Token Factory attendee credits. Redeem them in week 1:
