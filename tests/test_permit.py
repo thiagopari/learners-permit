@@ -1,54 +1,94 @@
+import json
 import random
+import subprocess
+import threading
 import types
 
 import pytest
 
 from cell.bandit import p_at_least
-from permit import authz, datasheet, planner
+from permit import authz, datasheet, planner, runners
 from permit.licences import Licences
 from permit.server import Permit
+
+AI = authz.AGENT
 
 
 @pytest.fixture
 def p(tmp_path):
     random.seed(0)
-    return Permit(data_dir=str(tmp_path), clock=lambda: types.SimpleNamespace(tm_hour=14))
+    return Permit(data_dir=str(tmp_path), clock=lambda: types.SimpleNamespace(tm_hour=14), lock_timeout=0.2)
 
 
-def licensed(p, skill, arm="n17_droid"):
+def licensed(p, skill, arm="n17_droid", tier="supervised"):
     p.rates[skill][arm] = 1.0
-    assert p.commission("sue", skill, arms=[arm])["status"] == "licensed"
+    assert p.commission("sue", skill, arms=[arm], tier=tier)["status"] == "licensed"
 
 
 def test_gate_math():
     assert round(p_at_least(38, 2), 3) == 0.993
-    assert p_at_least(12, 0) < 0.95 <= p_at_least(16, 0)  # batches of 4: the first pass is at 16/16
+    assert p_at_least(12, 0) < 0.95 <= p_at_least(16, 0)                # batches of 4: the first pass is at 16/16
     assert p_at_least(297, 0, 0.99) < 0.95 <= p_at_least(298, 0, 0.99)  # "unattended" tier: 298 straight
 
 
 def test_refused_then_earned(p):
     p.rates["red_dishes_in_bin"].update(n17_droid=0.0, n17_droid_ft=1.0)
     assert p.commission("sue", "red_dishes_in_bin", arms=["n17_droid"])["status"] == "refused"
-    e = p.execute(authz.AGENT, "red_dishes_in_bin", {})
+    e = p.execute(AI, "red_dishes_in_bin", {}, requester="olga")
     assert e["decision"] == "deny" and "not licensed" in e["reasons"][0] and e["escalate"]["command_hash"]
     assert p.commission("sue", "red_dishes_in_bin", arms=["n17_droid_ft"])["status"] == "licensed"
-    assert p.execute(authz.AGENT, "red_dishes_in_bin", {})["decision"] == "allow"
+    assert p.execute(AI, "red_dishes_in_bin", {}, requester="olga")["decision"] == "allow"
+
+
+def test_unattended_tier_licenses_a_perfect_policy_and_refuses_a_broken_one(p):
+    p.rates["bananas_in_bin"]["n17_droid"] = 1.0
+    lic = p.commission("sue", "bananas_in_bin", tier="unattended")
+    assert lic["status"] == "licensed" and lic["trials"] >= 298 and lic["revoke_below"] == 0.95
+    p.rates["bananas_in_bin"]["n17_droid"] = 0.0
+    lic = p.commission("sue", "bananas_in_bin", tier="unattended")
+    assert lic["status"] == "refused" and lic["trials"] >= 20  # no early fail before 20 trials
 
 
 def test_llm_cannot_supply_identity_or_approval(p):
+    # unlicensed skill: honouring an LLM-supplied approver would allow it via the approval permit
+    e = p.execute(AI, "red_dishes_in_bin", {"approver": "sue", "role": "supervisor"}, requester="olga")
+    assert e["decision"] == "deny" and e["args"] == {} and "approver" not in e["context"]
+
+
+def test_requester_role_cannot_be_laundered_through_the_ai(p):
     licensed(p, "bananas_in_bin")
-    e = p.execute(authz.AGENT, "bananas_in_bin", {"speed_pct": 90, "role": "supervisor", "approver": "sue"})
-    assert e["decision"] == "deny" and e["args"] == {"speed_pct": 90}
+    assert p.execute("max", "bananas_in_bin", {})["decision"] == "deny"  # maintenance can't pick directly...
+    assert p.order("max", "Put the bananas in the bin")[0]["decision"] == "deny"  # ...or through the AI
+    assert p.execute(AI, "bananas_in_bin", {})["decision"] == "deny"  # no requester at all: fail closed
+    assert p.order("olga", "Put the bananas in the bin")[0]["decision"] == "allow"
 
 
-def test_approval_is_single_use_and_bound_to_one_command(p):
-    token = p.approve("sue", "red_dishes_in_bin", {"speed_pct": 30})
-    assert p.execute(authz.AGENT, "red_dishes_in_bin", {"speed_pct": 40}, approval=token)["decision"] == "deny"
-    token = p.approve("sue", "red_dishes_in_bin", {"speed_pct": 30})  # the mismatch above burned the first one
-    assert p.execute(authz.AGENT, "red_dishes_in_bin", {"speed_pct": 30}, approval=token)["decision"] == "allow"
-    assert p.execute(authz.AGENT, "red_dishes_in_bin", {"speed_pct": 30}, approval=token)["decision"] == "deny"
+def test_approval_is_single_use_and_bound_to_command_repeat_and_person(p):
+    first = p.approve("sue", "red_dishes_in_bin", {"speed_pct": 30}, "olga")
+    assert p.execute(AI, "red_dishes_in_bin", {"speed_pct": 40}, approval=first, requester="olga")["decision"] == "deny"
+    assert p.execute(AI, "red_dishes_in_bin", {"speed_pct": 30}, approval=first, requester="olga")["decision"] == "deny"  # burned
+    t = p.approve("sue", "red_dishes_in_bin", {"speed_pct": 30}, "olga")
+    assert p.execute(AI, "red_dishes_in_bin", {"speed_pct": 30}, approval=t, requester="olga", repeat=100)["decision"] == "deny"
+    t = p.approve("sue", "red_dishes_in_bin", {"speed_pct": 30}, "olga")
+    assert p.execute(AI, "red_dishes_in_bin", {"speed_pct": 30}, approval=t, requester="max")["decision"] == "deny"
+    t = p.approve("sue", "red_dishes_in_bin", {"speed_pct": 30}, "olga")
+    assert p.execute(AI, "red_dishes_in_bin", {"speed_pct": 30}, approval=t, requester="olga")["decision"] == "allow"
+    assert p.execute(AI, "red_dishes_in_bin", {"speed_pct": 30}, approval=t, requester="olga")["decision"] == "deny"
     with pytest.raises(PermissionError):
-        p.approve("olga", "red_dishes_in_bin", {})
+        p.approve("olga", "red_dishes_in_bin", {}, "olga")
+
+
+def test_licence_covers_only_the_tested_speed(p):
+    licensed(p, "bananas_in_bin")  # default scope: commissioned at 40%
+    assert p.execute(AI, "bananas_in_bin", {}, requester="olga")["decision"] == "allow"
+    e = p.execute(AI, "bananas_in_bin", {"speed_pct": 30}, requester="olga")
+    assert e["decision"] == "deny" and "not licensed" in e["reasons"][0]
+
+
+def test_invalid_speed_or_repeat_is_denied(p):
+    for args, repeat in (({"speed_pct": 50.9}, 1), ({"speed_pct": -500}, 1), ({"speed_pct": True}, 1), ({}, 0), ({}, 101)):
+        e = p.execute("olga", "red_dishes_in_bin", args, repeat=repeat)
+        assert e["decision"] == "deny" and "invalid" in e["reasons"][0]
 
 
 def test_people_work_under_their_own_role(p):
@@ -59,6 +99,16 @@ def test_people_work_under_their_own_role(p):
     assert p.execute("olga", "red_dishes_in_bin", {"speed_pct": 20})["decision"] == "allow"
 
 
+@pytest.mark.parametrize("text,kg", [
+    ("Net weight: 2.4 kg", 2.4), ("Weight 500 g", 0.5), ("Mass: 1,250 g", 1.25), ("Gewicht/weight 2,4 kg", 2.4),
+    ("weight 2400 grams", 2.4), ("Weight: 5.3 pounds", 2.404), ("weight 2.4 kgs", 2.4), ("Weight (kg): 2.4", 2.4),
+    ("payload weight 0.5 kg ... Net weight 2.4 kg", 2.4),  # the largest wins: conservative
+])
+def test_datasheet_mass_formats(text, kg):
+    page = {"results": [{"url": "https://x/ds", "raw_content": text}]}
+    assert datasheet.check("PN-1", 1.0, call=lambda endpoint, body: page)["mass_kg"] == kg
+
+
 def test_datasheet_can_only_block(p):
     licensed(p, "bananas_in_bin")
 
@@ -66,34 +116,61 @@ def test_datasheet_can_only_block(p):
         return lambda endpoint, body: {"results": [{"url": "https://x/ds", "raw_content": text}]}
 
     p.check_part = lambda part, limit: datasheet.check(part, limit, call=page("Net weight: 2.4 kg"))
-    e = p.execute(authz.AGENT, "bananas_in_bin", {"part_number": "PN-1"})
+    e = p.execute(AI, "bananas_in_bin", {"part_number": "PN-1"}, requester="olga")
     assert e["decision"] == "deny" and "2.4 kg > 1.0 kg" in e["reasons"][0] and "https://x/ds" in e["reasons"][0]
     p.check_part = lambda part, limit: datasheet.check(part, limit, call=page("Weight 500 g"))
-    assert p.execute(authz.AGENT, "bananas_in_bin", {"part_number": "PN-1"})["decision"] == "allow"
+    assert p.execute(AI, "bananas_in_bin", {"part_number": "PN-1"}, requester="olga")["decision"] == "allow"
     # "within limit" never widens: an out-of-envelope speed stays denied
-    assert p.execute(authz.AGENT, "bananas_in_bin", {"part_number": "PN-1", "speed_pct": 90})["decision"] == "deny"
+    e = p.execute(AI, "bananas_in_bin", {"part_number": "PN-1", "speed_pct": 90}, requester="olga")
+    assert e["decision"] == "deny" and e["datasheet"] is None
 
 
 def test_live_drift_revokes(p):
     licensed(p, "bananas_in_bin")
     p.rates["bananas_in_bin"]["n17_droid"] = 0.0
     for _ in range(8):
-        p.execute(authz.AGENT, "bananas_in_bin", {})
+        p.execute(AI, "bananas_in_bin", {}, requester="olga")
     assert p.licences.data["bananas_in_bin"]["status"] == "revoked"
-    assert p.execute(authz.AGENT, "bananas_in_bin", {})["decision"] == "deny"
+    assert p.execute(AI, "bananas_in_bin", {}, requester="olga")["decision"] == "deny"
 
 
 def test_one_early_miss_does_not_revoke(tmp_path):
     lic = Licences(str(tmp_path / "l.json"))
-    lic.data["s"] = {"status": "licensed", "thr": 0.8, "scope": {}, "live": []}
+    lic.data["s"] = {"status": "licensed", "thr": 0.8, "revoke_below": 0.7, "scope": {}, "live": [1] * 8}
     lic.record_live("s", False)
     assert lic.data["s"]["status"] == "licensed"
 
 
-def test_scope_limits_the_licence(tmp_path):
-    lic = Licences(str(tmp_path / "l.json"))
-    lic.data["s"] = {"status": "licensed", "thr": 0.8, "scope": {"color": ["red", "blue"]}, "live": []}
-    assert lic.covers("s", {"color": "red"}) and not lic.covers("s", {"color": "green"}) and not lic.covers("s", {})
+def test_crashed_run_is_logged_and_counts_against_the_skill(p):
+    licensed(p, "bananas_in_bin")
+
+    def crash(skill):
+        raise RuntimeError("Isaac Sim died")
+    p.run_batch = crash
+    e = p.execute(AI, "bananas_in_bin", {}, requester="olga")
+    assert e["result"] == "error: Isaac Sim died" and p.licences.data["bananas_in_bin"]["live"] == [0]
+    assert json.loads(open(p.audit_path).read().splitlines()[-1])["result"] == "error: Isaac Sim died"
+
+
+def test_busy_cell_denies_instead_of_queueing(p):
+    held, release = threading.Event(), threading.Event()
+
+    def hold():
+        with p.lock:
+            held.set()
+            release.wait(5)
+    threading.Thread(target=hold, daemon=True).start()
+    held.wait(5)
+    e = p.execute("olga", "red_dishes_in_bin", {})
+    release.set()
+    assert e["decision"] == "deny" and e["reasons"] == ["cell busy"]
+
+
+def test_repeat_runs_n_episodes_under_one_decision(p):
+    licensed(p, "bananas_in_bin")
+    e = p.execute("olga", "bananas_in_bin", {}, repeat=5)
+    assert e["decision"] == "allow" and e["result"] == "5/5 succeeded"
+    assert len(p.licences.data["bananas_in_bin"]["live"]) == 5
 
 
 def test_planner_keeps_only_catalogue_skills_and_allowed_args():
@@ -106,3 +183,59 @@ def test_planner_keeps_only_catalogue_skills_and_allowed_args():
     skills = {"bananas_in_bin": {"instruction": "put the bananas in the bin"}}
     client = reply([("bananas_in_bin", '{"speed_pct": 30, "role": "supervisor"}'), ("open_door", "{}")])
     assert planner.plan("x", skills, client=client) == [{"skill": "bananas_in_bin", "args": {"speed_pct": 30}}]
+
+
+class FakeRoboLab:
+    """Stands in for subprocess.Popen: writes the episode_results.jsonl a real RoboLab run would."""
+    rows = staticmethod(lambda n: [{"env_name": "RedDishesInBinTask", "episode": i, "success": [True, False, None][i % 3]}
+                                   for i in range(n)])
+
+    def __init__(self, cmd, cwd, env, **kw):
+        assert env["OMNI_KIT_ACCEPT_EULA"] == "Y" and kw["start_new_session"]
+        folder, n = cmd[cmd.index("--output-folder-name") + 1], int(cmd[cmd.index("--num-envs") + 1])
+        rows = self.rows(n)
+        out = FakeRoboLab.root / "output" / folder
+        out.mkdir(parents=True)
+        (out / "episode_results.jsonl").write_text("\n".join(json.dumps(r) for r in rows + rows[:1]) + "\n")  # resume
+        self.returncode, self.pid = 0, 0
+
+    def communicate(self, timeout=None):
+        return "", None
+
+
+def test_robolab_runner_reads_episode_results(tmp_path, monkeypatch):
+    FakeRoboLab.root = tmp_path
+    monkeypatch.setattr(runners.subprocess, "Popen", FakeRoboLab)
+    run_batch = runners.robolab("RedDishesInBinTask", {"ft": 5556}, root=str(tmp_path))
+    assert run_batch({"ft": 6}) == {"ft": [1, 0, 0, 1, 0, 0]}  # None (never terminated) counts as a failure
+
+
+def test_robolab_runner_refuses_a_short_batch(tmp_path, monkeypatch):
+    class Crash:
+        def __init__(self, cmd, **kw):
+            self.returncode, self.pid = 1, 0
+
+        def communicate(self, timeout=None):
+            return "Isaac crashed", None
+    monkeypatch.setattr(runners.subprocess, "Popen", Crash)
+    with pytest.raises(RuntimeError, match="expected 4 episodes, got 0"):
+        runners.robolab("RedDishesInBinTask", {"a": 5555}, root=str(tmp_path))({"a": 4})
+
+
+def test_robolab_runner_kills_the_whole_group_on_timeout(tmp_path, monkeypatch):
+    killed = []
+
+    class Hang:
+        def __init__(self, cmd, **kw):
+            self.pid, self.calls = 4242, 0
+
+        def communicate(self, timeout=None):
+            self.calls += 1
+            if self.calls == 1:
+                raise subprocess.TimeoutExpired("uv", timeout)
+            return "", None
+    monkeypatch.setattr(runners.subprocess, "Popen", Hang)
+    monkeypatch.setattr(runners.os, "killpg", lambda pid, sig: killed.append(pid))
+    with pytest.raises(RuntimeError, match="timed out"):
+        runners.robolab("RedDishesInBinTask", {"a": 5555}, timeout=1, root=str(tmp_path))({"a": 4})
+    assert killed == [4242]

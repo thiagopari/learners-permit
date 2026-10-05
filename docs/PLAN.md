@@ -147,8 +147,8 @@ Both ideas fit without compromise, because each supplies what the other is missi
   - N1.7 has **no LoRA**.
   - Use the **DROID (Franka)** embodiment tag; SO-100 and GR1 would need a new embodiment trained from scratch.
 - **The baseline that makes the story [V]:** NVIDIA's RoboLab runs N1.7-DROID zero-shot in Isaac Sim.
-  - **BananasInBin: 38/40.**
-  - **RedDishesInBin (colour-conditioned): 15/40.**
+  - **BananasInBin (RoboLab task `BananasInBinThreeTotalTask`): 38/40.**
+  - **RedDishesInBin (`RedDishesInBinTask`): 15/40.**
   - **Careful with the framing:** the same README reports **8.58% overall** (412/4,800 episodes). RedDishesInBin is actually one of only 13 tasks with any success, so "colour is where it breaks" won't survive NVIDIA judges.
   - **The honest claim:** zero-shot reliability **varies wildly from task to task** (95% vs 37.5% vs mostly 0%), and that's exactly why per-skill licences are needed. ([RoboLab](https://github.com/NVIDIA/Isaac-GR00T/blob/main/examples/RoboLab/README.md))
   - Measure your own scene's baseline in Tier 1; never quote 15/40 as your scene's number.
@@ -165,7 +165,7 @@ Both ideas fit without compromise, because each supplies what the other is missi
 
 | Tier | When | Cost | What |
 |---|---|---|---|
-| 0 | Days 1–2 | $0 | Run RoboLab + N1.7-DROID on the Linux laptop (RTX Blackwell). Reproduce RedDishesInBin. |
+| 0 | Days 1–2 | ~$5 | Run RoboLab + N1.7-DROID **on a Nebius RTX PRO 6000 VM**, not the laptop. The laptop's RTX PRO 2000 has 8 GB; GR00T and Isaac Sim each need 16 GB+, and RoboLab's TiledCamera hangs on laptop Blackwell GPUs. Reproduce both baselines. |
 | 1 | Week 1 | ≤$10 | One sorting scene: 3 coloured parts, 2 bins. Zero-shot eval over 10 phrasings, with held-out colours. |
 | 2 | Week 2 | ~$40 | 500–1,000 scripted demos (DROID format). Fine-tune 5–10K steps on 1× RTX PRO 6000, about 3–6 h per run. |
 | 3 | Week 3 | ~$40–60 | Several thousand eval episodes on spot RTX PRO 6000 VMs (uk-south2) or Serverless L40S jobs. L40S quota is only 2, and its "spot" price is flat-rate. Keep a reserve. |
@@ -248,7 +248,7 @@ Workstreams:
 
 | Week | Goal | Done when |
 |---|---|---|
-| **1 (Oct 5–11)** End to end on a fallback skill | Nebius accounts, promo codes, budget alerts, **RTX PRO 6000 quota request (uk-south2)**. Tier 0: RoboLab + N1.7-DROID on the Linux laptop. Port the tool service to x86. Build `POST /run` + `authorize()` + trust check. Nemotron tool-calling loop over `tools.json` on Token Factory. | **The must-ship demo works:** order → plan → gate refuses or allows → the skill runs, using the `libero_object` checkpoint or a RoboLab task |
+| **1 (Oct 5–11)** End to end on a fallback skill | Nebius accounts, promo codes, budget alerts, **RTX PRO 6000 quota request (uk-south2)**. Tier 0 on the Nebius VM: RoboLab + N1.7-DROID on the Linux laptop. Port the tool service to x86. Build `POST /run` + `authorize()` + trust check. Nemotron tool-calling loop over `tools.json` on Token Factory. | **The must-ship demo works:** order → plan → gate refuses or allows → the skill runs, using the `libero_object` checkpoint or a RoboLab task |
 | **2 (Oct 12–18)** Make the skill real | Isaac Lab sorting scene (3 colours, 2 bins). Scripted expert generating 500–1,000 DROID-format demos. Fine-tune on spot RTX PRO 6000 with frequent checkpoints. Tavily gates (datasheet limit, recall → park, fault code → ticket). RBAC policy + human approvals | A fine-tuned checkpoint exists; Tavily blocks a pick live |
 | **3 (Oct 19–25)** Prove it at scale | Connect the Thompson-sampling gate to the new runner. Zero-shot vs fine-tuned across 10 phrasings and held-out colours, thousands of episodes on Nebius. Confidence-interval plots and cost per 1,000 episodes. **Oct 22 cut line:** real Franka clip, or fall back to a webcam verify | The gate licenses the fine-tuned skill on evidence |
 | **4 (Oct 26–29)** Ship | Video under 3 min (story above), README (architecture, impact numbers, Nebius usage), prior-work note, tool feedback, license. **Submit Oct 29** | Devpost submitted |
@@ -263,13 +263,20 @@ Workstreams:
 | ~~**Teammates' code**~~ | **Resolved Oct 4:** Megha, Amal and Ferbin all agreed | Done |
 | **Hardware footage** (a lab Franka isn't DROID's ZED 2 + ZED Mini rig) | Put any real arm with a scripted pick behind the same `/run`. **16 straight successes license it on camera** (batches of 4; 13 if you check every trial). Note that the rules let the sponsor ask for hardware access, so a borrowed lab arm is a risk | **Oct 12:** access confirmed. **Oct 22:** footage shot |
 
+## Update (Oct 4, evening): findings from the Linux runbook
+- **The laptop can't do the GPU work.** It has an RTX PRO 2000 Blackwell with 8 GB. GR00T inference needs 16 GB+, Isaac Sim 5.1 lists 16 GB as its minimum, RoboLab recommends 48 GB, and its TiledCamera hangs on laptop Blackwell chips (Isaac Lab #4951/#5001). **Use the Nebius RTX PRO 6000 VM from day 1.** The laptop runs the control plane, scripts and git.
+- **Task names:** `BananasInBinThreeTotalTask` and `RedDishesInBinTask`. RoboLab needs `uv sync --extra isaac50` (or `isaac51`) plus git-lfs. The GR00T example README is stale.
+- **Each RoboLab call boots Isaac Sim, so commissioning uses batches of 20 episodes,** not 4. With 20/20, P(rate ≥ 0.8) = 0.991, so a perfect skill passes in one launch.
+- **Fine-tune data risk:** RoboLab's exporter writes LeRobot v3 with joint-position state, not DROID's 17-D v2 layout, so expect a conversion step. Validate 5 episodes first (`docs/RUNBOOK.md` §3.3).
+- **Quota:** the default RTX PRO 6000 quota is 32 GPUs in uk-south2/eu-south1, so the Oct 8 cut line is just "confirm the quota row shows 32".
+
 ## Budget
 > **Credits confirmed (Oct 4):** a teammate attended Boston, so you have the $100 AI Cloud + $100 Token Factory attendee credits. Redeem them in week 1:
 > - **AI Cloud:** it needs a card and a $25 top-up before the promo code applies. **Set a budget alert;** the card auto-charges if the balance goes negative.
 > - **Token Factory:** promo codes are applied separately (Top up → promo).
 
 - **AI Cloud $100:**
-  - Tier 1: $0–10 (laptop first).
+  - Tier 0–1: about $5–15 (all GPU work is on the Nebius VM; the 8 GB laptop can't host GR00T + Isaac Sim).
   - Fine-tunes: ~$40, at 2–4 runs × 3–6 h on spot RTX PRO 6000.
   - Eval sweep: ~$40–60.
   - Ask the Nebius team for the "additional platform credits" the event mentioned, and keep $20 of buffer.

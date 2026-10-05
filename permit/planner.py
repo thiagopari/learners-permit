@@ -10,7 +10,8 @@ MODEL = os.environ.get("NEMOTRON_MODEL", "nvidia/nemotron-3-super-120b-a12b")
 ARGS = {"speed_pct": {"type": "integer", "minimum": 5, "maximum": 100, "description": "arm speed, percent of max"},
         "part_number": {"type": "string", "description": "part number on the item, if the order gives one"}}
 SYSTEM = ("You dispatch robot skills for one warehouse cell. Call the skill tools that fulfil the order, once each, "
-          "in order. Use only the tools given; if none fits, call none. Pass a part number only if the order has one.")
+          "in order. Use only the tools given; if none fits, call none. Pass a part number only if the order has one, "
+          "and a speed only if the order states one.")
 
 
 def tools(skills):

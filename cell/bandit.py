@@ -19,9 +19,11 @@ def p_at_least(s, f, thr=THR):
     return sum(comb(n, k) * thr**k * (1 - thr) ** (n - k) for k in range(s + 1))
 
 
-def commission(arms, run_batch, thr=THR, conf=CONF, batch=4, max_trials=40, on_batch=None, rng=random):
+def commission(arms, run_batch, thr=THR, conf=CONF, batch=4, max_trials=40, on_batch=None, rng=random, min_trials=0):
     """arms: candidate policy ids. run_batch({arm: n_episodes}) -> {arm: [1, 0, ...]}, run in parallel.
-    on_batch(entry) is called after every batch so a dashboard can show progress."""
+    on_batch(entry) is called after every batch so a dashboard can show progress.
+    min_trials: no early "fail" before this many trials. With a high bar (e.g. 0.99) the prior alone already sits
+    below 1 - conf, so without it a perfect policy fails after its first batch. Added for Learner's Permit."""
     s, f = dict.fromkeys(arms, 0), dict.fromkeys(arms, 0)
     log = []
     while sum(s.values()) + sum(f.values()) < max_trials:
@@ -48,7 +50,7 @@ def commission(arms, run_batch, thr=THR, conf=CONF, batch=4, max_trials=40, on_b
             on_batch(entry)
         if p[best] >= conf:
             return {"decision": "pass", "policy": best, "successes": s, "failures": f, "log": log}
-        if all(v <= 1 - conf for v in p.values()):
+        if all(v <= 1 - conf for v in p.values()) and sum(s.values()) + sum(f.values()) >= min_trials:
             return {"decision": "fail", "successes": s, "failures": f, "log": log}
     return {"decision": "inconclusive", "successes": s, "failures": f, "log": log}
 

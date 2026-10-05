@@ -17,8 +17,8 @@ ENTITIES = ([_entity("Role", r) for r in ("ai_agent", "operator", "supervisor", 
             + [_entity("User", user, [role]) for user, role in PEOPLE.items()])
 
 
-def decide(user, action, zone, context):
+def decide(user, action, zone, context, policy=POLICY):
     who = f'Agent::"{AGENT}"' if user == AGENT else f'User::"{user}"'
     r = cedarpy.is_authorized({"principal": who, "action": f'Action::"{action}"', "resource": f'Zone::"{zone}"',
-                               "context": context}, POLICY, ENTITIES)
+                               "context": context}, policy, ENTITIES)
     return r.decision == cedarpy.Decision.Allow

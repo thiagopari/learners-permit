@@ -2,11 +2,13 @@
 // The /run choke point fills `context` from the session, clock, sensors and licence store.
 // Nothing in it comes from LLM text.
 
-// The AI agent works only inside its envelope, and only with skills that earned a licence.
+// The AI agent works only inside its envelope, only with skills that earned a licence, and only for a person whose
+// own role may request work (so maintenance can't launder a pick through the AI).
 permit (principal in Role::"ai_agent", action in [Action::"pick_place", Action::"move_to"], resource in Zone::"cell1")
 when { ["banana","dish","housing","lid"].contains(context.object_class) && ["A","B","bin"].contains(context.bin)
        && context.speed_pct <= 50 && context.hour >= 6 && context.hour < 22
-       && context.skill_licensed };
+       && context.skill_licensed
+       && context has requester_role && ["operator","supervisor"].contains(context.requester_role) };
 
 // A supervisor can approve one specific command outside the envelope (single-use token).
 permit (principal in Role::"ai_agent", action == Action::"pick_place", resource in Zone::"cell1")

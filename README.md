@@ -12,8 +12,9 @@ sorting and kitting; production picking expects about 99.9%. Someone has to deci
 trigger, on what, and for how long. Here that decision is made in code and backed by evidence:
 
 - **Licences are earned.** A skill is commanded by the AI only after an evaluation sweep shows
-  P(success rate ≥ 0.8) ≥ 0.95. That is a Bayesian sequential test: Hyperion's gate, `cell/bandit.py`, unchanged.
-- **Licences are scoped.** They cover only the conditions that were tested (colours, phrasings, payloads).
+  P(success rate ≥ 0.8) ≥ 0.95. That is a Bayesian sequential test: Hyperion's gate, `cell/bandit.py`, with one
+  backward-compatible parameter added. An "unattended" tier needs P(rate ≥ 0.99), which takes 298 straight successes.
+- **Licences are scoped.** They cover only the conditions that were tested; today that's the commanded speed.
 - **Licences are revocable.** Once live runs slip, the licence is pulled automatically.
 - **Roles are enforced, not prompted.** One Cedar policy at one endpoint. The role comes from the session,
   never from the LLM.
@@ -29,7 +30,10 @@ person ─order─▶ Nemotron planner ─skill calls─▶ POST /run ◀── 
 ```
 Rules the code enforces (`permit/`, tested in `tests/`):
 - **Identity:** the planner sees only the skill catalogue. Any role, approver or extra argument it emits is dropped.
-- **Approvals:** a supervisor's approval is a single-use token, bound to one exact command and valid for 10 minutes.
+- **Approvals:** a supervisor's approval is a single-use token, bound to one exact command, repeat count and person,
+  and valid for 10 minutes.
+- **Requesters:** the AI works only for people whose own role may request work, so maintenance can't use it to
+  launder a pick their role forbids.
 - **Modes:** the AI never changes modes or speed limits, even with an approval.
 - **Fail closed:** missing context means deny. A person in the cell caps everyone at 25% speed.
 - **The web can only narrow:** a datasheet can block a pick but never allow one.
@@ -37,7 +41,7 @@ Rules the code enforces (`permit/`, tested in `tests/`):
 ## Run it (any machine, no GPU, no keys)
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
-.venv/bin/python -m pytest -q tests        # 31 tests
+.venv/bin/python -m pytest -q tests        # 52 tests
 .venv/bin/python demo/four_beats.py        # refuse → earn → block → revoke (mock runner)
 .venv/bin/python -m permit.server          # console at http://127.0.0.1:8099
 ```
@@ -67,8 +71,8 @@ Optional real services:
 | Path | What |
 |---|---|
 | `permit/` | **New:** Learner's Permit control plane, Cedar policy, licences, planner, Tavily check, runners |
-| `console/`, `demo/`, `tests/` | **New:** licence console, four-beat demo, 31 tests |
-| `cell/bandit.py` | Hyperion's commissioning gate, reused unchanged |
+| `console/`, `demo/`, `tests/` | **New:** licence console, four-beat demo, 52 tests |
+| `cell/bandit.py` | Hyperion's commissioning gate, reused (plus a `min_trials` parameter for the 99% tier) |
 | everything else | Hyperion (prior work; its README is [docs/hyperion-README.md](docs/hyperion-README.md)) |
 
 ## Prior work

@@ -1,6 +1,6 @@
-"""Tavily datasheet check. It can only narrow: a part heavier than the skill's limit is blocked, citing the page
-the mass came from. Any other outcome leaves the decision to RBAC and the licence.
-The mass is parsed from Tavily's extracted page text, never from an LLM.
+"""Tavily datasheet check. It can only narrow: if any weight on the found pages exceeds the skill's limit, the
+part is blocked, citing the page. Any other outcome leaves the decision to RBAC and the licence.
+Masses are parsed from Tavily's extracted page text, never from an LLM. Taking the largest one is conservative.
 """
 import json
 import os
@@ -8,8 +8,24 @@ import re
 import urllib.request
 
 API = "https://api.tavily.com"
-MASS = re.compile(r"(?:weight|mass)\D{0,40}?(\d+(?:\.\d+)?)\s*(kg|g|lbs?)\b", re.I)
-TO_KG = {"kg": 1.0, "g": 0.001, "lb": 0.4536, "lbs": 0.4536}
+NUM = r"(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:[.,]\d+)?)"   # 1,250 | 1,250.5 | 2.4 | 2,4
+UNIT = r"(kgs?|kilograms?|g|grams?|lbs?|pounds?)"
+AFTER = re.compile(rf"(?:weight|mass)[^\d\n]{{0,40}}?{NUM}\s*{UNIT}\b", re.I)    # Net weight: 2.4 kg
+BEFORE = re.compile(rf"(?:weight|mass)\s*\(\s*{UNIT}\s*\)\s*[:=]?\s*{NUM}", re.I)  # Weight (kg): 2.4
+TO_KG = {"k": 1.0, "g": 0.001, "l": 0.4536, "p": 0.4536}  # by the unit's first letter
+
+
+def number(text):
+    if re.fullmatch(r"\d{1,3}(?:,\d{3})+(?:\.\d+)?", text):
+        return float(text.replace(",", ""))  # thousands separators
+    return float(text.replace(",", "."))      # decimal comma
+
+
+def masses(text):
+    for m in AFTER.finditer(text):
+        yield number(m.group(1)) * TO_KG[m.group(2)[0].lower()], m.group(0)
+    for m in BEFORE.finditer(text):
+        yield number(m.group(2)) * TO_KG[m.group(1)[0].lower()], m.group(0)
 
 
 def tavily(endpoint, body):
@@ -26,10 +42,9 @@ def check(part_number, limit_kg, call=tavily):
     if not urls:
         return {"verdict": "unknown", "part": part_number, "reason": "no datasheet found"}
     pages = call("extract", {"urls": urls, "query": "weight mass kg"})
-    for page in pages.get("results", []):
-        m = MASS.search(page.get("raw_content") or "")
-        if m:
-            kg = round(float(m.group(1)) * TO_KG[m.group(2).lower()], 3)
-            return {"verdict": "block" if kg > limit_kg else "within_limit", "part": part_number, "mass_kg": kg,
-                    "limit_kg": limit_kg, "source": page["url"], "evidence": m.group(0)}
-    return {"verdict": "unknown", "part": part_number, "reason": "no mass in the extracted pages", "sources": urls}
+    seen = [(kg, ev, page["url"]) for page in pages.get("results", []) for kg, ev in masses(page.get("raw_content") or "")]
+    if not seen:
+        return {"verdict": "unknown", "part": part_number, "reason": "no mass in the extracted pages", "sources": urls}
+    kg, evidence, url = max(seen)
+    return {"verdict": "block" if kg > limit_kg else "within_limit", "part": part_number, "mass_kg": round(kg, 3),
+            "limit_kg": limit_kg, "source": url, "evidence": evidence}
