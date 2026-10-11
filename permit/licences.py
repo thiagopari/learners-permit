@@ -1,11 +1,11 @@
 """Licences: the AI may command a skill only after evaluation proves it, only within the scope that was
-tested, and only until live results slip. The proof is Hyperion's commissioning gate (cell/bandit.py).
+tested, and only until live results slip. The proof is the trust gate in permit/gate.py.
 """
 import json
 import os
 import time
 
-from cell.bandit import CONF, commission, p_at_least
+from permit.gate import CONFIDENCE as CONF, Sweep, prob_rate_at_least as p_at_least
 
 # thr: success rate to license at. cap: trial cap (cap 40 licensed a true-90% policy only ~56% of the time; 100
 # does ~92%). min_trials: no early fail before this many (the 99% prior starts below 1 - CONF).
@@ -61,32 +61,24 @@ class Licences:
             self.sweeps.pop(key)
             _save(self.sweeps_path, self.sweeps)
             prog = None
-        if not prog:
-            prog = {"successes": dict.fromkeys(arms, 0), "failures": dict.fromkeys(arms, 0), "log": [], "resumed": 0}
-        start = prog if prog["log"] else None
-        if start:
-            prog["resumed"] += 1
+        sweep = Sweep.start(list(arms), t["thr"], t["cap"], t["min_trials"], state=prog)
+        resumed = prog["resumed"] + 1 if prog else 0
 
         def checkpoint(entry):
-            for arm, outcomes in entry["ran"].items():
-                prog["successes"][arm] += sum(outcomes)
-                prog["failures"][arm] += len(outcomes) - sum(outcomes)
-            prog["log"].append(entry)
-            self.sweeps[key] = prog
+            self.sweeps[key] = {**sweep.state(), "resumed": resumed}
             _save(self.sweeps_path, self.sweeps)
             if on_batch:
                 on_batch(entry)
-        res = commission(list(arms), run_batch, thr=t["thr"], batch=batch, max_trials=t["cap"],
-                         min_trials=t["min_trials"], on_batch=checkpoint, start=start)
+        decision = sweep.run(run_batch, batch=batch, on_batch=checkpoint)
         if self.sweeps.pop(key, None) is not None:
             _save(self.sweeps_path, self.sweeps)
-        s, f = res["successes"], res["failures"]
-        best = res.get("policy") or max(arms, key=lambda a: p_at_least(s[a], f[a], t["thr"]))
-        lic = {"status": "licensed" if res["decision"] == "pass" else "refused", "decision": res["decision"],
+        best = sweep.leader()
+        arm = sweep.arms[best]
+        lic = {"status": "licensed" if decision == "pass" else "refused", "decision": decision,
                "tier": tier, "thr": t["thr"], "revoke_below": t["revoke_below"], "policy": best,
-               "successes": s[best], "trials": s[best] + f[best], "p": round(p_at_least(s[best], f[best], t["thr"]), 4),
+               "successes": arm.successes, "trials": arm.trials, "p": round(arm.confidence_at(t["thr"]), 4),
                "scope": scope or {}, "issued": time.strftime("%Y-%m-%d %H:%M:%S"), "live": [],
-               "log": [e["line"] for e in res["log"]], "resumed": prog["resumed"]}
+               "log": [e["line"] for e in sweep.log], "resumed": resumed}
         self.data[skill] = lic
         self.save()
         return lic

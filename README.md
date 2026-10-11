@@ -12,8 +12,8 @@ sorting and kitting; production picking expects about 99.9%. Someone has to deci
 trigger, on what, and for how long. Here that decision is made in code and backed by evidence:
 
 - **Licences are earned.** A skill is commanded by the AI only after an evaluation sweep shows
-  P(success rate ≥ 0.8) ≥ 0.95. That is a Bayesian sequential test: Hyperion's gate, `cell/bandit.py`, with one
-  backward-compatible parameter added. An "unattended" tier needs P(rate ≥ 0.99), which takes 298 straight successes.
+  P(success rate ≥ 0.8) ≥ 0.95. That is a Bayesian sequential test (Beta-Bernoulli posterior, Thompson-sampling allocation) in
+  `permit/gate.py`, written for this project from Hyperion's idea. An "unattended" tier needs P(rate ≥ 0.99), which takes 298 straight successes.
 - **Licences are scoped.** They cover only the conditions that were tested; today that's the commanded speed.
 - **Licences are revocable.** Once live runs slip, the licence is pulled automatically.
 - **Roles are enforced, not prompted.** One Cedar policy at one endpoint. The role comes from the session,
@@ -58,7 +58,7 @@ Optional real services:
 ## Status (2026-10-04)
 - **Done:**
   - Control plane: `permit/server.py`, plus the Cedar policy and its tests.
-  - Licences on Hyperion's gate (cap raised from 40 to 100 trials).
+  - Licences on a newly written trust gate (`permit/gate.py`; cap 100, and 400 for the 99% tier).
   - Nemotron planner client and Tavily check.
   - Console, mock runner, and the four-beat demo.
 - **Next (Linux laptop + Nebius):**
@@ -73,7 +73,7 @@ Optional real services:
 | `permit/` | **New:** Learner's Permit control plane, Cedar policy, licences, planner, Tavily check, runners |
 | `console/`, `demo/`, `tests/` | **New:** licence console, four-beat demo, 64 tests |
 | `cloud/` | **New:** the Nebius GPU VM: `vm.sh` (create, setup, stop) from the laptop, an unattended setup, an idle guard, and `measure.py` for the first session's numbers |
-| `cell/bandit.py` | Hyperion's commissioning gate, reused (plus a `min_trials` parameter for the 99% tier) |
+| `permit/gate.py` | **New:** the trust gate, a fresh implementation of Hyperion's idea (80%/99% tiers, caps 100/400, checkpointable sweeps) |
 | everything else | Hyperion (prior work): repo map in [docs/hyperion-README.md](docs/hyperion-README.md), the GB10 submission README in [docs/hyperion-gb10-readme.md](docs/hyperion-gb10-readme.md) |
 
 ## Prior work
@@ -84,6 +84,7 @@ The team's own public upload of the same code, with its Oct 3 commit history, is
 [github.com/mochi-bunny/navfix](https://github.com/mochi-bunny/navfix).
 
 New in Learner's Permit:
+- The trust gate itself, rewritten from scratch (`permit/gate.py`); Hyperion's `cell/bandit.py` is not used.
 - Enforcing the gate in code (in Hyperion it was only a prompt).
 - Cedar RBAC at a single choke point.
 - Per-skill, per-scope licences with drift revocation.
