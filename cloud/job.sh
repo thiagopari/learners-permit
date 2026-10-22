@@ -17,11 +17,15 @@
 #   LP_BUCKET            Object Storage bucket for results
 #   LP_S3_PROFILE        how the job mounts the bucket: an AWS profile name, or PROFILE@SECRET for a MysteryBox secret
 #   LP_HF_SECRET         MysteryBox secret holding the Hugging Face read token (passed to the job as HF_TOKEN)
+#   NEBIUS_PROJECT_ID    the project jobs run in (the CLI profile's default project may be a different one)
 # Options: LP_JOB_PLATFORM / LP_JOB_PRESET (default gpu-rtx6000-a / 1gpu-24vcpu-218gb; Isaac Sim needs RT cores, so
-# the fallback is gpu-l40s-a / 1gpu-8vcpu-32gb in eu-north1), LP_SPOT=1, LP_JOB_HOURS (default 4),
+# the fallback is gpu-l40s-a / 1gpu-8vcpu-32gb in eu-north1), LP_SPOT=1 (capped at LP_MAX_PRICE, default 1.20 per
+# GPU hour, by a pricing policy: cloud/price_cap.sh), LP_JOB_HOURS (default 4),
 # LP_USD_PER_HOUR (default 1.80, for the cost per 1,000 episodes).
 set -euo pipefail
 cd "$(dirname "$0")/.."
+# shellcheck source=cloud/price_cap.sh
+. cloud/price_cap.sh
 # shellcheck source=/dev/null
 [ -f ~/.config/learners-permit.env ] && { set -a; . ~/.config/learners-permit.env; set +a; }
 [ $# -gt 0 ] || { sed -n '2,24p' "$0"; exit 1; }
@@ -31,7 +35,7 @@ image() { echo "cr.$region.nebius.cloud/${NEBIUS_REGISTRY:?set NEBIUS_REGISTRY}/
 
 submit() {  # submit RUN_ID SKILL [KEY=VAL..]
     local run_id=$1 skill=$2; shift 2
-    : "${LP_BUCKET:?set LP_BUCKET}" "${LP_HF_SECRET:?set LP_HF_SECRET}"
+    : "${LP_BUCKET:?set LP_BUCKET}" "${LP_HF_SECRET:?set LP_HF_SECRET}" "${NEBIUS_PROJECT_ID:?set NEBIUS_PROJECT_ID}"
     local hours=${LP_JOB_HOURS:-4}
     local envs=(--env "LP_RUN_ID=$run_id" --env "LP_SKILL=$skill" --env "LP_COMMIT=$commit"
                 --env "LP_BUDGET_MIN=$(( hours * 60 - 15 ))" --env "LP_USD_PER_HOUR=${LP_USD_PER_HOUR:-1.80}")
@@ -40,13 +44,17 @@ submit() {  # submit RUN_ID SKILL [KEY=VAL..]
         [[ $kv == LP_*=* ]] || { echo "settings must look like LP_NAME=value, got: $kv"; exit 1; }
         envs+=(--env "$kv")
     done
-    local pricing=(--on-demand)
-    [ "${LP_SPOT:-0}" = 1 ] && pricing=(--preemptible --follows-spot-price)
+    local platform=${LP_JOB_PLATFORM:-gpu-rtx6000-a} pricing=(--on-demand)
+    if [ "${LP_SPOT:-0}" = 1 ]; then
+        mapfile -t pricing < <(spot_pricing "$NEBIUS_PROJECT_ID" "$platform")
+        [ "${#pricing[@]}" -gt 0 ] || exit 1
+        pricing=(--preemptible "${pricing[@]}")
+    fi
     # on-failure: a preempted or crashed run restarts and resumes from the checkpoint in the bucket.
-    nebius ai job create --name "lp-$run_id" --image "$(image)" "${envs[@]}" \
+    nebius ai job create --parent-id "$NEBIUS_PROJECT_ID" --name "lp-$run_id" --image "$(image)" "${envs[@]}" \
         --env-secret "HF_TOKEN=$LP_HF_SECRET" \
         --volume "s3://$LP_BUCKET:/results:rw:${LP_S3_PROFILE:-default}" \
-        --platform "${LP_JOB_PLATFORM:-gpu-rtx6000-a}" --preset "${LP_JOB_PRESET:-1gpu-24vcpu-218gb}" \
+        --platform "$platform" --preset "${LP_JOB_PRESET:-1gpu-24vcpu-218gb}" \
         "${pricing[@]}" --timeout "${hours}h" --restart-policy on-failure --disk-size 250Gi --shm-size 32Gi \
         --format jsonpath='{.metadata.id}'
     echo
