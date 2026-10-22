@@ -12,8 +12,8 @@ sorting and kitting; production picking expects about 99.9%. Someone has to deci
 trigger, on what, and for how long. Here that decision is made in code and backed by evidence:
 
 - **Licences are earned.** A skill is commanded by the AI only after an evaluation sweep shows
-  P(success rate ≥ 0.8) ≥ 0.95. That is a Bayesian sequential test: Hyperion's gate, `cell/bandit.py`, with one
-  backward-compatible parameter added. An "unattended" tier needs P(rate ≥ 0.99), which takes 298 straight successes.
+  P(success rate ≥ 0.8) ≥ 0.95. That is a Bayesian sequential test (Beta-Bernoulli posterior, Thompson-sampling allocation) in
+  `permit/gate.py`, written for this project from Hyperion's idea. An "unattended" tier needs P(rate ≥ 0.99), which takes 298 straight successes.
 - **Licences are scoped.** They cover only the conditions that were tested; today that's the commanded speed.
 - **Licences are revocable.** Once live runs slip, the licence is pulled automatically.
 - **Roles are enforced, not prompted.** One Cedar policy at one endpoint. The role comes from the session,
@@ -37,6 +37,9 @@ Rules the code enforces (`permit/`, tested in `tests/`):
 - **Modes:** the AI never changes modes or speed limits, even with an approval.
 - **Fail closed:** missing context means deny. A person in the cell caps everyone at 25% speed.
 - **The web can only narrow:** a datasheet can block a pick but never allow one.
+- **Every no is explained:** Nemotron tells the supervisor, in plain English, why each refusal, block or
+  revocation happened and what to do next. It sees only the audit facts (never the order text or web page text),
+  an answer quoting a number not in those facts is replaced by a template, and it can't change a decision.
 
 ## Run it (any machine, no GPU, no keys)
 ```bash
@@ -50,15 +53,25 @@ API calls (demo session tokens: `demo-sue` supervisor, `demo-olga` operator, `de
 curl -X POST localhost:8099/commission -H 'Authorization: Bearer demo-sue' -d '{"skill":"bananas_in_bin"}'
 curl -X POST localhost:8099/orders -H 'Authorization: Bearer demo-olga' -d '{"text":"Put the bananas in the bin"}'
 ```
+Evaluation sweeps as a **Nebius Serverless AI Job** (bills only while it runs; nothing left idling):
+```bash
+cloud/job.sh build                                    # image: GR00T N1.7 server + RoboLab/Isaac Sim + permit
+cloud/job.sh run red_dishes_in_bin LP_ARMS=n17_droid  # one commissioning sweep on an RTX PRO 6000
+cloud/job.sh fetch <run_id>                           # licence, checkpoint, summary (cost per 1,000 episodes), clips
+python cloud/job/sweep.py import results/<run_id>/licences.json   # the console now uses that licence
+```
+A preempted job restarts and resumes from the checkpoint it copies to Object Storage after every batch.
+Settings are in `cloud/job.sh` and `cloud/job/sweep.py`.
+
 Optional real services:
-- `NEBIUS_API_KEY` switches the planner to Nemotron on Token Factory (`NEMOTRON_MODEL`, default `nvidia/nemotron-3-super-120b-a12b`).
+- `NEBIUS_API_KEY` switches the planner and the explanations to Nemotron on Token Factory (`NEMOTRON_MODEL`, default `nvidia/nemotron-3-super-120b-a12b`).
 - `TAVILY_API_KEY` turns on the datasheet check.
 - Without them, the server says so and uses offline stand-ins.
 
 ## Status (2026-10-04)
 - **Done:**
   - Control plane: `permit/server.py`, plus the Cedar policy and its tests.
-  - Licences on Hyperion's gate (cap raised from 40 to 100 trials).
+  - Licences on a newly written trust gate (`permit/gate.py`; cap 100, and 400 for the 99% tier).
   - Nemotron planner client and Tavily check.
   - Console, mock runner, and the four-beat demo.
 - **Next (Linux laptop + Nebius):**
@@ -73,7 +86,8 @@ Optional real services:
 | `permit/` | **New:** Learner's Permit control plane, Cedar policy, licences, planner, Tavily check, runners |
 | `console/`, `demo/`, `tests/` | **New:** licence console, four-beat demo, 64 tests |
 | `cloud/` | **New:** the Nebius GPU VM: `vm.sh` (create, setup, stop) from the laptop, an unattended setup, an idle guard, and `measure.py` for the first session's numbers |
-| `cell/bandit.py` | Hyperion's commissioning gate, reused (plus a `min_trials` parameter for the 99% tier) |
+| `cloud/job.sh`, `cloud/job/` | **New:** the evaluation sweep as a Nebius Serverless AI Job: image, entrypoint, sweep runner |
+| `permit/gate.py` | **New:** the trust gate, a fresh implementation of Hyperion's idea (80%/99% tiers, caps 100/400, checkpointable sweeps) |
 | everything else | Hyperion (prior work): repo map in [docs/hyperion-README.md](docs/hyperion-README.md), the GB10 submission README in [docs/hyperion-gb10-readme.md](docs/hyperion-gb10-readme.md) |
 
 ## Prior work
@@ -84,6 +98,7 @@ The team's own public upload of the same code, with its Oct 3 commit history, is
 [github.com/mochi-bunny/navfix](https://github.com/mochi-bunny/navfix).
 
 New in Learner's Permit:
+- The trust gate itself, rewritten from scratch (`permit/gate.py`); Hyperion's `cell/bandit.py` is not used.
 - Enforcing the gate in code (in Hyperion it was only a prompt).
 - Cedar RBAC at a single choke point.
 - Per-skill, per-scope licences with drift revocation.

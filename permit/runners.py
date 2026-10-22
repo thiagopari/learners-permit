@@ -1,5 +1,5 @@
 """How a skill's trials run. Each runner returns run_batch({arm: n}) -> {arm: [1, 0, ...]}, the contract of
-Hyperion's gate (cell/bandit.py).
+the trust gate (permit/gate.py).
 
 mock:    coin flips at set true rates. No GPU; for tests and the demo. The rates dict is read on every call, so a
          demo can "perturb the scene" by changing it.
@@ -14,11 +14,11 @@ import subprocess
 import sys
 import time
 
-from cell.bandit import sim_runner
+from permit.gate import coin_flips
 
 
 def mock(rates, seconds_per_batch=0.0):
-    return sim_runner(rates, seconds_per_batch=seconds_per_batch)
+    return coin_flips(rates, seconds_per_batch=seconds_per_batch)
 
 
 def robolab(task, ports, video="none", timeout=3600, root=None, retries=1, extra_args=()):

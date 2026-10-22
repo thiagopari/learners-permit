@@ -6,7 +6,7 @@ import types
 
 import pytest
 
-from cell.bandit import p_at_least
+from permit.gate import prob_rate_at_least as p_at_least
 from permit import authz, datasheet, planner, runners
 from permit.licences import Licences
 from permit.server import Permit
@@ -26,8 +26,8 @@ def licensed(p, skill, arm="n17_droid", tier="supervised"):
 
 
 def test_gate_math():
-    assert round(p_at_least(38, 2), 3) == 0.993
-    assert p_at_least(12, 0) < 0.95 <= p_at_least(16, 0)                # batches of 4: the first pass is at 16/16
+    assert round(p_at_least(38, 2, 0.8), 3) == 0.993
+    assert p_at_least(12, 0, 0.8) < 0.95 <= p_at_least(16, 0, 0.8)               # batches of 4: the first pass is at 16/16
     assert p_at_least(297, 0, 0.99) < 0.95 <= p_at_least(298, 0, 0.99)  # "unattended" tier: 298 straight
 
 

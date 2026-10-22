@@ -14,6 +14,8 @@
 
 Callers send "Authorization: Bearer <session token>", and the role comes from that session. The LLM never supplies
 identity, approvals or context: execute() fills context from the clock, sensors, sessions and the licence store.
+Every denial and revocation also gets a plain-English explanation for the supervisor (Nemotron, or a template), logged
+as its own audit entry after the decision. It's advisory: it never feeds back into a decision.
 """
 import hashlib
 import json
@@ -23,7 +25,7 @@ import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-from permit import authz, datasheet, licences, planner, runners
+from permit import authz, datasheet, explainer, licences, planner, runners
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 SESSIONS = json.loads(os.environ.get("PERMIT_SESSIONS", '{"demo-sue": "sue", "demo-olga": "olga", "demo-max": "max"}'))
@@ -37,7 +39,7 @@ def command_hash(skill, args, repeat, requester):
 
 class Permit:
     def __init__(self, data_dir=os.path.join(ROOT, "data"), runner="mock", plan=None, check_part=None,
-                 clock=time.localtime, mock_delay=0.0, lock_timeout=5.0):
+                 clock=time.localtime, mock_delay=0.0, lock_timeout=5.0, explain=None):
         self.skills = json.load(open(os.path.join(ROOT, "skills.json")))
         self.licences = licences.Licences(os.path.join(data_dir, "licences.json"))
         self.audit_path = os.path.join(data_dir, "audit.jsonl")
@@ -45,6 +47,7 @@ class Permit:
         self.runner, self.mock_delay = runner, mock_delay
         self.batch = 20 if runner == "robolab" else 4  # each RoboLab call boots Isaac Sim: amortize over 20 episodes
         self.plan, self.check_part, self.clock = plan or planner.offline_plan, check_part, clock
+        self.explain = explain  # facts -> text, e.g. explainer.nemotron; None uses the template
         self.sensors = {"human_in_zone": False}
         self.approvals = {}
         self.lock, self.lock_timeout = threading.RLock(), lock_timeout  # one cell, one command at a time
@@ -63,7 +66,7 @@ class Permit:
         return self.runner + (":" + json.dumps(self.scene, sort_keys=True) if self.scene else "")
 
     def log(self, **entry):
-        entry = {"t": time.strftime("%H:%M:%S"), **entry}
+        entry = {"t": time.strftime("%H:%M:%S"), "id": secrets.token_hex(4), **entry}
         os.makedirs(os.path.dirname(self.audit_path), exist_ok=True)
         with open(self.audit_path, "a") as f:
             f.write(json.dumps(entry) + "\n")
@@ -84,11 +87,22 @@ class Permit:
         """The choke point. user is authz.AGENT for AI commands (requester = the person it acts for), otherwise the
         session's person. A busy cell denies instead of queueing, so a timed-out caller never executes later."""
         if not self.lock.acquire(timeout=self.lock_timeout):
-            return self.log(actor=user, requester=requester, skill=skill, decision="deny", reasons=["cell busy"])
+            return self.annotate(self.log(actor=user, requester=requester, skill=skill, decision="deny",
+                                          reasons=["cell busy"]))
         try:
-            return self._execute(user, skill, args, approval, requester, repeat)
+            entry = self._execute(user, skill, args, approval, requester, repeat)
         finally:
             self.lock.release()
+        return self.annotate(entry)  # outside the lock: a slow Token Factory call never holds the cell
+
+    def annotate(self, entry):
+        """Explain a denial, and a revocation this run caused, each as its own audit entry pointing at the decision."""
+        for e in (entry, entry.get("revocation")):
+            if e and explainer.needs(e):
+                text, by = explainer.explain(explainer.facts(e, self.licences.data.get(e["skill"])), self.explain)
+                e["explanation"], e["explained_by"] = text, by
+                self.log(action="explain", ref=e["id"], skill=e["skill"], explanation=text, by=by)
+        return entry
 
     def _execute(self, user, skill, args, approval, requester, repeat):
         deny = dict(actor=user, requester=requester, skill=skill, decision="deny")
@@ -108,7 +122,7 @@ class Permit:
             if sheet["verdict"] == "block":  # web evidence can only narrow
                 ok = False
                 reasons.append(f"datasheet: {sheet['mass_kg']} kg > {sheet['limit_kg']} kg limit ({sheet['source']})")
-        result = None
+        result, was = None, (self.licences.data.get(skill) or {}).get("status")
         if ok:
             policy = (self.licences.data.get(skill) or {}).get("policy") or next(iter(self.skills[skill]["arms"]))
             try:
@@ -123,6 +137,10 @@ class Permit:
                          decision="allow" if ok else "deny", reasons=reasons, context=ctx, datasheet=sheet,
                          result=result, licence=(self.licences.data.get(skill) or {}).get("status", "none"),
                          **({"scene": self.scene} if self.scene else {}))
+        lic = self.licences.data.get(skill) or {}
+        if was == "licensed" and lic.get("status") == "revoked":
+            entry["revocation"] = self.log(actor="permit", action="revoke", skill=skill, reasons=[lic["reason"]],
+                                           licence="revoked", ref=entry["id"])
         if not ok and user == authz.AGENT:
             entry["escalate"] = {"skill": skill, "args": args, "repeat": repeat, "for": requester,
                                  "command_hash": command_hash(skill, args, repeat, requester)}
@@ -276,7 +294,8 @@ if __name__ == "__main__":
     ap.add_argument("--port", type=int, default=8099)
     a = ap.parse_args()
     llm, web = bool(os.environ.get("NEBIUS_API_KEY")), bool(os.environ.get("TAVILY_API_KEY"))
-    print(f"planner: {'Nemotron on Token Factory' if llm else 'offline stand-in (set NEBIUS_API_KEY)'} | "
+    print(f"planner + explanations: {'Nemotron on Token Factory' if llm else 'offline stand-ins (set NEBIUS_API_KEY)'} | "
           f"datasheets: {'Tavily' if web else 'off (set TAVILY_API_KEY)'} | runner: {a.runner}")
     serve(Permit(runner=a.runner, plan=planner.plan if llm else None, check_part=datasheet.check if web else None,
+                 explain=explainer.nemotron if llm else None,
                  mock_delay=0.3 if a.runner == "mock" else 0.0, lock_timeout=5.0 if a.runner == "mock" else 30.0), a.port)

@@ -23,6 +23,8 @@
   th { color:var(--mute); font-weight:600; font-size:12px; }
   td.allow { color:var(--ok); font-weight:600; } td.deny { color:var(--no); font-weight:600; }
   .wrap { overflow-x:auto; }
+  .explain { display:block; margin-top:4px; color:var(--mute); font-style:italic; }
+  .explain small { font-style:normal; opacity:.8; }
 </style>
 </head>
 <body>
@@ -47,12 +49,16 @@ async function tick() {
         <div class="kv">live <b>${wins}/${live.length}</b>${l.reason ? ` · ${esc(l.reason)}` : ""}</div></div>`;
     }).join("") || '<p class="sub">No licences yet. A supervisor commissions a skill to start.</p>';
     const audit = await (await fetch("/audit")).json();
-    document.getElementById("audit").innerHTML = audit.reverse().map(e => {
+    const notes = Object.fromEntries(audit.filter(e => e.action === "explain").map(e => [e.ref, e]));
+    document.getElementById("audit").innerHTML = audit.filter(e => e.action !== "explain").reverse().map(e => {
       const what = e.action ? `${e.action} ${e.skill ?? ""} ${e.text ? "“" + e.text + "”" : ""}` : `${e.skill} ${JSON.stringify(e.args || {})}`;
       const why = (e.reasons || []).join("; ") || e.result || (e.status ? `${e.status} ${e.counts ?? ""} p=${e.p ?? ""}` : "");
       const who = e.requester ? `${e.actor} for ${e.requester}` : e.actor;
+      const n = notes[e.id];
+      const note = n ? `<span class="explain">${esc(n.explanation)} <small>(${esc(n.by)})</small></span>` : "";
+      const decision = e.decision || (e.action === "revoke" ? "revoked" : "");
       return `<tr><td>${esc(e.t)}</td><td>${esc(who)}</td><td>${esc(what)}</td>
-        <td class="${esc(e.decision)}">${esc(e.decision || "")}</td><td>${esc(why)}</td></tr>`;
+        <td class="${e.action === "revoke" ? "deny" : esc(e.decision)}">${esc(decision)}</td><td>${esc(why)}${note}</td></tr>`;
     }).join("");
   } catch (err) { /* server restarting; try again next tick */ }
 }
