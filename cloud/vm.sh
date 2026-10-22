@@ -11,13 +11,16 @@
 #
 # Needs: the nebius CLI with a profile (`nebius profile create`), and ~/.config/learners-permit.env with
 # NEBIUS_PROJECT_ID (a project in uk-south2 or eu-south1) and, for setup, HF_TOKEN.
-# Options: LP_SPOT=1 (preemptible, $0.95/h instead of $1.80/h; preemption stops it, the disk survives),
+# Options: LP_SPOT=1 (preemptible: $0.79-1.79/h instead of $1.80/h, capped at LP_MAX_PRICE, default 1.20, by a
+# pricing policy, see cloud/price_cap.sh; preemption or a price above the cap stops it, the disk survives),
 # LP_DISK_GIB (default 150; grow later with `nebius compute disk update --size-gibibytes`), LP_SSH_KEY.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+# shellcheck source=cloud/price_cap.sh
+. cloud/price_cap.sh
 # shellcheck source=/dev/null
 [ -f ~/.config/learners-permit.env ] && { set -a; . ~/.config/learners-permit.env; set +a; }
-[ $# -gt 0 ] || { sed -n '2,15p' "$0"; exit 1; }
+[ $# -gt 0 ] || { sed -n '2,16p' "$0"; exit 1; }
 : "${NEBIUS_PROJECT_ID:?set NEBIUS_PROJECT_ID in ~/.config/learners-permit.env}"
 name=lp-rtx6000 user=lp key=${LP_SSH_KEY:-$HOME/.ssh/id_ed25519}
 ssh_opts=(-i "$key" -o StrictHostKeyChecking=accept-new -o ServerAliveInterval=30)
@@ -75,7 +78,11 @@ create)
     [ -f "$key.pub" ] || { echo "no SSH key at $key.pub (set LP_SSH_KEY)"; exit 1; }
     subnet=$(nebius vpc subnet list --parent-id "$NEBIUS_PROJECT_ID" --format jsonpath='{.items[0].metadata.id}')
     pricing=()  # regular VM by default
-    [ "${LP_SPOT:-0}" = 1 ] && pricing=(--follows-spot-price --preemptible-on-preemption stop)
+    if [ "${LP_SPOT:-0}" = 1 ]; then
+        mapfile -t pricing < <(spot_pricing "$NEBIUS_PROJECT_ID" gpu-rtx6000-a)
+        [ "${#pricing[@]}" -gt 0 ] || exit 1
+        pricing+=(--preemptible-on-preemption stop)
+    fi
     # --recovery-policy fail is what makes the idle guard safe: a poweroff from inside the VM then stops it, where
     # the default policy restarts it and keeps billing. It can only be set at creation.
     nebius compute instance create --parent-id "$NEBIUS_PROJECT_ID" --name "$name" \
@@ -129,5 +136,5 @@ delete)
     [ "$answer" = "$name" ] || { echo "not deleted"; exit 1; }
     nebius compute instance delete --id "$(vm_id)"  # also deletes the managed boot disk
     ;;
-*) sed -n '2,15p' "$0"; exit 1 ;;
+*) sed -n '2,16p' "$0"; exit 1 ;;
 esac
