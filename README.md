@@ -37,6 +37,9 @@ Rules the code enforces (`permit/`, tested in `tests/`):
 - **Modes:** the AI never changes modes or speed limits, even with an approval.
 - **Fail closed:** missing context means deny. A person in the cell caps everyone at 25% speed.
 - **The web can only narrow:** a datasheet can block a pick but never allow one.
+- **Every no is explained:** Nemotron tells the supervisor, in plain English, why each refusal, block or
+  revocation happened and what to do next. It sees only the audit facts (never the order text or web page text),
+  an answer quoting a number not in those facts is replaced by a template, and it can't change a decision.
 
 ## Run it (any machine, no GPU, no keys)
 ```bash
@@ -51,7 +54,7 @@ curl -X POST localhost:8099/commission -H 'Authorization: Bearer demo-sue' -d '{
 curl -X POST localhost:8099/orders -H 'Authorization: Bearer demo-olga' -d '{"text":"Put the bananas in the bin"}'
 ```
 Optional real services:
-- `NEBIUS_API_KEY` switches the planner to Nemotron on Token Factory (`NEMOTRON_MODEL`, default `nvidia/nemotron-3-super-120b-a12b`).
+- `NEBIUS_API_KEY` switches the planner and the explanations to Nemotron on Token Factory (`NEMOTRON_MODEL`, default `nvidia/nemotron-3-super-120b-a12b`).
 - `TAVILY_API_KEY` turns on the datasheet check.
 - Without them, the server says so and uses offline stand-ins.
 

@@ -1,7 +1,7 @@
 """The video story end to end, with no GPU and no API keys: refuse -> earn -> block -> revoke.
 
 Uses the mock runner (coin flips at the rates in permit/skills.json). If NEBIUS_API_KEY / TAVILY_API_KEY are
-set, the planner (Nemotron) and the datasheet check (Tavily) are real. Run from the repo root:
+set, the planner and the explanations (Nemotron) and the datasheet check (Tavily) are real. Run from the repo root:
     python demo/four_beats.py
 """
 import os
@@ -11,7 +11,7 @@ import tempfile
 from types import SimpleNamespace
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from permit import datasheet, planner  # noqa: E402
+from permit import datasheet, explainer, planner  # noqa: E402
 from permit.server import Permit  # noqa: E402
 
 PAGE = "https://example.com/datasheets/PN-48213 (offline stand-in for Tavily)"
@@ -28,6 +28,9 @@ def show(entries):
     for e in entries:
         why = "; ".join(e.get("reasons") or []) or e.get("result")
         print(f"   {e['decision'].upper():5} {e['skill']} {e.get('args') or ''} -> {why}  [licence: {e['licence']}]")
+        for x in (e, e.get("revocation") or {}):
+            if x.get("explanation"):
+                print(f"         {x['explained_by']}: {x['explanation']}")
 
 
 def card(skill, lic):
@@ -36,8 +39,9 @@ def card(skill, lic):
 
 
 random.seed(7)
+llm = bool(os.environ.get("NEBIUS_API_KEY"))
 p = Permit(data_dir=tempfile.mkdtemp(), clock=lambda: SimpleNamespace(tm_hour=14),  # demo clock: inside 06-22
-           plan=planner.plan if os.environ.get("NEBIUS_API_KEY") else None,
+           plan=planner.plan if llm else None, explain=explainer.nemotron if llm else None,
            check_part=datasheet.check if os.environ.get("TAVILY_API_KEY")
            else (lambda part, limit: datasheet.check(part, limit, call=canned)))
 
@@ -58,9 +62,9 @@ show(p.order("olga", "Put the bananas in the bin. Crate PN-48213."))
 print("4. REVOKE: perturb the scene; live results slip and the licence is pulled")
 p.rates["red_dishes_in_bin"]["n17_droid_ft"] = 0.1
 for _ in range(50):
-    if p.licences.data["red_dishes_in_bin"]["status"] != "licensed":
+    runs = p.order("olga", "Put the red dishes in the bin")
+    if any(e.get("revocation") for e in runs):
+        show(runs)
         break
-    p.order("olga", "Put the red dishes in the bin")
-print("   " + p.licences.data["red_dishes_in_bin"].get("reason", "still licensed"))
 show(p.order("olga", "Put the red dishes in the bin"))
 print(f"\naudit trail: {p.audit_path}")
