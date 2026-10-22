@@ -53,6 +53,16 @@ API calls (demo session tokens: `demo-sue` supervisor, `demo-olga` operator, `de
 curl -X POST localhost:8099/commission -H 'Authorization: Bearer demo-sue' -d '{"skill":"bananas_in_bin"}'
 curl -X POST localhost:8099/orders -H 'Authorization: Bearer demo-olga' -d '{"text":"Put the bananas in the bin"}'
 ```
+Evaluation sweeps as a **Nebius Serverless AI Job** (bills only while it runs; nothing left idling):
+```bash
+cloud/job.sh build                                    # image: GR00T N1.7 server + RoboLab/Isaac Sim + permit
+cloud/job.sh run red_dishes_in_bin LP_ARMS=n17_droid  # one commissioning sweep on an RTX PRO 6000
+cloud/job.sh fetch <run_id>                           # licence, checkpoint, summary (cost per 1,000 episodes), clips
+python cloud/job/sweep.py import results/<run_id>/licences.json   # the console now uses that licence
+```
+A preempted job restarts and resumes from the checkpoint it copies to Object Storage after every batch.
+Settings are in `cloud/job.sh` and `cloud/job/sweep.py`.
+
 Optional real services:
 - `NEBIUS_API_KEY` switches the planner and the explanations to Nemotron on Token Factory (`NEMOTRON_MODEL`, default `nvidia/nemotron-3-super-120b-a12b`).
 - `TAVILY_API_KEY` turns on the datasheet check.
@@ -76,6 +86,7 @@ Optional real services:
 | `permit/` | **New:** Learner's Permit control plane, Cedar policy, licences, planner, Tavily check, runners |
 | `console/`, `demo/`, `tests/` | **New:** licence console, four-beat demo, 64 tests |
 | `cloud/` | **New:** the Nebius GPU VM: `vm.sh` (create, setup, stop) from the laptop, an unattended setup, an idle guard, and `measure.py` for the first session's numbers |
+| `cloud/job.sh`, `cloud/job/` | **New:** the evaluation sweep as a Nebius Serverless AI Job: image, entrypoint, sweep runner |
 | `permit/gate.py` | **New:** the trust gate, a fresh implementation of Hyperion's idea (80%/99% tiers, caps 100/400, checkpointable sweeps) |
 | everything else | Hyperion (prior work): repo map in [docs/hyperion-README.md](docs/hyperion-README.md), the GB10 submission README in [docs/hyperion-gb10-readme.md](docs/hyperion-gb10-readme.md) |
 

@@ -1,0 +1,24 @@
+# The job image needs only the control plane, the job scripts and the tests: keep secrets, history and media out.
+.git
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/.env
+**/*.token
+permit/data
+results
+docs
+navfix
+agent
+cell
+sim
+glue
+isaac
+docker
+infra
+warehouse
+samples
+console
+demo
+tools
+*.log

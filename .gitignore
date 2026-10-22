@@ -18,3 +18,6 @@ isaac/telemetry.jsonl
 # Learner's Permit runtime state
 permit/data/
 .pytest_cache/
+
+# Serverless Job results fetched with cloud/job.sh fetch
+results/
