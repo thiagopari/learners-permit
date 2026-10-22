@@ -11,7 +11,7 @@
 #   cloud/job.sh fetch RUN_ID          download a run's folder from the bucket to results/RUN_ID
 #
 # Needs: the nebius CLI with a profile, docker (build only), the aws CLI (fetch only), and in
-# ~/.config/learners-permit.env:
+# the project's .env (git-ignored; or ~/.config/learners-permit.env):
 #   NEBIUS_REGION        region of the registry and bucket (default uk-south2)
 #   NEBIUS_REGISTRY      registry path from `nebius registry create` (the ID without "registry-")
 #   LP_BUCKET            Object Storage bucket for results
@@ -26,8 +26,11 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 # shellcheck source=cloud/price_cap.sh
 . cloud/price_cap.sh
-# shellcheck source=/dev/null
-[ -f ~/.config/learners-permit.env ] && { set -a; . ~/.config/learners-permit.env; set +a; }
+# Keys: the project's .env (git-ignored), else ~/.config/learners-permit.env. Strip Windows line endings (Notepad).
+for f in .env ~/.config/learners-permit.env; do
+    # shellcheck source=/dev/null
+    [ -f "$f" ] && { set -a; . <(tr -d '\015' < "$f"); set +a; break; }  # \015: Notepad's CR
+done
 [ $# -gt 0 ] || { sed -n '2,24p' "$0"; exit 1; }
 region=${NEBIUS_REGION:-uk-south2}
 commit=$(git rev-parse --short HEAD)

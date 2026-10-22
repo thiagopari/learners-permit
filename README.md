@@ -63,7 +63,7 @@ python cloud/job/sweep.py import results/<run_id>/licences.json   # the console 
 A preempted job restarts and resumes from the checkpoint it copies to Object Storage after every batch.
 Settings are in `cloud/job.sh` and `cloud/job/sweep.py`.
 
-Optional real services:
+Optional real services (put the keys in `.env`: copy `.env.example`; it's git-ignored):
 - `NEBIUS_API_KEY` switches the planner and the explanations to Nemotron on Token Factory (`NEMOTRON_MODEL`, default `nvidia/nemotron-3-super-120b-a12b`).
 - `TAVILY_API_KEY` turns on the datasheet check.
 - Without them, the server says so and uses offline stand-ins.

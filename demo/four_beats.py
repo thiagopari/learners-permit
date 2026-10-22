@@ -11,7 +11,7 @@ import tempfile
 from types import SimpleNamespace
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from permit import datasheet, explainer, planner  # noqa: E402
+from permit import datasheet, envfile, explainer, planner  # noqa: E402
 from permit.server import Permit  # noqa: E402
 
 PAGE = "https://example.com/datasheets/PN-48213 (offline stand-in for Tavily)"
@@ -38,6 +38,7 @@ def card(skill, lic):
           f"P(rate >= {lic['thr']}) = {lic['p']}")
 
 
+envfile.load()  # the project's .env, if any: real Nemotron and Tavily
 random.seed(7)
 llm = bool(os.environ.get("NEBIUS_API_KEY"))
 p = Permit(data_dir=tempfile.mkdtemp(), clock=lambda: SimpleNamespace(tm_hour=14),  # demo clock: inside 06-22
