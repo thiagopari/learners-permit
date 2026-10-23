@@ -25,7 +25,9 @@ for f in .env ~/.config/learners-permit.env; do
 done
 [ $# -gt 0 ] || { sed -n '2,16p' "$0"; exit 1; }
 : "${NEBIUS_PROJECT_ID:?set NEBIUS_PROJECT_ID in .env}"
-name=lp-rtx6000 user=lp key=${LP_SSH_KEY:-$HOME/.ssh/id_ed25519}
+# Not "lp": Ubuntu already has an lp system user (the printer daemon) with a nologin shell, and cloud-init only adds
+# the key to an existing user, so every SSH session ended "This account is currently not available" (Oct 23).
+name=lp-rtx6000 user=permit key=${LP_SSH_KEY:-$HOME/.ssh/id_ed25519}
 ssh_opts=(-i "$key" -o StrictHostKeyChecking=accept-new -o ServerAliveInterval=30)
 
 vm_id() { nebius compute instance get-by-name --parent-id "$NEBIUS_PROJECT_ID" --name "$name" --format jsonpath='{.metadata.id}'; }
