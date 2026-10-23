@@ -40,11 +40,18 @@ def card(skill, lic):
 
 envfile.load()  # the project's .env, if any: real Nemotron and Tavily
 random.seed(7)
-llm = bool(os.environ.get("NEBIUS_API_KEY"))
+llm, web = bool(os.environ.get("NEBIUS_API_KEY")), bool(os.environ.get("TAVILY_API_KEY"))
+# The block beat needs a part the web actually documents: a made-up number finds no page that names it, so with real
+# services it's a real item (a cordless drill, ~1.7 kg on its retailer's spec sheet, over the skill's 1.0 kg limit).
+# Nemotron reads the part out of the order; the offline planner only spots numbers like PN-48213.
+live_block = llm and web
+part = os.environ.get("LP_DEMO_PART", "Makita XFD131") if live_block else "PN-48213"
 p = Permit(data_dir=tempfile.mkdtemp(), clock=lambda: SimpleNamespace(tm_hour=14),  # demo clock: inside 06-22
            plan=planner.plan if llm else None, explain=explainer.nemotron if llm else None,
-           check_part=datasheet.check if os.environ.get("TAVILY_API_KEY")
+           check_part=datasheet.check if live_block
            else (lambda part, limit: datasheet.check(part, limit, call=canned)))
+print(f"planner and explanations: {'Nemotron on Token Factory' if llm else 'offline stand-ins'} | "
+      f"datasheets: {'Tavily, live' if live_block else 'offline stand-in'}\n")
 
 print("0. Commission the zero-shot policy on both skills (Nebius eval sweeps; mocked here)")
 card("bananas_in_bin", p.commission("sue", "bananas_in_bin"))
@@ -58,7 +65,7 @@ card("red_dishes_in_bin", p.commission("sue", "red_dishes_in_bin", arms=["n17_dr
 show(p.order("olga", "Put the red dishes in the bin"))
 
 print("3. BLOCK: the datasheet says the part is too heavy for the skill")
-show(p.order("olga", "Put the bananas in the bin. Crate PN-48213."))
+show(p.order("olga", f"Put the bananas in the bin. The item is part {part}."))
 
 print("4. REVOKE: perturb the scene; live results slip and the licence is pulled")
 p.rates["red_dishes_in_bin"]["n17_droid_ft"] = 0.1

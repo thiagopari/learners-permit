@@ -103,17 +103,40 @@ def test_people_work_under_their_own_role(p):
     ("Net weight: 2.4 kg", 2.4), ("Weight 500 g", 0.5), ("Mass: 1,250 g", 1.25), ("Gewicht/weight 2,4 kg", 2.4),
     ("weight 2400 grams", 2.4), ("Weight: 5.3 pounds", 2.404), ("weight 2.4 kgs", 2.4), ("Weight (kg): 2.4", 2.4),
     ("payload weight 0.5 kg ... Net weight 2.4 kg", 2.4),  # the largest wins: conservative
+    # as Tavily extracted a real retailer page for a Makita XFD131 drill (Oct 22): a spec table and product copy
+    ("| Overall Length | 6-5/8\" | | | Weight (lbs.) | 3.8 | | | No Load Speed (rpm) | 0 - 500", 1.724),
+    ("Compact and ergonomic design |  Weighs only 3.6 lbs. with battery", 1.633),
 ])
 def test_datasheet_mass_formats(text, kg):
-    page = {"results": [{"url": "https://x/ds", "raw_content": text}]}
+    page = {"results": [{"url": "https://x/ds", "raw_content": f"Part PN-1. {text}"}]}
     assert datasheet.check("PN-1", 1.0, call=lambda endpoint, body: page)["mass_kg"] == kg
+
+
+@pytest.mark.parametrize("text,part,match", [
+    ("Rear spring no. 3, 48213-04030, 19.7 kg", "PN-48213", False),  # Tavily's real match for the demo part, Oct 22
+    ("Crate PN-48213, net weight 2.4 kg", "PN-48213", True), ("crate pn 48213", "PN-48213", True),
+    ("crate PN48213", "PN-48213", True), ("crate PN-482130", "PN-48213", False),
+    ("Makita XFD131 18V LXT drill", "Makita XFD131", True), ("Makita XFD1310 kit", "Makita XFD131", False),
+    ("XFD131 by another brand", "Makita XFD131", False),
+])
+def test_a_page_counts_only_if_it_names_the_part(text, part, match):
+    assert datasheet.names_part(text, part) is match
+
+
+def test_a_heavy_page_about_another_part_never_blocks(p):
+    licensed(p, "bananas_in_bin")
+    wrong = {"results": [{"url": "https://parts.example/48213-04030", "raw_content": "48213-04030 weight 19.7 kg"}]}
+    p.check_part = lambda part, limit: datasheet.check(part, limit, call=lambda endpoint, body: wrong)
+    e = p.execute(AI, "bananas_in_bin", {"part_number": "PN-48213"}, requester="olga")
+    assert e["decision"] == "allow" and e["datasheet"]["verdict"] == "unknown"
+    assert e["datasheet"]["reason"] == "no page found that names this part"
 
 
 def test_datasheet_can_only_block(p):
     licensed(p, "bananas_in_bin")
 
     def page(text):
-        return lambda endpoint, body: {"results": [{"url": "https://x/ds", "raw_content": text}]}
+        return lambda endpoint, body: {"results": [{"url": "https://x/ds", "raw_content": f"PN-1 {text}"}]}
 
     p.check_part = lambda part, limit: datasheet.check(part, limit, call=page("Net weight: 2.4 kg"))
     e = p.execute(AI, "bananas_in_bin", {"part_number": "PN-1"}, requester="olga")

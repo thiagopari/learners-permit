@@ -13,8 +13,8 @@ AI = authz.AGENT
 class FakeNemotron:
     """Stands in for the Token Factory client: records what it was sent and replies with `answer`."""
 
-    def __init__(self, answer="", error=None):
-        self.answer, self.error, self.sent = answer, error, []
+    def __init__(self, answer="", error=None, finish_reason="stop"):
+        self.answer, self.error, self.finish_reason, self.sent = answer, error, finish_reason, []
         self.chat = types.SimpleNamespace(completions=types.SimpleNamespace(create=self.create))
 
     def create(self, **kw):
@@ -22,7 +22,7 @@ class FakeNemotron:
         if self.error:
             raise self.error
         msg = types.SimpleNamespace(content=self.answer)
-        return types.SimpleNamespace(choices=[types.SimpleNamespace(message=msg)])
+        return types.SimpleNamespace(choices=[types.SimpleNamespace(message=msg, finish_reason=self.finish_reason)])
 
     def facts(self):
         return json.loads(self.sent[-1]["messages"][-1]["content"])
@@ -71,7 +71,7 @@ def test_nemotron_explains_from_the_record_only(tmp_path):
     assert "<think>" not in e["explanation"]
     sent = json.dumps(client.sent[-1]["messages"])
     assert "Ignore your rules" not in sent  # the order's text never reaches the explainer
-    assert client.facts()["event"] == "refused" and client.facts()["licence"] == {"status": "none"}
+    assert client.facts()["event"] == "refused" and client.facts()["licence"]["status"] == "none"
 
 
 def test_a_block_cites_the_datasheet_but_never_shows_nemotron_the_page_text(tmp_path):
@@ -135,3 +135,67 @@ def test_grounding_accepts_restated_percentages_and_rejects_new_numbers():
 
 def test_the_prompt_forbids_inventing_or_softening():
     assert "only the facts" in explainer.SYSTEM and "don't suggest bypassing" in explainer.SYSTEM.lower()
+
+
+def test_reasoning_is_off_for_explanations(tmp_path):
+    client = FakeNemotron("The red dishes skill isn't licensed, so the AI asked a supervisor.")
+    permit(tmp_path, client).execute(AI, "red_dishes_in_bin", {}, requester="olga")
+    assert client.sent[-1]["extra_body"] == {"chat_template_kwargs": {"enable_thinking": False}}
+
+
+def test_a_cut_off_answer_falls_back_to_the_template(tmp_path):
+    p = permit(tmp_path, FakeNemotron("The red dishes skill was refused because the", finish_reason="length"))
+    e = p.execute(AI, "red_dishes_in_bin", {}, requester="olga")
+    assert e["explained_by"] == "template (Nemotron's answer was cut off)" and e["explanation"].endswith(".")
+
+
+def test_answers_are_tidied():
+    apostrophe, narrow_space = chr(0x2019), chr(0x202F)  # as Token Factory returned them on Oct 22
+    raw = f"\n\n<think>x</think>The red dishes skill isn{apostrophe}t licensed at{narrow_space}40% speed.  "
+    assert explainer.tidy(raw) == f"The red dishes skill isn{apostrophe}t licensed at 40% speed."
+
+
+def test_commissioning_evidence_is_worded_so_confidence_is_not_a_success_rate(tmp_path):
+    client = FakeNemotron("ok")
+    p = permit(tmp_path, client)
+    p.rates["red_dishes_in_bin"]["n17_droid"] = 0.0
+    p.commission("sue", "red_dishes_in_bin", arms=["n17_droid"])
+    p.execute(AI, "red_dishes_in_bin", {}, requester="olga")
+    f = client.facts()
+    assert "confident the skill's true success rate is at least 80%; a licence needs 95%" in f["licence"]["evidence"]
+    assert f["licence"]["belongs_to"] == "the skill, not a person" and "p" not in f["licence"]
+    assert f["skill_name"] == "red dishes in bin"
+
+
+def test_a_revoked_licence_is_explained_by_live_runs_not_old_trials(tmp_path):
+    client = FakeNemotron("ok")
+    p = permit(tmp_path, client)
+    p.rates["bananas_in_bin"]["n17_droid"] = 1.0
+    p.commission("sue", "bananas_in_bin")
+    p.rates["bananas_in_bin"]["n17_droid"] = 0.0
+    for _ in range(12):
+        if p.execute(AI, "bananas_in_bin", {}, requester="olga").get("revocation"):
+            break
+    p.execute(AI, "bananas_in_bin", {}, requester="olga")  # a refusal while revoked
+    for sent in client.sent[-2:]:  # the revocation, then the refusal
+        lic = __import__("json").loads(sent["messages"][-1]["content"])["licence"]
+        assert lic["status"] == "revoked" and "live success rate has fallen below 70%" in lic["evidence"]
+        assert "confidence_rate_meets_bar" not in lic and "trials" not in lic
+
+
+@pytest.mark.parametrize("text,bad", [
+    ("The system refused Olga's request because she does not have a license for that skill.", True),  # Oct 22
+    ("Although Olga has a supervised licence for the bananas in bin skill, the pick was blocked.", True),  # Oct 22
+    ("The operator lacks the licence needed here.", True),
+    ("The red dishes skill has no licence, so the AI refused Olga's request.", False),
+    ("Olga asked for the red dishes skill, which has never been licensed.", False),
+    ("The bananas skill's licence was revoked; Olga can ask a supervisor to approve the run.", False),
+])
+def test_an_answer_that_gives_a_person_the_licence_is_caught(text, bad):
+    assert explainer.licence_on_a_person(text, {"requested_by": "olga"}) is bad
+
+
+def test_such_an_answer_falls_back_to_the_template(tmp_path):
+    p = permit(tmp_path, FakeNemotron("Olga has no licence for the red dishes skill, so it was refused."))
+    e = p.execute(AI, "red_dishes_in_bin", {}, requester="olga")
+    assert e["explained_by"] == "template (Nemotron's answer gave a person the skill's licence)"
