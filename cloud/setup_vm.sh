@@ -23,7 +23,10 @@ driver=$(nvidia-smi --query-gpu=driver_version --format=csv,noheader | head -1)
 # Isaac Lab #3477: early 580 drivers break Warp on Blackwell; 580.95.05 fixed it for some reporters.
 dpkg --compare-versions "$driver" ge 580.95.05 || { echo "driver $driver predates 580.95.05 (RUNBOOK section 4)"; exit 1; }
 sudo apt-get update -qq
-sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq ffmpeg git git-lfs tmux jq vulkan-tools python3-venv
+# The GL/X libraries are Isaac Sim's, as in cloud/job/Dockerfile: without libGLU, libneuray (MDL materials) fails to
+# load and the first boot segfaults in librtx.mdltranslator (Oct 23, on the Nebius ubuntu24.04-cuda13.0 image).
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq ffmpeg git git-lfs tmux jq vulkan-tools python3-venv \
+    libglu1-mesa libegl1 libgl1 libxt6 libxrender1 libxi6 libsm6 libxrandr2 libxkbcommon0
 vulkaninfo --summary 2>/dev/null | grep -i 'deviceName' | grep -q -i nvidia \
     || { echo "Vulkan sees no NVIDIA GPU, so Isaac Sim can't render (RUNBOOK section 5.3)"; exit 1; }
 git lfs install
