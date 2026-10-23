@@ -25,7 +25,7 @@ import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-from permit import authz, datasheet, explainer, licences, planner, runners
+from permit import authz, datasheet, envfile, explainer, licences, planner, runners
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 SESSIONS = json.loads(os.environ.get("PERMIT_SESSIONS", '{"demo-sue": "sue", "demo-olga": "olga", "demo-max": "max"}'))
@@ -293,6 +293,8 @@ if __name__ == "__main__":
     ap.add_argument("--runner", choices=["mock", "robolab"], default="mock")
     ap.add_argument("--port", type=int, default=8099)
     a = ap.parse_args()
+    keys = envfile.load()
+    print(f"keys: {keys or 'none found (.env or ~/.config/learners-permit.env)'}")
     llm, web = bool(os.environ.get("NEBIUS_API_KEY")), bool(os.environ.get("TAVILY_API_KEY"))
     print(f"planner + explanations: {'Nemotron on Token Factory' if llm else 'offline stand-ins (set NEBIUS_API_KEY)'} | "
           f"datasheets: {'Tavily' if web else 'off (set TAVILY_API_KEY)'} | runner: {a.runner}")

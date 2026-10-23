@@ -13,10 +13,14 @@ from permit import planner
 
 SYSTEM = ("You explain a robot cell's safety decisions to the shift supervisor. You get one decision as JSON facts. "
           "In two or three plain sentences, say what happened, why, and what can be done next. Use only the facts "
-          "given; quote numbers exactly as written there and add no others. Don't soften the decision, don't suggest "
-          "bypassing it, and don't use markdown.")
+          "given; quote numbers exactly as written there and add no others. Write for a person: no JSON keys or "
+          "field names (say \"40% speed\", not \"speed_pct 40\"), and name skills in plain words (\"the red dishes "
+          "skill\", not \"red_dishes_in_bin\"). Don't soften the decision, don't suggest bypassing it, and don't use "
+          "markdown. Licences belong to skills, never to people: never say a person lacks a licence. Confidence is how sure "
+          "the system is about a success rate; it is not itself a success rate.")
 NUMBER = re.compile(r"\d+(?:\.\d+)?")
 THINK = re.compile(r"<think>.*?</think>", re.S)
+NARROW_NBSP, NBSP = chr(0x202F), chr(0xA0)
 
 
 def needs(entry):
@@ -30,26 +34,39 @@ def facts(entry, licence):
     sheet = entry.get("datasheet") or {}
     blocked = sheet.get("verdict") == "block"
     event = "revoked" if entry.get("action") == "revoke" else "blocked" if blocked else "refused"
-    f = {"event": event, "skill": entry["skill"],
+    f = {"event": event, "skill": entry["skill"], "skill_name": plain(entry["skill"]),
          "reasons": [r for r in entry.get("reasons", []) if not r.startswith("datasheet:")]}
     if event != "revoked":  # a revocation is about the skill, not about whoever's run tipped it
-        f["for"] = entry.get("requester") or entry.get("actor")
+        f["requested_by"] = entry.get("requester") or entry.get("actor")
     if ctx:
         f["request"] = {k: ctx[k] for k in ("speed_pct", "hour", "human_in_zone", "requester_role") if k in ctx}
     if blocked:
         f["datasheet"] = {"part": sheet.get("part"), "mass_kg": sheet["mass_kg"], "limit_kg": sheet["limit_kg"],
                           "source": sheet["source"]}
     if licence:
-        live = licence.get("live", [])
-        f["licence"] = {"status": licence["status"], "tier": licence["tier"], "bar_pct": round(licence["thr"] * 100),
-                        "trials": licence["trials"], "successes": licence["successes"], "p": licence["p"],
-                        "confidence_needed": 0.95, "live_runs": len(live), "live_successes": sum(live)}
+        # Pre-worded evidence: given a bare "p": 0.9775, Nemotron called it "a 97.75% success rate" (Oct 22 test).
+        live, bar, sure = licence.get("live", []), round(licence["thr"] * 100), round(licence["p"] * 100, 2)
+        f["licence"] = {"status": licence["status"], "tier": licence["tier"], "belongs_to": "the skill, not a person",
+                        "evidence": f"{licence['successes']} of {licence['trials']} commissioning trials passed, so "
+                                    f"the system is {sure}% confident the skill's true success rate is at least "
+                                    f"{bar}%; a licence needs 95% confidence",
+                        "bar_pct": bar, "trials": licence["trials"], "successes": licence["successes"],
+                        "confidence_rate_meets_bar": licence["p"], "confidence_needed": 0.95,
+                        "live_runs": len(live), "live_successes": sum(live)}
         if licence.get("reason"):
             f["licence"]["reason"] = licence["reason"]
-        if event == "revoked":
-            f["licence"]["revoke_below_pct"] = round(licence["revoke_below"] * 100)
+        if licence["status"] == "revoked":  # the revocation itself, and any refusal while revoked
+            floor = round(licence["revoke_below"] * 100)
+            f["licence"]["revoke_below_pct"] = floor
+            # The commissioning numbers no longer describe the skill; given them, Nemotron mixed the two rules up.
+            f["licence"]["evidence"] = (f"{sum(live)} of the last {len(live)} live runs succeeded, so the system is "
+                                        f"at least 95% confident the skill's live success rate has fallen below "
+                                        f"{floor}%, the floor for a {licence['tier']} licence")
+            for stale in ("confidence_rate_meets_bar", "confidence_needed", "trials", "successes", "bar_pct"):
+                f["licence"].pop(stale)
     else:
-        f["licence"] = {"status": "none"}
+        f["licence"] = {"status": "none", "belongs_to": "the skill, not a person",
+                        "evidence": "the skill has never been commissioned, so it has no licence"}
     if event == "revoked":
         f["next_step"] = "until a supervisor commissions the skill again, the AI asks a person before every run"
     elif blocked:
@@ -61,18 +78,23 @@ def facts(entry, licence):
     return f
 
 
+def plain(skill):
+    """red_dishes_in_bin -> "red dishes in bin": what a supervisor would call it."""
+    return skill.replace("_", " ")
+
+
 def offline(f):
     """The template answer: used with no key, on an error, or when Nemotron's answer isn't grounded."""
     lic = f["licence"]
     if f["event"] == "revoked":
-        return (f"The licence for {f['skill']} was revoked: {lic.get('reason', 'live results slipped')}. "
+        return (f"The licence for {f['skill_name']} was revoked: {lic.get('reason', 'live results slipped')}. "
                 f"Live runs now show, with 95% confidence, a success rate under the {lic['revoke_below_pct']}% floor for a "
                 f"{lic['tier']} licence. "
                 f"Next: {f['next_step']}.")
     if f["event"] == "blocked":
         d = f["datasheet"]
         return (f"The pick of part {d['part']} was blocked: its datasheet lists {d['mass_kg']} kg, over the "
-                f"{d['limit_kg']} kg limit for {f['skill']} (source: {d['source']}). Next: {f['next_step']}.")
+                f"{d['limit_kg']} kg limit for {f['skill_name']} (source: {d['source']}). Next: {f['next_step']}.")
     why = "; ".join(f["reasons"]) or "outside the AI's envelope"
     if lic["status"] == "none":
         evidence = " The skill has never been commissioned."
@@ -82,8 +104,9 @@ def offline(f):
         evidence = f" Its licence was revoked: {lic.get('reason', 'live results slipped')}."
     else:
         evidence = (f" Its licence is {lic['status']}: {lic['successes']}/{lic['trials']} trials passed, and "
-                    f"P(rate >= {lic['bar_pct']}%) = {lic['p']}, against the {lic['confidence_needed']} needed.")
-    return f"The AI did not run {f['skill']} for {f['for']}: {why}.{evidence} Next: {f['next_step']}."
+                    f"P(rate >= {lic['bar_pct']}%) = {lic['confidence_rate_meets_bar']}, against the "
+                    f"{lic['confidence_needed']} needed.")
+    return f"The AI did not run {f['skill_name']} for {f['requested_by']}: {why}.{evidence} Next: {f['next_step']}."
 
 
 def grounded(text, f):
@@ -94,13 +117,39 @@ def grounded(text, f):
     return all(round(float(n), 6) in allowed for n in NUMBER.findall(text))
 
 
+def licence_on_a_person(text, f):
+    """True if the answer says a person has, holds or lacks a licence. Licences belong to skills; Nemotron wrote
+    "she does not have a license" and "Olga has a supervised licence" on Oct 22 despite the prompt saying so."""
+    people = [re.escape(str(f["requested_by"]))] if f.get("requested_by") else []
+    who = r"\b(?:" + "|".join(people + ["she", "he", "they", "the operator", "the requester", "the user"]) + r")\b"
+    claim = r"\b(?:has|have|holds?|hold|lacks?|doesn.t have|does not have|didn.t have|did not have|without)\b"
+    noun = r"\blicen[cs]es?\b"  # the noun only: "the skill, which has never been licensed" is a correct sentence
+    return re.search(who + r"[^.]{0,40}?" + claim + r"[^.]{0,40}?" + noun, text, re.I) is not None
+
+
+class CutOff(Exception):
+    """The answer hit the token limit: a half sentence is worse than the template."""
+
+
 def nemotron(f, client=None):
     if client is None:
         from openai import OpenAI
         client = OpenAI(base_url=planner.BASE_URL, api_key=os.environ["NEBIUS_API_KEY"], timeout=20, max_retries=1)
-    r = client.chat.completions.create(model=planner.MODEL, temperature=0.2, max_tokens=600, messages=[
-        {"role": "system", "content": SYSTEM}, {"role": "user", "content": json.dumps(f)}])
-    text = THINK.sub("", r.choices[0].message.content or "")
+    # Reasoning off: measured on Token Factory, it spent ~250 hidden tokens before a 3-sentence answer (and could run
+    # past the limit); off, the answer took 1.3 s instead of 3-4 s. The planner keeps its reasoning.
+    r = client.chat.completions.create(
+        model=planner.MODEL, temperature=0.2, max_tokens=300,
+        extra_body={"chat_template_kwargs": {"enable_thinking": False}},
+        messages=[{"role": "system", "content": SYSTEM}, {"role": "user", "content": json.dumps(f)}])
+    choice = r.choices[0]
+    if getattr(choice, "finish_reason", None) == "length":
+        raise CutOff()
+    return tidy(choice.message.content or "")
+
+
+def tidy(text):
+    """Drop any <think> block, turn narrow no-break spaces (seen before numbers) into plain ones, collapse spaces."""
+    text = THINK.sub("", text).replace(NARROW_NBSP, " ").replace(NBSP, " ")
     return " ".join(text.split())
 
 
@@ -111,10 +160,14 @@ def explain(f, llm=None):
         return fallback, "template"
     try:
         text = llm(f)
+    except CutOff:
+        return fallback, "template (Nemotron's answer was cut off)"
     except Exception as e:  # Token Factory down, no key, timeout: the decision stands either way
         return fallback, f"template (Nemotron error: {type(e).__name__})"
     if not text:
         return fallback, "template (Nemotron gave no answer)"
     if not grounded(text, f):
         return fallback, "template (Nemotron's answer quoted numbers not in the record)"
+    if licence_on_a_person(text, f):
+        return fallback, "template (Nemotron's answer gave a person the skill's licence)"
     return text, "nemotron"
