@@ -90,6 +90,16 @@ class Licences:
             return False
         return all(conditions.get(k) in (v if isinstance(v, list) else [v]) for k, v in lic["scope"].items())
 
+    def suspend(self, skill, reason, by):
+        """Pull a licence on evidence other than its success rate (e.g. by="scene"). Only a licensed skill can be
+        suspended, and it goes back to "revoked": the AI asks a person until a supervisor commissions it again."""
+        lic = self.data.get(skill)
+        if not lic or lic["status"] != "licensed":
+            return lic
+        lic.update(status="revoked", reason=reason, revoked_by=by)
+        self.save()
+        return lic
+
     def record_live(self, skill, ok):
         """Live results can only narrow: revoke once the recent window is confident the rate is below revoke_below."""
         lic = self.data.get(skill)
@@ -98,6 +108,7 @@ class Licences:
         lic["live"] = (lic["live"] + [int(ok)])[-LIVE_WINDOW:]
         s, n = sum(lic["live"]), len(lic["live"])
         if n >= LIVE_MIN and p_at_least(s, n - s, lic["revoke_below"]) <= 1 - CONF:
-            lic.update(status="revoked", reason=f"live results slipped: {s}/{n} successes in the last {n} runs")
+            lic.update(status="revoked", reason=f"live results slipped: {s}/{n} successes in the last {n} runs",
+                       revoked_by="live")
         self.save()
         return lic

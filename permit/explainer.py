@@ -59,9 +59,14 @@ def facts(entry, licence):
             floor = round(licence["revoke_below"] * 100)
             f["licence"]["revoke_below_pct"] = floor
             # The commissioning numbers no longer describe the skill; given them, Nemotron mixed the two rules up.
-            f["licence"]["evidence"] = (f"{sum(live)} of the last {len(live)} live runs succeeded, so the system is "
-                                        f"at least 95% confident the skill's live success rate has fallen below "
-                                        f"{floor}%, the floor for a {licence['tier']} licence")
+            if licence.get("revoked_by") == "scene":  # Cosmos saw a different scene; the success rate didn't decide it
+                f["licence"]["evidence"] = (f"Cosmos Reason 2 compared the cell after a live run with the scene the "
+                                            f"skill was commissioned in, and found that {licence['reason']}; the "
+                                            f"licence is evidence about the commissioning scene only")
+            else:
+                f["licence"]["evidence"] = (f"{sum(live)} of the last {len(live)} live runs succeeded, so the system "
+                                            f"is at least 95% confident the skill's live success rate has fallen "
+                                            f"below {floor}%, the floor for a {licence['tier']} licence")
             for stale in ("confidence_rate_meets_bar", "confidence_needed", "trials", "successes", "bar_pct"):
                 f["licence"].pop(stale)
     else:
@@ -87,9 +92,7 @@ def offline(f):
     """The template answer: used with no key, on an error, or when Nemotron's answer isn't grounded."""
     lic = f["licence"]
     if f["event"] == "revoked":
-        return (f"The licence for {f['skill_name']} was revoked: {lic.get('reason', 'live results slipped')}. "
-                f"Live runs now show, with 95% confidence, a success rate under the {lic['revoke_below_pct']}% floor for a "
-                f"{lic['tier']} licence. "
+        return (f"The licence for {f['skill_name']} was revoked: {lic['evidence']}. "
                 f"Next: {f['next_step']}.")
     if f["event"] == "blocked":
         d = f["datasheet"]

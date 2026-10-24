@@ -9,6 +9,7 @@
 #   cloud/vm.sh dashboard RoboLab's dashboard (replays episode videos) at http://localhost:8080, plus the console
 #   cloud/vm.sh clips     download every recorded episode video to results/clips/
 #   cloud/vm.sh measure   run cloud/measure.py in tmux on the VM (2-3 h)       cloud/vm.sh results   what it has so far
+#   cloud/vm.sh cosmos    serve Cosmos Reason 2 (the scene check) on the VM's 127.0.0.1:8001
 #   cloud/vm.sh start | stop                         a stopped VM bills only its disk ($0.071 per GiB-month)
 #   cloud/vm.sh delete    delete the VM and its boot disk (asks first)
 #   cloud/vm.sh user-data print the cloud-init that create sends
@@ -27,7 +28,7 @@ for f in .env ~/.config/learners-permit.env; do
     # shellcheck source=/dev/null
     [ -f "$f" ] && { set -a; . <(tr -d '\015' < "$f"); set +a; break; }  # \015: Notepad's CR
 done
-[ $# -gt 0 ] || { sed -n '2,20p' "$0"; exit 1; }
+[ $# -gt 0 ] || { sed -n '2,21p' "$0"; exit 1; }
 : "${NEBIUS_PROJECT_ID:?set NEBIUS_PROJECT_ID in .env}"
 # Not "lp": Ubuntu already has an lp system user (the printer daemon) with a nologin shell, and cloud-init only adds
 # the key to an existing user, so every SSH session ended "This account is currently not available" (Oct 23).
@@ -180,6 +181,17 @@ dashboard)  # RoboLab's results dashboard (episode videos) and the permit consol
     ip=$(vm_ip)
     ssh "${ssh_opts[@]}" -N -L 8080:127.0.0.1:8080 -L 8099:127.0.0.1:8099 "$user@$ip"
     ;;
+cosmos)  # Cosmos Reason 2 (the scene check) on the VM's 127.0.0.1:8001, in tmux, then one smoke test
+    if ! on_vm 'tmux has-session -t measure 2> /dev/null'; then push_code; fi
+    on_vm 'ss -ltn | grep -q "127.0.0.1:8001 " && exit 0
+        tmux has-session -t cosmos 2> /dev/null || tmux new-session -d -s cosmos \
+            "~/Isaac-GR00T/.venv/bin/python ~/learners-permit/cloud/cosmos_server.py 2>&1 | tee ~/cosmos-server.log"
+        echo "loading Cosmos-Reason2-2B (a minute or two)"
+        for _ in $(seq 120); do ss -ltn | grep -q "127.0.0.1:8001 " && exit 0
+            tmux has-session -t cosmos 2> /dev/null || break; sleep 5; done
+        tail -20 ~/cosmos-server.log; echo "Cosmos is not listening"; exit 1'
+    on_vm 'curl -s 127.0.0.1:8001/v1/models'; echo
+    ;;
 measure)  # the first session's numbers (cloud/measure.py), in tmux on the VM: closing the laptop is fine
     if on_vm 'tmux has-session -t measure 2> /dev/null'; then echo "measure is already running: $0 results"; exit 0; fi
     push_code
@@ -207,5 +219,5 @@ delete)
     [ "$answer" = "$name" ] || { echo "not deleted"; exit 1; }
     nebius compute instance delete --id "$(vm_id)"  # also deletes the managed boot disk
     ;;
-*) sed -n '2,20p' "$0"; exit 1 ;;
+*) sed -n '2,21p' "$0"; exit 1 ;;
 esac

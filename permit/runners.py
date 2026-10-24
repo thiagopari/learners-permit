@@ -29,6 +29,7 @@ def robolab(task, ports, video="none", timeout=3600, root=None, retries=1, extra
     A failed launch is retried `retries` times in a fresh folder: the whole launch is discarded, never part of it,
     so a crash can't select which episodes count. extra_args go to RoboLab as given (e.g. a randomized background)."""
     root = root or os.environ.get("ROBOLAB_DIR", os.path.expanduser("~/RoboLab"))
+    videos = {}  # arm -> the last launch's episode videos (viewport first), for the Cosmos scene check
 
     def launch(arm, n):
         folder = f"lp_{task}_{arm}_{time.time_ns()}"
@@ -52,6 +53,8 @@ def robolab(task, ports, video="none", timeout=3600, root=None, retries=1, extra
         if len(episodes) != n:  # a resume can re-append, so de-duplicate before counting
             raise RuntimeError(f"{task}/{arm}: expected {n} episodes, got {len(episodes)} "
                                f"(exit {p.returncode}) {(log or '')[-500:]}")
+        out_dir = pathlib.Path(root, "output", folder)
+        videos[arm] = sorted(map(str, out_dir.rglob("*.mp4")), key=lambda v: (not v.endswith("_viewport.mp4"), v))
         return [1 if r.get("success") else 0 for r in episodes.values()]  # None = never terminated = fail
 
     def run_batch(alloc):
@@ -66,4 +69,5 @@ def robolab(task, ports, video="none", timeout=3600, root=None, retries=1, extra
                         raise
                     print(f"{e}; retrying", file=sys.stderr, flush=True)
         return out
+    run_batch.videos = videos
     return run_batch

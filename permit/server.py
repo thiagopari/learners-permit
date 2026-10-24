@@ -25,7 +25,7 @@ import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-from permit import authz, datasheet, envfile, explainer, licences, planner, runners
+from permit import authz, datasheet, envfile, explainer, licences, planner, runners, scene
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 SESSIONS = json.loads(os.environ.get("PERMIT_SESSIONS", '{"demo-sue": "sue", "demo-olga": "olga", "demo-max": "max"}'))
@@ -39,7 +39,8 @@ def command_hash(skill, args, repeat, requester):
 
 class Permit:
     def __init__(self, data_dir=os.path.join(ROOT, "data"), runner="mock", plan=None, check_part=None,
-                 clock=time.localtime, mock_delay=0.0, lock_timeout=5.0, explain=None):
+                 clock=time.localtime, mock_delay=0.0, lock_timeout=5.0, explain=None, check_scene=None,
+                 frame=scene.frame):
         self.skills = json.load(open(os.path.join(ROOT, "skills.json")))
         self.licences = licences.Licences(os.path.join(data_dir, "licences.json"))
         self.audit_path = os.path.join(data_dir, "audit.jsonl")
@@ -53,13 +54,44 @@ class Permit:
         self.lock, self.lock_timeout = threading.RLock(), lock_timeout  # one cell, one command at a time
         self.scene = {}  # the world the cell works in: /perturb changes it and no licence is told (the revoke beat)
         self.video = os.environ.get("LP_VIDEO", "none")  # "viewport": the demo's own runs record its footage
+        # Cosmos Reason 2 (reference_jpg, current_jpg) -> scene.check verdict; frame(video, jpg) takes one frame.
+        self.check_scene, self.frame = check_scene, frame
+        self.frames_dir = os.path.join(data_dir, "frames")
 
     def run_batch(self, skill):
         if self.runner == "mock":
             return runners.mock(self.rates[skill], self.mock_delay)
         extra = ["--randomize-background", "--background-seed", str(self.scene["background_seed"])] if self.scene else []
-        return runners.robolab(self.skills[skill]["robolab_task"], self.skills[skill]["arms"], video=self.video,
+        video = self.video if self.video != "none" or not self.check_scene else "viewport"  # the check needs frames
+        return runners.robolab(self.skills[skill]["robolab_task"], self.skills[skill]["arms"], video=video,
                                extra_args=extra)
+
+    def frame_of(self, run_batch, arm, name):
+        """A JPEG from the last launch's first video for this arm, or None if the runner recorded none."""
+        videos = (getattr(run_batch, "videos", None) or {}).get(arm) or []
+        if not videos:
+            return None
+        os.makedirs(self.frames_dir, exist_ok=True)
+        try:
+            return self.frame(videos[0], os.path.join(self.frames_dir, f"{name}.jpg"))
+        except Exception:  # no frame means no scene check; it never blocks
+            return None
+
+    def verify_scene(self, skill, run_batch, policy):
+        """After a live run: Cosmos compares this run's scene with the licence's reference. Can only narrow."""
+        lic = self.licences.data.get(skill) or {}
+        if not (self.check_scene and lic.get("status") == "licensed" and lic.get("scene_reference")):
+            return None
+        current = self.frame_of(run_batch, policy, f"{skill}-{time.time_ns()}")
+        if not current:
+            return None
+        v = self.check_scene(lic["scene_reference"], current)
+        self.log(actor="permit", action="scene_check", skill=skill, verdict=v["verdict"], changes=v.get("changes"),
+                 model=v.get("model"), reference=lic["scene_reference"], frame=current)
+        if v["verdict"] == "changed":
+            self.licences.suspend(skill, f"the scene changed since the skill was commissioned ({v.get('model')}): "
+                                         + "; ".join(v["changes"]), by="scene")
+        return v
 
     def source(self):
         """Where trials come from: the runner, plus the scene if it's perturbed. A sweep never resumes across a change."""
@@ -122,13 +154,17 @@ class Permit:
             if sheet["verdict"] == "block":  # web evidence can only narrow
                 ok = False
                 reasons.append(f"datasheet: {sheet['mass_kg']} kg > {sheet['limit_kg']} kg limit ({sheet['source']})")
-        result, was = None, (self.licences.data.get(skill) or {}).get("status")
+        result, was, seen = None, (self.licences.data.get(skill) or {}).get("status"), None
         if ok:
             policy = (self.licences.data.get(skill) or {}).get("policy") or next(iter(self.skills[skill]["arms"]))
-            try:
-                outcomes = self.run_batch(skill)({policy: repeat})[policy]
+            rb = None
+            try:  # creating the runner can fail too (e.g. a missing RoboLab): that counts as a failed run
+                rb = self.run_batch(skill)
+                outcomes = rb({policy: repeat})[policy]
             except Exception as e:  # a crashed run is logged and counts against the skill
                 outcomes, result = [0], f"error: {e}"
+            if result is None:  # first the scene: a changed scene suspends before the drift statistics catch up
+                seen = self.verify_scene(skill, rb, policy)
             for o in outcomes:  # sim batches only; a real cell would stop at the first revocation
                 self.licences.record_live(skill, bool(o))
             if result is None:
@@ -136,7 +172,7 @@ class Permit:
         entry = self.log(actor=user, requester=requester, skill=skill, args=args, repeat=repeat, approver=approver,
                          decision="allow" if ok else "deny", reasons=reasons, context=ctx, datasheet=sheet,
                          result=result, licence=(self.licences.data.get(skill) or {}).get("status", "none"),
-                         **({"scene": self.scene} if self.scene else {}))
+                         **({"scene": self.scene} if self.scene else {}), **({"scene_check": seen} if seen else {}))
         lic = self.licences.data.get(skill) or {}
         if was == "licensed" and lic.get("status") == "revoked":
             entry["revocation"] = self.log(actor="permit", action="revoke", skill=skill, reasons=[lic["reason"]],
@@ -186,8 +222,14 @@ class Permit:
             raise RuntimeError("cell busy")
         try:
             arms, scope, _ = self.sweep(skill, arms, tier, scope)
-            lic = self.licences.commission(skill, arms, self.run_batch(skill), tier=tier, batch=self.batch,
+            rb = self.run_batch(skill)
+            lic = self.licences.commission(skill, arms, rb, tier=tier, batch=self.batch,
                                            scope=scope, source=self.source(), resume=resume)
+            if lic["status"] == "licensed" and self.check_scene:  # the scene this licence is evidence about
+                ref = self.frame_of(rb, lic["policy"], f"{skill}-reference")
+                if ref:
+                    lic["scene_reference"] = ref
+                    self.licences.save()
             self.log(actor=user, action="commission", skill=skill, arms=arms, tier=tier, status=lic["status"],
                      counts=f"{lic['successes']}/{lic['trials']}", p=lic["p"])
             return lic
@@ -292,12 +334,15 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--runner", choices=["mock", "robolab"], default="mock")
     ap.add_argument("--port", type=int, default=8099)
+    ap.add_argument("--scene-check", action="store_true",
+                    help=f"after each live run, Cosmos Reason 2 at {scene.BASE_URL} checks the scene (robolab runner)")
     a = ap.parse_args()
     keys = envfile.load()
     print(f"keys: {keys or 'none found (.env or ~/.config/learners-permit.env)'}")
     llm, web = bool(os.environ.get("NEBIUS_API_KEY")), bool(os.environ.get("TAVILY_API_KEY"))
     print(f"planner + explanations: {'Nemotron on Token Factory' if llm else 'offline stand-ins (set NEBIUS_API_KEY)'} | "
-          f"datasheets: {'Tavily' if web else 'off (set TAVILY_API_KEY)'} | runner: {a.runner}")
+          f"datasheets: {'Tavily' if web else 'off (set TAVILY_API_KEY)'} | runner: {a.runner} | "
+          f"scene check: {scene.MODEL if a.scene_check else 'off (--scene-check)'}")
     serve(Permit(runner=a.runner, plan=planner.plan if llm else None, check_part=datasheet.check if web else None,
-                 explain=explainer.nemotron if llm else None,
+                 explain=explainer.nemotron if llm else None, check_scene=scene.check if a.scene_check else None,
                  mock_delay=0.3 if a.runner == "mock" else 0.0, lock_timeout=5.0 if a.runner == "mock" else 30.0), a.port)

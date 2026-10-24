@@ -119,7 +119,7 @@ def test_a_revocation_is_logged_once_and_explained(tmp_path):
     assert len(revocations) == 1
     r = revocations[0]
     assert r["action"] == "revoke" and "live results slipped" in r["reasons"][0]
-    assert "70% floor" in r["explanation"] and "asks a person" in r["explanation"]
+    assert "below 70%, the floor" in r["explanation"] and "asks a person" in r["explanation"]
     logged = [x for x in audit(p) if x.get("action") == "revoke"]
     assert len(logged) == 1 and logged[0]["id"] == r["id"]
     assert runs[-1]["decision"] == "deny" and "was revoked" in runs[-1]["explanation"]
