@@ -44,6 +44,15 @@ vm_ip() {  # dynamic: a stopped VM gives its public IP back, so look it up every
 }
 on_vm() { local ip; ip=$(vm_ip); ssh "${ssh_opts[@]}" "$user@$ip" "$@"; }
 
+push_code() {  # this repo's committed HEAD onto the VM, keeping permit/data (licences, checkpoints, audit) and the venv
+    [ -z "$(git status --porcelain)" ] || echo "note: uncommitted changes are not copied, only HEAD"
+    git archive --format=tar HEAD | on_vm 'set -e; cd ~; rm -rf lp.new; mkdir lp.new; tar -x -C lp.new
+        for d in permit/data .venv; do [ ! -e "learners-permit/$d" ] || mv "learners-permit/$d" "lp.new/$d"; done
+        rm -rf learners-permit; mv lp.new learners-permit'
+    git rev-parse --short HEAD | on_vm 'cat > ~/learners-permit/.commit'
+    echo "copied $(git rev-parse --short HEAD) to the VM"
+}
+
 gr00t_up() {  # the GR00T policy server on the VM's 127.0.0.1:5600, in tmux, unless it's already listening
     # Not 5555, GR00T's default: on Nebius images NVIDIA's DCGM monitor (nv-hostengine) listens there. And the port
     # being open isn't enough: it has to be GR00T that holds it.
@@ -129,12 +138,7 @@ setup)
     if on_vm 'tmux has-session -t setup 2> /dev/null'; then
         echo "setup is already running on the VM; following it"
     else
-        [ -z "$(git status --porcelain)" ] || echo "note: uncommitted changes are not copied, only HEAD"
-        # Swap in the new code, but carry over permit/data (licences, sweep checkpoints, audit log) and the venv.
-        git archive --format=tar HEAD | on_vm 'set -e; cd ~; rm -rf lp.new; mkdir lp.new; tar -x -C lp.new
-            for d in permit/data .venv; do [ ! -e "learners-permit/$d" ] || mv "learners-permit/$d" "lp.new/$d"; done
-            rm -rf learners-permit; mv lp.new learners-permit'
-        git rev-parse --short HEAD | on_vm 'cat > ~/learners-permit/.commit'
+        push_code
         printf '%s' "$HF_TOKEN" | on_vm 'umask 077 && mkdir -p ~/.cache/huggingface && cat > ~/.cache/huggingface/token'
         on_vm 'rm -f ~/lp-setup.status && tmux new-session -d -s setup "bash ~/learners-permit/cloud/setup_vm.sh"'
     fi
@@ -157,6 +161,9 @@ tunnel)
 record)  # record TASK [N]: N episodes (default 2) with third-person viewport video, through permit's RoboLab runner
     task=${2:-BananasInBinThreeTotalTask} n=${3:-2}
     [[ $task =~ ^[A-Za-z0-9_]+$ && $n =~ ^[0-9]+$ ]] || { echo "usage: $0 record [TASK] [N]"; exit 1; }
+    # Not while measure runs: swapping the code under it, or a second Isaac Sim on the GPU, would spoil its numbers.
+    if on_vm 'tmux has-session -t measure 2> /dev/null'; then echo "measure is running; record after it ends"; exit 1; fi
+    push_code
     gr00t_up
     on_vm "cd ~/learners-permit && ROBOLAB_DIR=~/RoboLab timeout -k 60 60m .venv/bin/python -c \"
 from permit import runners
@@ -174,9 +181,14 @@ dashboard)  # RoboLab's results dashboard (episode videos) and the permit consol
     ssh "${ssh_opts[@]}" -N -L 8080:127.0.0.1:8080 -L 8099:127.0.0.1:8099 "$user@$ip"
     ;;
 measure)  # the first session's numbers (cloud/measure.py), in tmux on the VM: closing the laptop is fine
+    if on_vm 'tmux has-session -t measure 2> /dev/null'; then echo "measure is already running: $0 results"; exit 0; fi
+    push_code
     gr00t_up
-    on_vm 'tmux has-session -t measure 2> /dev/null && echo "already running" || tmux new-session -d -s measure \
+    on_vm 'tmux new-session -d -s measure \
         "cd ~/learners-permit && ROBOLAB_DIR=~/RoboLab .venv/bin/python cloud/measure.py 2>&1 | tee -a ~/lp-measure.log"'
+    sleep 30  # a crash on import or a missing server shows up within seconds
+    on_vm 'tmux has-session -t measure 2> /dev/null' \
+        || { echo "measure stopped at once:"; on_vm 'tail -15 ~/lp-measure.log'; exit 1; }
     echo "Measuring (2-3 h). Each finished condition is a line in ~/lp-measurements.jsonl on the VM."
     echo "Follow: $0 ssh, then tail -f ~/lp-measure.log. Results: $0 results"
     ;;

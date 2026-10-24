@@ -12,9 +12,12 @@ On the VM, with the GR00T server starting or up on 127.0.0.1:5600 (docs/LINUX_HA
 import json
 import os
 import socket
+import sys
 import time
 
-from permit import runners
+# Run as `python cloud/measure.py`: Python then puts cloud/ on the path, not the repo root (Oct 24, first real run).
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from permit import runners  # noqa: E402
 
 PLAN = [("BananasInBinThreeTotalTask", 40, None), ("RedDishesInBinTask", 40, None),
         ("BananasInBinThreeTotalTask", 20, 1), ("BananasInBinThreeTotalTask", 20, 2)]
