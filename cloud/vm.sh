@@ -8,6 +8,7 @@
 #   cloud/vm.sh record [TASK] [N]   N episodes (default 2) with viewport video; starts the GR00T server if needed
 #   cloud/vm.sh dashboard RoboLab's dashboard (replays episode videos) at http://localhost:8080, plus the console
 #   cloud/vm.sh clips     download every recorded episode video to results/clips/
+#   cloud/vm.sh measure   run cloud/measure.py in tmux on the VM (2-3 h)       cloud/vm.sh results   what it has so far
 #   cloud/vm.sh start | stop                         a stopped VM bills only its disk ($0.071 per GiB-month)
 #   cloud/vm.sh delete    delete the VM and its boot disk (asks first)
 #   cloud/vm.sh user-data print the cloud-init that create sends
@@ -26,7 +27,7 @@ for f in .env ~/.config/learners-permit.env; do
     # shellcheck source=/dev/null
     [ -f "$f" ] && { set -a; . <(tr -d '\015' < "$f"); set +a; break; }  # \015: Notepad's CR
 done
-[ $# -gt 0 ] || { sed -n '2,19p' "$0"; exit 1; }
+[ $# -gt 0 ] || { sed -n '2,20p' "$0"; exit 1; }
 : "${NEBIUS_PROJECT_ID:?set NEBIUS_PROJECT_ID in .env}"
 # Not "lp": Ubuntu already has an lp system user (the printer daemon) with a nologin shell, and cloud-init only adds
 # the key to an existing user, so every SSH session ended "This account is currently not available" (Oct 23).
@@ -172,6 +173,17 @@ dashboard)  # RoboLab's results dashboard (episode videos) and the permit consol
     ip=$(vm_ip)
     ssh "${ssh_opts[@]}" -N -L 8080:127.0.0.1:8080 -L 8099:127.0.0.1:8099 "$user@$ip"
     ;;
+measure)  # the first session's numbers (cloud/measure.py), in tmux on the VM: closing the laptop is fine
+    gr00t_up
+    on_vm 'tmux has-session -t measure 2> /dev/null && echo "already running" || tmux new-session -d -s measure \
+        "cd ~/learners-permit && ROBOLAB_DIR=~/RoboLab .venv/bin/python cloud/measure.py 2>&1 | tee -a ~/lp-measure.log"'
+    echo "Measuring (2-3 h). Each finished condition is a line in ~/lp-measurements.jsonl on the VM."
+    echo "Follow: $0 ssh, then tail -f ~/lp-measure.log. Results: $0 results"
+    ;;
+results)  # the measurements so far
+    on_vm 'cat ~/lp-measurements.jsonl 2> /dev/null || echo "none yet"; tmux has-session -t measure 2> /dev/null \
+        && echo "(still running)" || echo "(not running)"'
+    ;;
 clips)  # download every recorded episode video to results/clips/ (git-ignored)
     mkdir -p results/clips
     on_vm 'cd ~/RoboLab/output 2> /dev/null && find . -name "*.mp4" -print0 | tar -c --null -T -' | tar -x -C results/clips
@@ -183,5 +195,5 @@ delete)
     [ "$answer" = "$name" ] || { echo "not deleted"; exit 1; }
     nebius compute instance delete --id "$(vm_id)"  # also deletes the managed boot disk
     ;;
-*) sed -n '2,19p' "$0"; exit 1 ;;
+*) sed -n '2,20p' "$0"; exit 1 ;;
 esac
