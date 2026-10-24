@@ -30,4 +30,6 @@ def test_the_example_holds_no_secrets_and_env_is_ignored():
     root = pathlib.Path(envfile.ROOT)
     example = envfile.parse((root / ".env.example").read_text())
     assert {k for k, v in example.items() if v} <= {"NEBIUS_PROJECT_ID"}
-    assert subprocess.run(["git", "check-ignore", "-q", ".env"], cwd=root).returncode == 0
+    assert "**/.env" in (root / ".gitignore").read_text().splitlines()
+    if (root / ".git").exists():  # the GPU VM gets a `git archive` copy, with no .git to ask
+        assert subprocess.run(["git", "check-ignore", "-q", ".env"], cwd=root).returncode == 0
