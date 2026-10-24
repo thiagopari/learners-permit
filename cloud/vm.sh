@@ -5,6 +5,9 @@
 #   cloud/vm.sh setup     copy this repo's committed HEAD and run cloud/setup_vm.sh in tmux there, then follow its log
 #   cloud/vm.sh status    state, public IP, and the idle guard's last check
 #   cloud/vm.sh ssh       a shell on the VM          cloud/vm.sh tunnel   the permit console at http://localhost:8099
+#   cloud/vm.sh record [TASK] [N]   N episodes (default 2) with viewport video; starts the GR00T server if needed
+#   cloud/vm.sh dashboard RoboLab's dashboard (replays episode videos) at http://localhost:8080, plus the console
+#   cloud/vm.sh clips     download every recorded episode video to results/clips/
 #   cloud/vm.sh start | stop                         a stopped VM bills only its disk ($0.071 per GiB-month)
 #   cloud/vm.sh delete    delete the VM and its boot disk (asks first)
 #   cloud/vm.sh user-data print the cloud-init that create sends
@@ -23,7 +26,7 @@ for f in .env ~/.config/learners-permit.env; do
     # shellcheck source=/dev/null
     [ -f "$f" ] && { set -a; . <(tr -d '\015' < "$f"); set +a; break; }  # \015: Notepad's CR
 done
-[ $# -gt 0 ] || { sed -n '2,16p' "$0"; exit 1; }
+[ $# -gt 0 ] || { sed -n '2,19p' "$0"; exit 1; }
 : "${NEBIUS_PROJECT_ID:?set NEBIUS_PROJECT_ID in .env}"
 # Not "lp": Ubuntu already has an lp system user (the printer daemon) with a nologin shell, and cloud-init only adds
 # the key to an existing user, so every SSH session ended "This account is currently not available" (Oct 23).
@@ -39,6 +42,17 @@ vm_ip() {  # dynamic: a stopped VM gives its public IP back, so look it up every
     echo "$ip"
 }
 on_vm() { local ip; ip=$(vm_ip); ssh "${ssh_opts[@]}" "$user@$ip" "$@"; }
+
+gr00t_up() {  # the GR00T policy server on the VM's 127.0.0.1:5555, in tmux, unless it's already listening
+    on_vm 'ss -ltn | grep -q "127.0.0.1:5555 " && exit 0
+        tmux has-session -t gr00t 2> /dev/null || tmux new-session -d -s gr00t "cd ~/Isaac-GR00T &&
+            CUDA_VISIBLE_DEVICES=0 ~/.local/bin/uv run python gr00t/eval/run_gr00t_server.py \
+            --model-path nvidia/GR00T-N1.7-DROID --embodiment-tag OXE_DROID_RELATIVE_EEF_RELATIVE_JOINT --device cuda \
+            --host 127.0.0.1 --port 5555 --use-sim-policy-wrapper 2>&1 | tee ~/gr00t-server.log"
+        echo "starting the GR00T policy server (a few minutes the first time)"
+        for _ in $(seq 180); do ss -ltn | grep -q "127.0.0.1:5555 " && exit 0; sleep 5; done
+        tail -20 ~/gr00t-server.log; echo "the GR00T server is not up after 15 minutes"; exit 1'
+}
 
 user_data() {  # cloud-init: our user and key, plus the idle guard on a 5-minute timer from the first boot
     local guard
@@ -135,11 +149,35 @@ tunnel)
     ip=$(vm_ip)
     ssh "${ssh_opts[@]}" -N -L 8099:127.0.0.1:8099 "$user@$ip"
     ;;
+record)  # record TASK [N]: N episodes (default 2) with third-person viewport video, through permit's RoboLab runner
+    task=${2:-BananasInBinThreeTotalTask} n=${3:-2}
+    [[ $task =~ ^[A-Za-z0-9_]+$ && $n =~ ^[0-9]+$ ]] || { echo "usage: $0 record [TASK] [N]"; exit 1; }
+    gr00t_up
+    on_vm "cd ~/learners-permit && ROBOLAB_DIR=~/RoboLab timeout -k 60 60m .venv/bin/python -c \"
+from permit import runners
+print('successes:', runners.robolab('$task', {'a': 5555}, video='viewport', retries=0)({'a': $n})['a'])\" &&
+           echo 'clips:' && find ~/RoboLab/output -name '*_viewport.mp4' -mmin -60 | tail -$n"
+    echo "Watch them: $0 dashboard (in the browser), or $0 clips (download to results/clips)"
+    ;;
+dashboard)  # RoboLab's results dashboard (episode videos) and the permit console, through an SSH tunnel
+    # Bound to 127.0.0.1 on the VM: RoboLab's default 0.0.0.0 would put it on the VM's public IP.
+    on_vm 'tmux has-session -t dashboard 2> /dev/null || tmux new-session -d -s dashboard \
+        "cd ~/RoboLab && ~/.local/bin/uv run robolab-dashboard --output-dir ~/RoboLab/output --host 127.0.0.1 --port 8080"'
+    echo "RoboLab dashboard (episode videos): http://localhost:8080"
+    echo "permit console (if running on the VM): http://localhost:8099. Ctrl-C closes the tunnel."
+    ip=$(vm_ip)
+    ssh "${ssh_opts[@]}" -N -L 8080:127.0.0.1:8080 -L 8099:127.0.0.1:8099 "$user@$ip"
+    ;;
+clips)  # download every recorded episode video to results/clips/ (git-ignored)
+    mkdir -p results/clips
+    on_vm 'cd ~/RoboLab/output 2> /dev/null && find . -name "*.mp4" -print0 | tar -c --null -T -' | tar -x -C results/clips
+    find results/clips -name '*.mp4' | sort
+    ;;
 start | stop) nebius compute instance "$1" --id "$(vm_id)" ;;
 delete)
     read -r -p "Delete $name and its boot disk? Everything on it is lost. Type the name to confirm: " answer
     [ "$answer" = "$name" ] || { echo "not deleted"; exit 1; }
     nebius compute instance delete --id "$(vm_id)"  # also deletes the managed boot disk
     ;;
-*) sed -n '2,16p' "$0"; exit 1 ;;
+*) sed -n '2,19p' "$0"; exit 1 ;;
 esac
