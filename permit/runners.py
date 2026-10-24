@@ -9,6 +9,7 @@ robolab: real GR00T N1.7 episodes in Isaac Sim through NVIDIA's RoboLab harness.
 import json
 import os
 import pathlib
+import shutil
 import signal
 import subprocess
 import sys
@@ -31,7 +32,9 @@ def robolab(task, ports, video="none", timeout=3600, root=None, retries=1, extra
 
     def launch(arm, n):
         folder = f"lp_{task}_{arm}_{time.time_ns()}"
-        cmd = ["uv", "run", "python", "policies/gr00t/run.py", "--headless", "--remote-host", "127.0.0.1",
+        # uv's installer puts it in ~/.local/bin, which a tmux or cron shell may not have on PATH (Oct 24, first run)
+        uv = shutil.which("uv") or os.path.expanduser("~/.local/bin/uv")
+        cmd = [uv, "run", "python", "policies/gr00t/run.py", "--headless", "--remote-host", "127.0.0.1",
                "--remote-port", str(ports[arm]), "--task", task, "--num-envs", str(n), "--num-runs", "1",
                "--open-loop-horizon", "8", "--instruction-type", "default", "--video-mode", video,
                "--output-folder-name", folder, *extra_args]
