@@ -6,7 +6,7 @@
                  drift revokes the licence in about 9 live runs; at 60%, about 19 and only 83% of the time. If it
                  stays higher, the beat needs a stronger perturbation (RoboLab's lighting variation, ported to GR00T).
 
-On the VM, with the GR00T server starting or up on 127.0.0.1:5555 (docs/LINUX_HANDOFF.md, Step 4):
+On the VM, with the GR00T server starting or up on 127.0.0.1:5600 (docs/LINUX_HANDOFF.md, Step 4):
     ROBOLAB_DIR=~/RoboLab .venv/bin/python cloud/measure.py
 """
 import json
@@ -21,7 +21,7 @@ PLAN = [("BananasInBinThreeTotalTask", 40, None), ("RedDishesInBinTask", 40, Non
 OUT = os.path.expanduser("~/lp-measurements.jsonl")
 
 
-def wait_for_server(port=5555, minutes=15):
+def wait_for_server(port=5600, minutes=15):
     for _ in range(minutes * 12):
         try:
             socket.create_connection(("127.0.0.1", port), timeout=2).close()
@@ -37,7 +37,7 @@ def main():
         extra = [] if seed is None else ["--randomize-background", "--background-seed", str(seed)]
         t0, row = time.time(), {"task": task, "episodes": n, "background_seed": seed}
         try:
-            outcomes = runners.robolab(task, {"a": 5555}, timeout=7200, extra_args=extra)({"a": n})["a"]
+            outcomes = runners.robolab(task, {"a": 5600}, timeout=7200, extra_args=extra)({"a": n})["a"]
             row["successes"] = sum(outcomes)
         except RuntimeError as e:  # one failed condition shouldn't cost the rest of the session
             row["error"] = str(e)[-300:]

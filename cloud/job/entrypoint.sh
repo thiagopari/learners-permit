@@ -44,9 +44,9 @@ cd "$GR00T"
 timeout -k 30 30m uv run hf download nvidia/Cosmos-Reason2-2B > /dev/null
 timeout -k 30 30m uv run hf download nvidia/GR00T-N1.7-DROID > /dev/null
 
-step "GR00T policy server on 127.0.0.1:5555"
+step "GR00T policy server on 127.0.0.1:5600"
 CUDA_VISIBLE_DEVICES=0 setsid uv run python gr00t/eval/run_gr00t_server.py --model-path nvidia/GR00T-N1.7-DROID \
-    --embodiment-tag OXE_DROID_RELATIVE_EEF_RELATIVE_JOINT --device cuda --host 127.0.0.1 --port 5555 \
+    --embodiment-tag OXE_DROID_RELATIVE_EEF_RELATIVE_JOINT --device cuda --host 127.0.0.1 --port 5600 \
     --use-sim-policy-wrapper > ~/gr00t-server.log 2>&1 &
 server=$!
 for _ in $(seq 180); do  # up to 15 minutes

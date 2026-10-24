@@ -6,7 +6,7 @@
     "max_mass_kg": 1.0,
     "robolab_task": "BananasInBinThreeTotalTask",
     "arms": {
-      "n17_droid": 5555
+      "n17_droid": 5600
     },
     "mock_rates": {
       "n17_droid": 0.95
@@ -19,8 +19,8 @@
     "max_mass_kg": 1.0,
     "robolab_task": "RedDishesInBinTask",
     "arms": {
-      "n17_droid": 5555,
-      "n17_droid_ft": 5556
+      "n17_droid": 5600,
+      "n17_droid_ft": 5601
     },
     "mock_rates": {
       "n17_droid": 0.375,

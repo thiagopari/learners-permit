@@ -43,14 +43,18 @@ vm_ip() {  # dynamic: a stopped VM gives its public IP back, so look it up every
 }
 on_vm() { local ip; ip=$(vm_ip); ssh "${ssh_opts[@]}" "$user@$ip" "$@"; }
 
-gr00t_up() {  # the GR00T policy server on the VM's 127.0.0.1:5555, in tmux, unless it's already listening
-    on_vm 'ss -ltn | grep -q "127.0.0.1:5555 " && exit 0
+gr00t_up() {  # the GR00T policy server on the VM's 127.0.0.1:5600, in tmux, unless it's already listening
+    # Not 5555, GR00T's default: on Nebius images NVIDIA's DCGM monitor (nv-hostengine) listens there. And the port
+    # being open isn't enough: it has to be GR00T that holds it.
+    on_vm 'gr00t_listening() { ss -ltn | grep -q "127.0.0.1:5600 " && pgrep -f run_gr00t_server > /dev/null; }
+        gr00t_listening && exit 0
+        if ss -ltn | grep -q ":5600 "; then echo "port 5600 is held by something other than GR00T:"; sudo ss -ltnp | grep ":5600 "; exit 1; fi
         tmux has-session -t gr00t 2> /dev/null || tmux new-session -d -s gr00t "cd ~/Isaac-GR00T &&
             CUDA_VISIBLE_DEVICES=0 ~/.local/bin/uv run python gr00t/eval/run_gr00t_server.py \
             --model-path nvidia/GR00T-N1.7-DROID --embodiment-tag OXE_DROID_RELATIVE_EEF_RELATIVE_JOINT --device cuda \
-            --host 127.0.0.1 --port 5555 --use-sim-policy-wrapper 2>&1 | tee ~/gr00t-server.log"
+            --host 127.0.0.1 --port 5600 --use-sim-policy-wrapper 2>&1 | tee ~/gr00t-server.log"
         echo "starting the GR00T policy server (a few minutes the first time)"
-        for _ in $(seq 180); do ss -ltn | grep -q "127.0.0.1:5555 " && exit 0; sleep 5; done
+        for _ in $(seq 180); do gr00t_listening && exit 0; sleep 5; done
         tail -20 ~/gr00t-server.log; echo "the GR00T server is not up after 15 minutes"; exit 1'
 }
 
@@ -155,7 +159,7 @@ record)  # record TASK [N]: N episodes (default 2) with third-person viewport vi
     gr00t_up
     on_vm "cd ~/learners-permit && ROBOLAB_DIR=~/RoboLab timeout -k 60 60m .venv/bin/python -c \"
 from permit import runners
-print('successes:', runners.robolab('$task', {'a': 5555}, video='viewport', retries=0)({'a': $n})['a'])\" &&
+print('successes:', runners.robolab('$task', {'a': 5600}, video='viewport', retries=0)({'a': $n})['a'])\" &&
            echo 'clips:' && find ~/RoboLab/output -name '*_viewport.mp4' -mmin -60 | tail -$n"
     echo "Watch them: $0 dashboard (in the browser), or $0 clips (download to results/clips)"
     ;;

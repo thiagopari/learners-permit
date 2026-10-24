@@ -69,10 +69,13 @@ cd "$LP"
 .venv/bin/pip install -q -r requirements.txt
 .venv/bin/python -m pytest -q tests
 
-step "GR00T policy server on 127.0.0.1:5555"
+step "GR00T policy server on 127.0.0.1:5600"
+# Not GR00T's default 5555: Nebius images run NVIDIA's DCGM monitor (nv-hostengine) there (Oct 24).
+pkill -f run_gr00t_server 2> /dev/null && sleep 5  # one left over from `cloud/vm.sh record` would hold the port
+if ss -ltn | grep -q ":5600 "; then echo "port 5600 is already in use:"; sudo ss -ltnp | grep ":5600 "; exit 1; fi
 cd "$GR00T"
 CUDA_VISIBLE_DEVICES=0 setsid uv run python gr00t/eval/run_gr00t_server.py --model-path nvidia/GR00T-N1.7-DROID \
-    --embodiment-tag OXE_DROID_RELATIVE_EEF_RELATIVE_JOINT --device cuda --host 127.0.0.1 --port 5555 \
+    --embodiment-tag OXE_DROID_RELATIVE_EEF_RELATIVE_JOINT --device cuda --host 127.0.0.1 --port 5600 \
     --use-sim-policy-wrapper > ~/gr00t-server.log 2>&1 &
 server=$!
 for _ in $(seq 180); do  # up to 15 minutes: the first load reads several GB of weights
@@ -85,7 +88,7 @@ grep -q -E "Server (is )?ready" ~/gr00t-server.log || { tail -30 ~/gr00t-server.
 step "End to end: 2 episodes of BananaOnPlateTask (NVIDIA's README: 40/40) through permit's RoboLab runner"
 cd "$LP"
 ROBOLAB_DIR="$ROBOLAB" timeout -k 60 45m .venv/bin/python -c "from permit import runners
-print(runners.robolab('BananaOnPlateTask', {'n17_droid': 5555}, retries=0)({'n17_droid': 2}))"
+print(runners.robolab('BananaOnPlateTask', {'n17_droid': 5600}, retries=0)({'n17_droid': 2}))"
 
 step "Done"
 df -h / | tail -1
