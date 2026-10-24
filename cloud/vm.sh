@@ -185,7 +185,7 @@ measure)  # the first session's numbers (cloud/measure.py), in tmux on the VM: c
     push_code
     gr00t_up
     on_vm 'tmux new-session -d -s measure \
-        "cd ~/learners-permit && ROBOLAB_DIR=~/RoboLab .venv/bin/python cloud/measure.py 2>&1 | tee -a ~/lp-measure.log"'
+        "cd ~/learners-permit && ROBOLAB_DIR=~/RoboLab .venv/bin/python cloud/measure.py 2>&1 | tee ~/lp-measure.log"'
     sleep 30  # a crash on import or a missing server shows up within seconds
     on_vm 'tmux has-session -t measure 2> /dev/null' \
         || { echo "measure stopped at once:"; on_vm 'tail -15 ~/lp-measure.log'; exit 1; }
