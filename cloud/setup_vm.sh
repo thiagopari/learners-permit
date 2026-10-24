@@ -79,11 +79,11 @@ CUDA_VISIBLE_DEVICES=0 setsid uv run python gr00t/eval/run_gr00t_server.py --mod
     --use-sim-policy-wrapper > ~/gr00t-server.log 2>&1 &
 server=$!
 for _ in $(seq 180); do  # up to 15 minutes: the first load reads several GB of weights
-    grep -q -E "Server (is )?ready" ~/gr00t-server.log && break
+    ss -ltn | grep -q "127.0.0.1:5600 " && break  # it prints no "ready" line: the open port is the signal
     kill -0 "$server" 2>/dev/null || { tail -30 ~/gr00t-server.log; echo "the GR00T server died"; exit 1; }
     sleep 5
 done
-grep -q -E "Server (is )?ready" ~/gr00t-server.log || { tail -30 ~/gr00t-server.log; echo "not ready after 15 min"; exit 1; }
+ss -ltn | grep -q "127.0.0.1:5600 " || { tail -30 ~/gr00t-server.log; echo "not listening after 15 min"; exit 1; }
 
 step "End to end: 2 episodes of BananaOnPlateTask (NVIDIA's README: 40/40) through permit's RoboLab runner"
 cd "$LP"
