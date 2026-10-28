@@ -12,6 +12,7 @@ cat > ~/.dockerignore <<'EOF'
 *
 !.local
 !.cache/huggingface/hub/models--nvidia--GR00T-N1.7-DROID
+!.cache/huggingface/hub/models--nvidia--Cosmos-Reason2-2B
 !Isaac-GR00T
 !RoboLab
 !learners-permit

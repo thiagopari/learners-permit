@@ -20,6 +20,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --chown=1001:1001 .local /home/permit/.local
 COPY --chown=1001:1001 .cache/huggingface/hub/models--nvidia--GR00T-N1.7-DROID \
     /home/permit/.cache/huggingface/hub/models--nvidia--GR00T-N1.7-DROID
+# GR00T N1.7's backbone IS Cosmos-Reason2-2B: the policy server loads it at start. The first job (Oct 28) left it out
+# and died offline with "couldn't connect to huggingface.co ... couldn't find them in the cached files".
+COPY --chown=1001:1001 .cache/huggingface/hub/models--nvidia--Cosmos-Reason2-2B \
+    /home/permit/.cache/huggingface/hub/models--nvidia--Cosmos-Reason2-2B
 COPY --chown=1001:1001 Isaac-GR00T /home/permit/Isaac-GR00T
 COPY --chown=1001:1001 RoboLab /home/permit/RoboLab
 COPY --chown=1001:1001 learners-permit /home/permit/learners-permit
