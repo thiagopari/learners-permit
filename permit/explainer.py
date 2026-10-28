@@ -69,6 +69,11 @@ def facts(entry, licence):
                                             f"below {floor}%, the floor for a {licence['tier']} licence")
             for stale in ("confidence_rate_meets_bar", "confidence_needed", "trials", "successes", "bar_pct"):
                 f["licence"].pop(stale)
+            if licence.get("revoked_by") == "scene":
+                # No success-rate rule decided it. Given the 70% floor and the live counts anyway, Nemotron wrote that
+                # a scene change "triggered an automatic revocation below the 70% threshold" (Oct 28, real run).
+                for stale in ("revoke_below_pct", "live_runs", "live_successes"):
+                    f["licence"].pop(stale, None)
     else:
         f["licence"] = {"status": "none", "belongs_to": "the skill, not a person",
                         "evidence": "the skill has never been commissioned, so it has no licence"}

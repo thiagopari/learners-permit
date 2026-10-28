@@ -160,3 +160,13 @@ def test_a_scene_suspension_template_names_cosmos_not_the_success_rate():
     f = explainer.facts({"action": "revoke", "skill": "bananas_in_bin", "reasons": [lic["reason"]]}, lic)
     text = explainer.offline(f)
     assert "vision check compared" in text and "red background" in text and "live runs" not in text
+
+
+def test_a_scene_suspension_gives_the_explainer_no_success_rate_numbers():
+    """On Oct 28 Nemotron, given the 70% floor, wrote that a scene change 'triggered a revocation below 70%'."""
+    lic = {"status": "revoked", "tier": "supervised", "thr": 0.8, "p": 0.98, "trials": 40, "successes": 37,
+           "revoke_below": 0.7, "live": [1, 1], "revoked_by": "scene",
+           "reason": "the scene changed since the skill was commissioned (nvidia/Nemotron-3.5-Super-VL): floor changed"}
+    f = explainer.facts({"action": "revoke", "skill": "bananas_in_bin", "reasons": [lic["reason"]]}, lic)
+    assert not {"revoke_below_pct", "live_runs", "live_successes", "trials", "successes"} & set(f["licence"])
+    assert not explainer.grounded("It fell below the 70% threshold.", f)

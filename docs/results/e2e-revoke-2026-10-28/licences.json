@@ -1,0 +1,30 @@
+{
+ "bananas_in_bin": {
+  "status": "revoked",
+  "decision": "pass",
+  "tier": "supervised",
+  "thr": 0.8,
+  "revoke_below": 0.7,
+  "policy": "n17_droid",
+  "successes": 37,
+  "trials": 40,
+  "p": 0.9756,
+  "scope": {
+   "speed_pct": [
+    40
+   ]
+  },
+  "issued": "2026-10-28 13:05:32",
+  "live": [
+   1
+  ],
+  "log": [
+   "batch 1: n17_droid 19/20 | P(rate >= 80%) for n17_droid = 0.94",
+   "batch 2: n17_droid 37/40 | P(rate >= 80%) for n17_droid = 0.98"
+  ],
+  "resumed": 0,
+  "scene_reference": "/home/permit/lp-e2e/frames/bananas_in_bin-reference.jpg",
+  "reason": "the scene changed since the skill was commissioned (nvidia/Nemotron-3.5-Super-VL): floor changed from tiled to wooden flooring on the left side; background flooring changed in the top right corner",
+  "revoked_by": "scene"
+ }
+}

@@ -18,8 +18,8 @@ for how long. Learner's Permit makes that decision in code, from evidence:
   succeeds at least 80% of the time (a Bayesian sequential test). An *unattended* tier needs 99%: 298 straight
   successes.
 - **Scoped.** A licence covers only the conditions tested (today: the commanded speed).
-- **Revocable.** It's pulled automatically when live results slip. A Cosmos Reason 2 check that also suspends it when
-  the scene changes is built and tested with a stand-in model, but **has not yet run on Nebius**.
+- **Revocable.** It's pulled automatically when live results slip, or when a vision check sees the scene is no longer
+  the one the licence was earned in (shown end to end on Nebius, below).
 - **Enforced, not prompted.** One Cedar policy decides every API request that can move the robot: `POST /run` (and
   the AI's `/orders` and `/agent/run`, which go through it) and the supervisor's commissioning trials. The requester's
   role comes from the session, never from the LLM. (Evaluation scripts run by someone with a shell on the GPU VM,
@@ -42,8 +42,34 @@ episode recorded (none dropped for finishing late):
 - Randomized backgrounds lowered GR00T's success on bananas only a little (20/20 and 16/20). That isn't enough to
   revoke the licence (the rule needs 95% confidence that the live rate fell below 70%), so the drift revocation
   correctly never fired; we have no measured scene that makes the licensed skill fail outright.
-- Every number in this table is from a real run. The offline demo (`demo/four_beats.py`) uses coin flips at these
-  rates and says so on every line; it is not robot evidence.
+- Every number in this table is from a real run (raw rows: [docs/results/measurements.jsonl](docs/results/measurements.jsonl)).
+  The offline demo (`demo/four_beats.py`) uses coin flips at these rates and says so on every line; it is not robot
+  evidence.
+
+### End to end on Nebius: earn, revoke, refuse (Oct 28, 19 minutes)
+Through the real control plane (`Permit`, Cedar, the gate) with GR00T in Isaac Sim, the vision check and Nemotron,
+nothing mocked ([log, audit trail, licence and frames](docs/results/e2e-revoke-2026-10-28/)):
+1. A supervisor commissions bananas: **37/40** real episodes, P(rate ≥ 80%) = 0.976, so **licensed**, and a frame
+   of the commissioning scene is kept as the licence's reference.
+2. The AI runs it in the same scene: success; the vision check says **same**, so the licence stays.
+3. The background is randomized and the AI runs it again: GR00T **still succeeds**, but the vision check says
+   **changed: "floor changed from tiled to wooden"**, so the licence is **revoked**: it was evidence about the
+   commissioning scene only. (The success rate alone wouldn't have caught this: under that background GR00T scored
+   20/20.)
+4. The AI asks again: **denied** and escalated to a supervisor, with Nemotron's plain-English explanation.
+
+### Which vision model checks the scene (measured, Oct 28)
+Same frames from our runs, 3 trials each: two runs of the same scene (control), a randomized background, a different
+scene ([raw results](docs/results/)).
+
+| Model | Where | Right | False alarms on the unchanged scene | Per check |
+|---|---|---|---|---|
+| **Nemotron-3.5-Super-VL** | Token Factory | **8/9** | **0/3** (its one miss was unparseable, so it never acted) | ~4 s |
+| Cosmos-Reason2-2B | our Nebius GPU VM (`cloud/cosmos_server.py`) | 6/9 | **3/3**: it counted task objects that moved as a scene change | ~21 s |
+
+So the scene check uses Nemotron-3.5-Super-VL; Cosmos-Reason2-2B would have suspended every licence on every run.
+(Prompting it to ignore the task objects didn't stop the false alarms.)
+
 
 ## How it works
 ```
@@ -54,7 +80,7 @@ person ─order─▶ Nemotron planner ─skill calls─▶ POST /run ◀── 
                                                  ▼
                                   GR00T N1.7-DROID in Isaac Sim (RoboLab), Nebius RTX PRO 6000
                                                  │ live results ──▶ drift revokes the licence
-                                                 │ Cosmos Reason 2 ──▶ a changed scene suspends it (not yet run on Nebius)
+                                                 │ vision check ──▶ a changed scene suspends it (Nemotron-3.5-Super-VL)
                                                  ▼
                        Nemotron explains every refusal, block and revocation to the supervisor
 ```
@@ -76,7 +102,8 @@ Rules the code enforces (`permit/`, tested in `tests/`; CI runs them on every pu
 |---|---|---|
 | **Nemotron-3-Super-120B-A12B** (`nvidia/nemotron-3-super-120b-a12b`) | Planner (tool calling over the skill catalogue) and explainer | Nebius Token Factory |
 | **GR00T N1.7-DROID** | The robot skill: a VLA policy driving a simulated Franka | Nebius AI Cloud, RTX PRO 6000 VM |
-| **Cosmos-Reason2-2B** | Scene check: is the cell still the scene the licence was earned in? | Built to run on the same Nebius VM (`cloud/cosmos_server.py`; it isn't on Token Factory). **Not yet run on Nebius**: tested with a stand-in model only |
+| **Nemotron-3.5-Super-VL** | Scene check: is the cell still the scene the licence was earned in? | Nebius Token Factory |
+| **Cosmos-Reason2-2B** | Measured for the scene check, not used: see the table above | Nebius AI Cloud, our GPU VM (`cloud/cosmos_server.py`; it isn't on Token Factory) |
 
 ## Nebius services used
 - **Token Factory:** every planner and explainer call, at runtime. OpenAI-compatible, so the `openai` client works
@@ -85,14 +112,16 @@ Rules the code enforces (`permit/`, tested in `tests/`; CI runs them on every pu
   GPUs have the RT cores Isaac Sim needs). `cloud/vm.sh` creates it with `--recovery-policy fail` and a 30-minute idle
   guard, and spot runs are capped by a Nebius pricing policy (`cloud/price_cap.sh`).
 - **Serverless AI Jobs:** `cloud/job.sh` packages a commissioning sweep as a job that checkpoints to Object Storage
-  after every batch and resumes after preemption. Built and tested with a mock runner; not yet run on Nebius.
+  after every batch and resumes after preemption. A smoke-test job ran on the RTX PRO 6000 platform (`gpu-rtx6000-a`,
+  uk-south2) on Oct 28; the full sweep job: _TODO: update when it has run_.
 
 ## Status (Oct 28, 2026)
 - **Real and tested on Nebius:** Nemotron planner and explainer (Token Factory), Tavily datasheet check, GR00T N1.7 +
-  Isaac Sim + RoboLab episodes through our runner, the baseline measurements above.
-- **Built and tested with fakes, not yet run on Nebius:** the Cosmos Reason 2 server and scene check, the Serverless
-  Job.
-- **Not built:** fine-tuning GR00T (the "earn" beat uses a narrower scope instead), a physical robot.
+  Isaac Sim + RoboLab episodes through our runner, the measurements above, the vision scene check
+  (Nemotron-3.5-Super-VL on Token Factory; Cosmos-Reason2-2B served on our VM and measured), and the end-to-end
+  earn → revoke → refuse run.
+- **Serverless Job:** a smoke test ran on Nebius; the full sweep job: _TODO_.
+- **Not built:** fine-tuning GR00T (so a refused skill can't earn its licence yet), a physical robot.
 
 ## Run it
 **Any machine, no GPU, no keys** (offline stand-ins for Nemotron and Tavily; coin-flip trials):
