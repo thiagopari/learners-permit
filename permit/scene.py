@@ -1,14 +1,20 @@
-"""Cosmos Reason 2 scene check: is the cell still the scene a skill's licence was earned in?
+"""Scene check: is the cell still the environment a skill's licence was earned in?
 
 A licence is evidence about one scene. When a skill is licensed, a frame of the commissioning scene is kept as its
-reference; after each live run, Cosmos Reason 2 compares a frame of that run with it. If the background, lighting or
-the objects present have changed, the licence no longer describes the cell, so it's suspended at once: the drift
-statistics would take ~8 failed runs to notice the same thing.
+reference; after each live run, a vision model compares a frame of that run with it. If the background, floor,
+lighting or table changed, the licence no longer describes the cell, so it's suspended at once, without waiting for
+the success rate to fall.
 
 Like the Tavily check, it can only narrow. "changed" suspends the licence; "same" changes nothing, and so does an
-answer we can't parse, or no answer at all. The model is reached through an OpenAI-compatible chat endpoint:
-cloud/cosmos_server.py serves Cosmos-Reason2-2B on the GPU VM (it isn't on Token Factory); COSMOS_BASE_URL and
-COSMOS_MODEL can point it at another vision model, e.g. nvidia/Nemotron-3.5-Super-VL on Token Factory.
+answer we can't parse, or no answer at all.
+
+Which model, measured on Oct 28 on frames from our own Isaac Sim runs (3 trials each of: two runs of the same scene,
+a randomized background, a different scene):
+- nvidia/Nemotron-3.5-Super-VL on Token Factory: 8 of 9 right, no false alarm (the miss was unparseable, so it
+  never acted), ~4 s per check. The default.
+- nvidia/Cosmos-Reason2-2B, served on the GPU VM by cloud/cosmos_server.py (it isn't on Token Factory): 6 of 9, and
+  it called two runs of the SAME scene "changed" 3 times in 3 (it treated moved task objects as a change), which would
+  suspend licences on every run. Not used to suspend; COSMOS_BASE_URL / COSMOS_MODEL switch to it for comparison.
 """
 import base64
 import json
@@ -16,14 +22,19 @@ import os
 import re
 import subprocess
 
-BASE_URL = os.environ.get("COSMOS_BASE_URL", "http://127.0.0.1:8001/v1")
-MODEL = os.environ.get("COSMOS_MODEL", "nvidia/Cosmos-Reason2-2B")
+BASE_URL = os.environ.get("COSMOS_BASE_URL", "https://api.tokenfactory.nebius.com/v1/")
+MODEL = os.environ.get("COSMOS_MODEL", "nvidia/Nemotron-3.5-Super-VL")
+# A licence covers the environment it was earned in. The task's objects (how many, where) vary from run to run by
+# design: asked about "objects present", Cosmos flagged 3 vs 4 visible bananas in two runs of the SAME scene as a
+# change (Oct 28), which would suspend licences wrongly. So it answers per part, and only the environment counts.
+ENVIRONMENT = ("background", "floor", "lighting", "table")
 QUESTION = (
-    "Image 1 is the scene a robot skill was tested in. Image 2 is the same robot cell now. Ignore the robot arm's "
-    "pose and where the movable objects sit: those change in every run. Has anything changed that the test did not "
-    "cover: the background, the lighting, the table, or which objects are present and their colours? "
+    "Image 1 is the robot cell a skill was tested in. Image 2 is the robot cell now. The robot arm's pose and the "
+    "task objects (how many there are, where they lie) differ from run to run; never count them as a change. "
+    "Compare only the environment: the background and walls, the floor, the lighting, and the table surface. "
     "Reason in <think></think>, then give only JSON in <answer></answer>: "
-    '{"same_conditions": true or false, "changes": ["short description of each change"]}')
+    '{"background": true or false, "floor": true or false, "lighting": true or false, "table": true or false, '
+    '"changes": ["short description of each environment change"]} where true means that part changed.')
 ANSWER = re.compile(r"<answer>(.*?)</answer>", re.S)
 JSON = re.compile(r"\{.*\}", re.S)
 
@@ -60,13 +71,14 @@ def verdict(text):
         data = json.loads(JSON.search(body).group(0))
     except (AttributeError, ValueError):
         return {"verdict": "unknown", "changes": [], "reason": "no JSON answer"}
-    same = data.get("same_conditions")
-    if not isinstance(same, bool):
-        return {"verdict": "unknown", "changes": [], "reason": "same_conditions isn't true or false"}
+    parts = {k: data.get(k) for k in ENVIRONMENT}
+    if not all(isinstance(v, bool) for v in parts.values()):
+        return {"verdict": "unknown", "changes": [], "reason": "not a true/false answer for every part"}
+    changed = [k for k, v in parts.items() if v]
     changes = [str(c)[:120] for c in data.get("changes") or [] if str(c).strip()][:5]
-    if not same and not changes:  # "changed" with nothing named isn't evidence enough to suspend a licence
-        return {"verdict": "unknown", "changes": [], "reason": "said changed but named no change"}
-    return {"verdict": "same" if same else "changed", "changes": [] if same else changes}
+    if changed and not changes:  # "changed" with nothing described isn't evidence enough to suspend a licence
+        return {"verdict": "unknown", "changes": [], "reason": "said changed but described no change"}
+    return {"verdict": "changed" if changed else "same", "parts": changed, "changes": changes if changed else []}
 
 
 def check(reference, current, ask=cosmos):

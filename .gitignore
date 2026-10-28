@@ -20,4 +20,4 @@ permit/data/
 .pytest_cache/
 
 # Serverless Job results fetched with cloud/job.sh fetch
-results/
+/results/

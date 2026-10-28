@@ -12,19 +12,32 @@ from tests.test_permit import FakeRoboLab
 AI = authz.AGENT
 
 
+SAME = '{"background": false, "floor": false, "lighting": false, "table": false, "changes": []}'
+
+
 @pytest.mark.parametrize("text,expect", [
-    ('<think>the wall is now red</think><answer>{"same_conditions": false, "changes": ["red background"]}</answer>',
-     {"verdict": "changed", "changes": ["red background"]}),
-    ('<answer>{"same_conditions": true, "changes": []}</answer>', {"verdict": "same", "changes": []}),
-    ('Looks the same. {"same_conditions": true}', {"verdict": "same", "changes": []}),  # no tags: the last JSON
+    ('<think>the wall is now red</think><answer>{"background": true, "floor": false, "lighting": false, '
+     '"table": false, "changes": ["red background"]}</answer>',
+     {"verdict": "changed", "parts": ["background"], "changes": ["red background"]}),
+    (f"<answer>{SAME}</answer>", {"verdict": "same", "parts": [], "changes": []}),
+    # Cosmos on Oct 28 answered in a ```json fence without the tags: the last JSON object counts
+    (f"```json\n{SAME}\n```", {"verdict": "same", "parts": [], "changes": []}),
 ])
 def test_verdicts_are_parsed(text, expect):
     assert scene.verdict(text) == expect
 
 
+def test_changes_to_the_task_objects_alone_never_count():
+    """The Oct 28 false alarm: 3 vs 4 visible bananas in two runs of the same scene."""
+    text = SAME.replace('"changes": []', '"changes": ["The number of bananas changed from four to three."]')
+    assert scene.verdict(text)["verdict"] == "same"
+
+
 @pytest.mark.parametrize("text", [
-    "", "I can't tell.", "<answer>not json</answer>", '<answer>{"same_conditions": "maybe"}</answer>',
-    '<answer>{"same_conditions": false, "changes": []}</answer>',  # "changed" but nothing named
+    "", "I can't tell.", "<answer>not json</answer>",
+    '<answer>{"background": "maybe", "floor": false, "lighting": false, "table": false}</answer>',
+    '<answer>{"background": false}</answer>',  # parts missing
+    '<answer>{"background": true, "floor": false, "lighting": false, "table": false, "changes": []}</answer>',
 ])
 def test_anything_unclear_is_unknown(text):
     assert scene.verdict(text)["verdict"] == "unknown"
@@ -41,7 +54,7 @@ def test_the_request_sends_both_frames_and_asks_for_tagged_json(tmp_path):
     for name in ("ref.jpg", "now.jpg"):
         (tmp_path / name).write_bytes(b"\xff\xd8 not really a jpeg")
     sent = []
-    msg = types.SimpleNamespace(content='<answer>{"same_conditions": true}</answer>')
+    msg = types.SimpleNamespace(content=f"<answer>{SAME}</answer>")
     client = types.SimpleNamespace(chat=types.SimpleNamespace(completions=types.SimpleNamespace(
         create=lambda **kw: sent.append(kw) or types.SimpleNamespace(choices=[types.SimpleNamespace(message=msg)]))))
     assert scene.verdict(scene.cosmos(str(tmp_path / "ref.jpg"), str(tmp_path / "now.jpg"), client=client))["verdict"] == "same"
@@ -114,7 +127,7 @@ def test_a_changed_scene_suspends_the_licence_after_one_run_and_is_explained(tmp
     e = c.p.execute(AI, "bananas_in_bin", {}, requester="olga")
     lic = c.p.licences.data["bananas_in_bin"]
     assert lic["status"] == "revoked" and lic["revoked_by"] == "scene" and "brick wall" in lic["reason"]
-    assert e["revocation"]["action"] == "revoke" and "Cosmos Reason 2" in e["revocation"]["explanation"]
+    assert e["revocation"]["action"] == "revoke" and "vision check compared" in e["revocation"]["explanation"]
     assert "live runs succeeded" not in e["revocation"]["explanation"]  # it wasn't the success rate
     assert c.p.execute(AI, "bananas_in_bin", {}, requester="olga")["decision"] == "deny"
     checks = [x for x in map(json.loads, open(c.p.audit_path)) if x.get("action") == "scene_check"]
@@ -146,4 +159,4 @@ def test_a_scene_suspension_template_names_cosmos_not_the_success_rate():
            "reason": "the scene changed since the skill was commissioned (nvidia/Cosmos-Reason2-2B): red background"}
     f = explainer.facts({"action": "revoke", "skill": "bananas_in_bin", "reasons": [lic["reason"]]}, lic)
     text = explainer.offline(f)
-    assert "Cosmos Reason 2 compared" in text and "red background" in text and "live runs" not in text
+    assert "vision check compared" in text and "red background" in text and "live runs" not in text

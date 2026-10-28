@@ -54,7 +54,7 @@ class Permit:
         self.lock, self.lock_timeout = threading.RLock(), lock_timeout  # one cell, one command at a time
         self.scene = {}  # the world the cell works in: /perturb changes it and no licence is told (the revoke beat)
         self.video = os.environ.get("LP_VIDEO", "none")  # "viewport": the demo's own runs record its footage
-        # Cosmos Reason 2 (reference_jpg, current_jpg) -> scene.check verdict; frame(video, jpg) takes one frame.
+        # The scene check (reference_jpg, current_jpg) -> scene.check verdict; frame(video, jpg) takes one frame.
         self.check_scene, self.frame = check_scene, frame
         self.frames_dir = os.path.join(data_dir, "frames")
 
@@ -339,7 +339,7 @@ if __name__ == "__main__":
     ap.add_argument("--runner", choices=["mock", "robolab"], default="mock")
     ap.add_argument("--port", type=int, default=8099)
     ap.add_argument("--scene-check", action="store_true",
-                    help=f"after each live run, Cosmos Reason 2 at {scene.BASE_URL} checks the scene (robolab runner)")
+                    help=f"after each live run, {scene.MODEL} at {scene.BASE_URL} checks the scene (robolab runner)")
     a = ap.parse_args()
     keys = envfile.load()
     print(f"keys: {keys or 'none found (.env or ~/.config/learners-permit.env)'}")

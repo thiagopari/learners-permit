@@ -59,8 +59,8 @@ def facts(entry, licence):
             floor = round(licence["revoke_below"] * 100)
             f["licence"]["revoke_below_pct"] = floor
             # The commissioning numbers no longer describe the skill; given them, Nemotron mixed the two rules up.
-            if licence.get("revoked_by") == "scene":  # Cosmos saw a different scene; the success rate didn't decide it
-                f["licence"]["evidence"] = (f"Cosmos Reason 2 compared the cell after a live run with the scene the "
+            if licence.get("revoked_by") == "scene":  # the vision check saw a different scene; the success rate didn't decide it
+                f["licence"]["evidence"] = (f"a vision check compared the cell after a live run with the scene the "
                                             f"skill was commissioned in, and found that {licence['reason']}; the "
                                             f"licence is evidence about the commissioning scene only")
             else:
