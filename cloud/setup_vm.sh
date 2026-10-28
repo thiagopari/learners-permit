@@ -23,7 +23,10 @@ driver=$(nvidia-smi --query-gpu=driver_version --format=csv,noheader | head -1)
 # Isaac Lab #3477: early 580 drivers break Warp on Blackwell; 580.95.05 fixed it for some reporters.
 dpkg --compare-versions "$driver" ge 580.95.05 || { echo "driver $driver predates 580.95.05 (RUNBOOK section 4)"; exit 1; }
 sudo apt-get update -qq
-sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq ffmpeg git git-lfs tmux jq vulkan-tools python3-venv
+# The GL/X libraries are Isaac Sim's, as in cloud/job/Dockerfile: without libGLU, libneuray (MDL materials) fails to
+# load and the first boot segfaults in librtx.mdltranslator (Oct 23, on the Nebius ubuntu24.04-cuda13.0 image).
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq ffmpeg git git-lfs tmux jq vulkan-tools python3-venv \
+    libglu1-mesa libegl1 libgl1 libxt6 libxrender1 libxi6 libsm6 libxrandr2 libxkbcommon0
 vulkaninfo --summary 2>/dev/null | grep -i 'deviceName' | grep -q -i nvidia \
     || { echo "Vulkan sees no NVIDIA GPU, so Isaac Sim can't render (RUNBOOK section 5.3)"; exit 1; }
 git lfs install
@@ -49,6 +52,10 @@ cd "$ROBOLAB"
 git lfs pull
 [ -d .venv ] || uv venv --python 3.11
 uv sync --extra isaac50
+# RoboLab b6cfcf6: --randomize-background reads HomeOfficeBackgroundCfg.dome_light off the class, but it's an
+# Isaac Lab @configclass, so the field exists only on an instance and every perturbed run died in 25 s (Oct 24).
+grep -rl "HomeOfficeBackgroundCfg\.dome_light" robolab/registrations 2> /dev/null \
+    | xargs -r sed -i "s/HomeOfficeBackgroundCfg\.dome_light/HomeOfficeBackgroundCfg().dome_light/g"
 
 step "Versions"
 { date -u +%FT%TZ
@@ -66,23 +73,26 @@ cd "$LP"
 .venv/bin/pip install -q -r requirements.txt
 .venv/bin/python -m pytest -q tests
 
-step "GR00T policy server on 127.0.0.1:5555"
+step "GR00T policy server on 127.0.0.1:5600"
+# Not GR00T's default 5555: Nebius images run NVIDIA's DCGM monitor (nv-hostengine) there (Oct 24).
+pkill -f run_gr00t_server 2> /dev/null && sleep 5  # one left over from `cloud/vm.sh record` would hold the port
+if ss -ltn | grep -q ":5600 "; then echo "port 5600 is already in use:"; sudo ss -ltnp | grep ":5600 "; exit 1; fi
 cd "$GR00T"
 CUDA_VISIBLE_DEVICES=0 setsid uv run python gr00t/eval/run_gr00t_server.py --model-path nvidia/GR00T-N1.7-DROID \
-    --embodiment-tag OXE_DROID_RELATIVE_EEF_RELATIVE_JOINT --device cuda --host 127.0.0.1 --port 5555 \
+    --embodiment-tag OXE_DROID_RELATIVE_EEF_RELATIVE_JOINT --device cuda --host 127.0.0.1 --port 5600 \
     --use-sim-policy-wrapper > ~/gr00t-server.log 2>&1 &
 server=$!
 for _ in $(seq 180); do  # up to 15 minutes: the first load reads several GB of weights
-    grep -q -E "Server (is )?ready" ~/gr00t-server.log && break
+    ss -ltn | grep -q "127.0.0.1:5600 " && break  # it prints no "ready" line: the open port is the signal
     kill -0 "$server" 2>/dev/null || { tail -30 ~/gr00t-server.log; echo "the GR00T server died"; exit 1; }
     sleep 5
 done
-grep -q -E "Server (is )?ready" ~/gr00t-server.log || { tail -30 ~/gr00t-server.log; echo "not ready after 15 min"; exit 1; }
+ss -ltn | grep -q "127.0.0.1:5600 " || { tail -30 ~/gr00t-server.log; echo "not listening after 15 min"; exit 1; }
 
 step "End to end: 2 episodes of BananaOnPlateTask (NVIDIA's README: 40/40) through permit's RoboLab runner"
 cd "$LP"
 ROBOLAB_DIR="$ROBOLAB" timeout -k 60 45m .venv/bin/python -c "from permit import runners
-print(runners.robolab('BananaOnPlateTask', {'n17_droid': 5555}, retries=0)({'n17_droid': 2}))"
+print(runners.robolab('BananaOnPlateTask', {'n17_droid': 5600}, retries=0)({'n17_droid': 2}))"
 
 step "Done"
 df -h / | tail -1

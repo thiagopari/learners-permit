@@ -32,11 +32,12 @@ def test_gate_math():
 
 
 def test_refused_then_earned(p):
-    p.rates["red_dishes_in_bin"].update(n17_droid=0.0, n17_droid_ft=1.0)
+    p.rates["red_dishes_in_bin"]["n17_droid"] = 0.0
     assert p.commission("sue", "red_dishes_in_bin", arms=["n17_droid"])["status"] == "refused"
     e = p.execute(AI, "red_dishes_in_bin", {}, requester="olga")
     assert e["decision"] == "deny" and "not licensed" in e["reasons"][0] and e["escalate"]["command_hash"]
-    assert p.commission("sue", "red_dishes_in_bin", arms=["n17_droid_ft"])["status"] == "licensed"
+    p.rates["red_dishes_in_bin"]["n17_droid"] = 1.0  # the same skill, re-commissioned after it improved
+    assert p.commission("sue", "red_dishes_in_bin")["status"] == "licensed"
     assert p.execute(AI, "red_dishes_in_bin", {}, requester="olga")["decision"] == "allow"
 
 
@@ -356,3 +357,17 @@ def test_robolab_runner_passes_extra_args_through(tmp_path, monkeypatch):
     extra = ["--randomize-background", "--background-seed", "3"]
     runners.robolab("RedDishesInBinTask", {"ft": 5556}, root=str(tmp_path), extra_args=extra)({"ft": 1})
     assert cmds[0][-3:] == extra
+
+
+def test_robolab_runner_finds_uv_off_the_path(tmp_path, monkeypatch):
+    """A tmux shell on the VM had no ~/.local/bin on PATH, so a bare "uv" wasn't found (Oct 24)."""
+    FakeRoboLab.root, cmds = tmp_path, []
+
+    class Recording(FakeRoboLab):
+        def __init__(self, cmd, cwd, env, **kw):
+            cmds.append(cmd)
+            super().__init__(cmd, cwd, env, **kw)
+    monkeypatch.setattr(runners.subprocess, "Popen", Recording)
+    monkeypatch.setattr(runners.shutil, "which", lambda name: None)
+    runners.robolab("RedDishesInBinTask", {"ft": 5601}, root=str(tmp_path))({"ft": 1})
+    assert cmds[0][0].replace("\\", "/").endswith("/.local/bin/uv")

@@ -19,6 +19,11 @@ when { context.speed_pct <= 80 };
 
 permit (principal in Role::"supervisor", action in [Action::"change_mode", Action::"set_speed_limit"], resource in Zone::"cell1");
 
+// Commissioning runs real trials on the robot, so it goes through the same policy: supervisors only, and the
+// fail-closed rule below means no trials at commissioning speed while a person is in the cell.
+permit (principal in Role::"supervisor", action == Action::"commission", resource in Zone::"cell1");
+forbid (principal in Role::"ai_agent", action == Action::"commission", resource);
+
 permit (principal in Role::"maintenance", action == Action::"change_mode", resource in Zone::"maint")
 when { context.speed_pct <= 25 };
 

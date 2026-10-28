@@ -1,8 +1,14 @@
-"""The video story end to end, with no GPU and no API keys: refuse -> earn -> block -> revoke.
+"""The control plane's four beats, offline: refuse -> earn -> block -> revoke.
 
-Uses the mock runner (coin flips at the rates in permit/skills.json). If NEBIUS_API_KEY / TAVILY_API_KEY are
-set, the planner and the explanations (Nemotron) and the datasheet check (Tavily) are real. Run from the repo root:
-    python demo/four_beats.py
+What's real and what isn't, so nothing here is mistaken for robot results:
+- Trials are OFFLINE STAND-INS: coin flips at the zero-shot success rates we measured for GR00T N1.7 on Nebius
+  (bananas 37/40, red dishes 14/40; see the README). No robot or simulator runs here. The real thing is
+  `python -m permit.server --runner robolab` on the GPU VM.
+- The planner and the explanations are real Nemotron on Token Factory when NEBIUS_API_KEY is set, and the datasheet
+  check is real Tavily when TAVILY_API_KEY is set too; otherwise both are offline stand-ins.
+- Beat 4 is a hypothetical: on Nebius, a randomized background did NOT lower GR00T's success (20/20), so we have no
+  measured drop. It shows only what the control plane does IF live results slip.
+Run from the repo root:  python demo/four_beats.py
 """
 import os
 import random
@@ -34,7 +40,7 @@ def show(entries):
 
 
 def card(skill, lic):
-    print(f"   {skill}: {lic['status'].upper()} on {lic['successes']}/{lic['trials']} trials, "
+    print(f"   {skill}: {lic['status'].upper()} on {lic['successes']}/{lic['trials']} stand-in trials, "
           f"P(rate >= {lic['thr']}) = {lic['p']}")
 
 
@@ -50,29 +56,27 @@ p = Permit(data_dir=tempfile.mkdtemp(), clock=lambda: SimpleNamespace(tm_hour=14
            plan=planner.plan if llm else None, explain=explainer.nemotron if llm else None,
            check_part=datasheet.check if live_block
            else (lambda part, limit: datasheet.check(part, limit, call=canned)))
+print("TRIALS ARE OFFLINE STAND-INS (coin flips at our measured GR00T rates), not robot runs.")
 print(f"planner and explanations: {'Nemotron on Token Factory' if llm else 'offline stand-ins'} | "
       f"datasheets: {'Tavily, live' if live_block else 'offline stand-in'}\n")
 
-print("0. Commission the zero-shot policy on both skills (Nebius eval sweeps; mocked here)")
+print("1. REFUSE: red dishes (measured 14/40) can't earn a licence, so the AI won't run it")
+card("red_dishes_in_bin", p.commission("sue", "red_dishes_in_bin"))
+show(p.order("olga", "Put the red dishes in the bin"))
+
+print("2. EARN: bananas (measured 37/40) earns its licence, and the same kind of order now runs")
 card("bananas_in_bin", p.commission("sue", "bananas_in_bin"))
-card("red_dishes_in_bin", p.commission("sue", "red_dishes_in_bin", arms=["n17_droid"]))
+show(p.order("olga", "Put the bananas in the bin"))
 
-print("1. REFUSE: the order needs a skill that hasn't earned a licence")
-show(p.order("olga", "Put the red dishes in the bin"))
-
-print("2. EARN: the fine-tuned policy passes the gate")
-card("red_dishes_in_bin", p.commission("sue", "red_dishes_in_bin", arms=["n17_droid_ft"]))
-show(p.order("olga", "Put the red dishes in the bin"))
-
-print("3. BLOCK: the datasheet says the part is too heavy for the skill")
+print("3. BLOCK: the datasheet says the item is too heavy for the skill")
 show(p.order("olga", f"Put the bananas in the bin. The item is part {part}."))
 
-print("4. REVOKE: perturb the scene; live results slip and the licence is pulled")
-p.rates["red_dishes_in_bin"]["n17_droid_ft"] = 0.1
+print("4. REVOKE (hypothetical: on Nebius a new background did not lower GR00T's success): IF live results slip")
+p.rates["bananas_in_bin"]["n17_droid"] = 0.1
 for _ in range(50):
-    runs = p.order("olga", "Put the red dishes in the bin")
+    runs = p.order("olga", "Put the bananas in the bin")
     if any(e.get("revocation") for e in runs):
         show(runs)
         break
-show(p.order("olga", "Put the red dishes in the bin"))
+show(p.order("olga", "Put the bananas in the bin"))
 print(f"\naudit trail: {p.audit_path}")
