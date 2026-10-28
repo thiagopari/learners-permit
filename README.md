@@ -34,13 +34,14 @@ episode recorded (none dropped for finishing late):
 | Bananas in the bin (`BananasInBinThreeTotalTask`) | default | 40 | **37** (92.5%) | 0.976 | **licensed** |
 | Red dishes in the bin (`RedDishesInBinTask`) | default | 40 | **14** (35%) | ≈ 0 | **refused** |
 | Bananas in the bin | random background, seed 1 | 20 | **20** (100%) | | |
-| Bananas in the bin | random background, seed 2 | 20 | _TBD_ | | |
+| Bananas in the bin | random background, seed 2 | 20 | **16** (80%) | | |
 
 - NVIDIA's RoboLab README reports 38/40 and 15/40 for the first two; ours match closely, but they are our numbers.
 - **Cost:** 40 episodes took 11.2 minutes on one RTX PRO 6000 at $1.80/h: **$0.34, or $8.40 per 1,000 episodes.**
 - Reliability varies wildly from task to task (92.5% vs 35% here), which is why licences are per skill.
-- A randomized background did **not** lower GR00T's success on bananas, so the drift revocation correctly never
-  fired; we have no measured scene that makes the licensed skill fail.
+- Randomized backgrounds lowered GR00T's success on bananas only a little (20/20 and 16/20). That isn't enough to
+  revoke the licence (the rule needs 95% confidence that the live rate fell below 70%), so the drift revocation
+  correctly never fired; we have no measured scene that makes the licensed skill fail outright.
 - Every number in this table is from a real run. The offline demo (`demo/four_beats.py`) uses coin flips at these
   rates and says so on every line; it is not robot evidence.
 

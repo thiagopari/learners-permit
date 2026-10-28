@@ -43,8 +43,8 @@ Nemotron's default reasoning ate the token budget of short explanations; Tavily 
 19.7 kg Toyota leaf spring until we required the page to name the part.
 
 **Accomplishments:** reproduced NVIDIA's zero-shot baselines on our own Nebius runs (37/40 and 14/40 vs 38/40 and
-15/40), and turned them into enforced, explained, revocable permissions. Found that a randomized background didn't
-degrade GR00T on bananas (20/20), so the licence correctly stayed.
+15/40), and turned them into enforced, explained, revocable permissions. Found that randomized backgrounds barely
+degraded GR00T on bananas (20/20, 16/20), so the licence correctly stayed.
 
 **What we learned:** evidence-gated autonomy only works if the evidence is enforced where the agent calls the robot,
 and if every outside signal (web, vision, live results) can only take permission away.
@@ -68,7 +68,7 @@ No third-party music or trademarks beyond the sponsors' own products.
 | 0:25–0:50 | The idea | Title card + the architecture diagram from the README | "Learner's Permit: an AI may command a robot skill only after trials prove it, only where it was tested, and only until the evidence changes." |
 | 0:50–1:30 | **EARN** | Sim clip of GR00T putting bananas in the bin; licence card: 37/40, P(rate ≥ 80%) = 0.976, $8.40 per 1,000 episodes; then the same order runs | "Bananas earned theirs: a sweep on a Nebius RTX PRO 6000, 37 of 40, 97.6% confident it succeeds at least 80% of the time. Now the agent may run it, at the speed it was tested at." |
 | 1:30–2:05 | **BLOCK** | Order with part "Makita XFD131"; Tavily finds the spec sheet: 1.72 kg over a 1.0 kg limit; denied, source URL shown | "The web can only narrow a licence. Tavily pulls the spec sheet: too heavy for this skill. Blocked, with the source cited." |
-| 2:05–2:45 | **REVOKE** | ONLY what really happened. Today: the background run (20/20) next to the drift rule, then the console revoking on live failures, labelled "offline stand-in". If Cosmos runs on Nebius before recording, show its real verdict instead | "We changed the background: GR00T still succeeded 20 of 20, so the licence rightly stayed. If live results do slip, the licence is pulled automatically and the agent goes back to asking a person." |
+| 2:05–2:45 | **REVOKE** | ONLY what really happened. Today: the background runs (20/20 and 16/20) next to the drift rule, then the console revoking on live failures, labelled "offline stand-in". If Cosmos runs on Nebius before recording, show its real verdict instead | "We changed the background: GR00T still succeeded 20 of 20 and 16 of 20, not enough evidence of a drop, so the licence rightly stayed. If live results do slip, the licence is pulled automatically and the agent goes back to asking a person." |
 | 2:45–2:58 | Close | Logos: Nebius Token Factory, AI Cloud, Nemotron, GR00T, Cosmos, Tavily; repo URL | "Other robot agents ask when they're unsure. Ours asks when it's unproven." |
 
 Show for at least a minute in total the key modules working (the rules' requirement for projects without hardware):
