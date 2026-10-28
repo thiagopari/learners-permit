@@ -192,12 +192,13 @@ cosmos)  # Cosmos Reason 2 (the scene check) on the VM's 127.0.0.1:8001, in tmux
         tail -20 ~/cosmos-server.log; echo "Cosmos is not listening"; exit 1'
     on_vm 'curl -s 127.0.0.1:8001/v1/models'; echo
     ;;
-measure)  # the first session's numbers (cloud/measure.py), in tmux on the VM: closing the laptop is fine
+measure)  # measure [default|perturbed]: cloud/measure.py in tmux on the VM (all four conditions without an argument)
+    [[ -z ${2:-} || $2 =~ ^(default|perturbed)$ ]] || { echo "usage: $0 measure [default|perturbed]"; exit 1; }
     if on_vm 'tmux has-session -t measure 2> /dev/null'; then echo "measure is already running: $0 results"; exit 0; fi
     push_code
     gr00t_up
     on_vm 'tmux new-session -d -s measure \
-        "cd ~/learners-permit && ROBOLAB_DIR=~/RoboLab .venv/bin/python cloud/measure.py 2>&1 | tee ~/lp-measure.log"'
+        "cd ~/learners-permit && ROBOLAB_DIR=~/RoboLab .venv/bin/python cloud/measure.py '"${2:-}"' 2>&1 | tee ~/lp-measure.log"'
     sleep 30  # a crash on import or a missing server shows up within seconds
     on_vm 'tmux has-session -t measure 2> /dev/null' \
         || { echo "measure stopped at once:"; on_vm 'tail -15 ~/lp-measure.log'; exit 1; }

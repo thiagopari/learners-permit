@@ -52,6 +52,10 @@ cd "$ROBOLAB"
 git lfs pull
 [ -d .venv ] || uv venv --python 3.11
 uv sync --extra isaac50
+# RoboLab b6cfcf6: --randomize-background reads HomeOfficeBackgroundCfg.dome_light off the class, but it's an
+# Isaac Lab @configclass, so the field exists only on an instance and every perturbed run died in 25 s (Oct 24).
+grep -rl "HomeOfficeBackgroundCfg\.dome_light" robolab/registrations 2> /dev/null \
+    | xargs -r sed -i "s/HomeOfficeBackgroundCfg\.dome_light/HomeOfficeBackgroundCfg().dome_light/g"
 
 step "Versions"
 { date -u +%FT%TZ

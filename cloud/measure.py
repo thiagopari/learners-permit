@@ -7,7 +7,7 @@
                  stays higher, the beat needs a stronger perturbation (RoboLab's lighting variation, ported to GR00T).
 
 On the VM, with the GR00T server starting or up on 127.0.0.1:5600 (docs/LINUX_HANDOFF.md, Step 4):
-    ROBOLAB_DIR=~/RoboLab .venv/bin/python cloud/measure.py
+    ROBOLAB_DIR=~/RoboLab .venv/bin/python cloud/measure.py [default|perturbed]   # no argument: all four
 """
 import json
 import os
@@ -36,7 +36,12 @@ def wait_for_server(port=5600, minutes=15):
 
 def main():
     wait_for_server()
+    only = sys.argv[1] if len(sys.argv) > 1 else None  # "default" or "perturbed": rerun one half
+    if only not in (None, "default", "perturbed"):
+        raise SystemExit("usage: measure.py [default|perturbed]")
     for task, n, seed in PLAN:
+        if only and (seed is None) != (only == "default"):
+            continue
         extra = [] if seed is None else ["--randomize-background", "--background-seed", str(seed)]
         t0, row = time.time(), {"task": task, "episodes": n, "background_seed": seed}
         try:
