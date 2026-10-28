@@ -9,8 +9,9 @@
       "n17_droid": 5600
     },
     "mock_rates": {
-      "n17_droid": 0.95
-    }
+      "n17_droid": 0.925
+    },
+    "mock_rates_source": "offline stand-in only: our measured zero-shot rate, 37/40 on Nebius, Oct 24 2026"
   },
   "red_dishes_in_bin": {
     "instruction": "put the red dishes in the bin",
@@ -19,12 +20,11 @@
     "max_mass_kg": 1.0,
     "robolab_task": "RedDishesInBinTask",
     "arms": {
-      "n17_droid": 5600,
-      "n17_droid_ft": 5601
+      "n17_droid": 5600
     },
     "mock_rates": {
-      "n17_droid": 0.375,
-      "n17_droid_ft": 0.92
-    }
+      "n17_droid": 0.35
+    },
+    "mock_rates_source": "offline stand-in only: our measured zero-shot rate, 14/40 on Nebius, Oct 24 2026"
   }
 }

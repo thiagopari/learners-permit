@@ -32,11 +32,12 @@ def test_gate_math():
 
 
 def test_refused_then_earned(p):
-    p.rates["red_dishes_in_bin"].update(n17_droid=0.0, n17_droid_ft=1.0)
+    p.rates["red_dishes_in_bin"]["n17_droid"] = 0.0
     assert p.commission("sue", "red_dishes_in_bin", arms=["n17_droid"])["status"] == "refused"
     e = p.execute(AI, "red_dishes_in_bin", {}, requester="olga")
     assert e["decision"] == "deny" and "not licensed" in e["reasons"][0] and e["escalate"]["command_hash"]
-    assert p.commission("sue", "red_dishes_in_bin", arms=["n17_droid_ft"])["status"] == "licensed"
+    p.rates["red_dishes_in_bin"]["n17_droid"] = 1.0  # the same skill, re-commissioned after it improved
+    assert p.commission("sue", "red_dishes_in_bin")["status"] == "licensed"
     assert p.execute(AI, "red_dishes_in_bin", {}, requester="olga")["decision"] == "allow"
 
 

@@ -161,10 +161,14 @@ class Sweep:
 
 
 def coin_flips(rates, seconds_per_batch=0.0, rng=random):
-    """A runner whose trials are coin flips at set true rates. `rates` is read on every call, so a caller can change
-    a rate mid-demo (e.g. to "perturb the scene")."""
+    """An offline stand-in runner: each trial succeeds with probability rates[arm]. Not robot results; for tests and
+    the offline demo. `rates` is read on every call, so a caller can change one between batches."""
     def run_batch(alloc):
         if seconds_per_batch:
             time.sleep(seconds_per_batch)
-        return {a: [1 if rng.random() < rates[a] else 0 for _ in range(n)] for a, n in alloc.items()}
+        outcomes = {}
+        for arm, trials in alloc.items():
+            chance = rates[arm]
+            outcomes[arm] = [int(rng.random() < chance) for _ in range(trials)]
+        return outcomes
     return run_batch

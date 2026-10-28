@@ -46,3 +46,19 @@ def test_forbid_beats_even_a_blanket_permit():
     loose = authz.POLICY + '\npermit (principal in Role::"ai_agent", action, resource);'
     assert authz.decide(A, "pick_place", "cell1", BASE, policy=loose) is True
     assert authz.decide(A, "change_mode", "cell1", {**BASE, "approver": SUE}, policy=loose) is False
+
+
+def test_commissioning_is_decided_by_cedar_too(tmp_path):
+    """Trials run the robot, so /commission goes through the same policy as /run."""
+    import types
+    import pytest
+    from permit.server import Permit
+    p = Permit(data_dir=str(tmp_path), clock=lambda: types.SimpleNamespace(tm_hour=14))
+    for who in ("olga", "max", authz.AGENT):
+        with pytest.raises(PermissionError):
+            p.commission(who, "bananas_in_bin")
+    p.sensors["human_in_zone"] = True  # fail closed: no trials at 40% with a person in the cell
+    with pytest.raises(PermissionError):
+        p.commission("sue", "bananas_in_bin")
+    p.sensors["human_in_zone"] = False
+    assert p.commission("sue", "bananas_in_bin")["status"] in ("licensed", "refused", "inconclusive")

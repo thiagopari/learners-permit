@@ -216,8 +216,11 @@ class Permit:
         return arms, scope, self.licences.sweeps.get(self.licences.sweep_key(skill, arms, tier, scope, self.source()))
 
     def commission(self, user, skill, arms=None, tier="supervised", scope=None, resume=None):
-        if authz.PEOPLE.get(user) != "supervisor":
-            raise PermissionError("only a supervisor can commission")
+        # Trials run the robot too, so Cedar decides here as well (supervisors only; no person in the cell at 40%).
+        if skill not in self.skills or not authz.decide(user, "commission", "cell1", self.context(skill, {})):
+            self.log(actor=user, action="commission", skill=skill, status="denied",
+                     reasons=["only a supervisor can commission, and not with a person in the cell"])
+            raise PermissionError("only a supervisor can commission, and not with a person in the cell")
         if not self.lock.acquire(timeout=self.lock_timeout):
             raise RuntimeError("cell busy")
         try:
@@ -285,9 +288,10 @@ def serve(permit, port):
                 if self.path == "/approvals":
                     token = permit.approve(user, body["skill"], body.get("args", {}), body["for"], repeat)
                     return self.reply(200, {"approval": token})
-                if self.path == "/commission":
-                    if not supervisor:
-                        raise PermissionError("only a supervisor can commission")
+                if self.path == "/commission":  # decided by Cedar here (fast 403) and again in permit.commission
+                    if body["skill"] not in permit.skills or not authz.decide(
+                            user, "commission", "cell1", permit.context(body["skill"], {})):
+                        raise PermissionError("only a supervisor can commission, and not with a person in the cell")
                     tier, resume = body.get("tier", "supervised"), body.get("resume")
                     if resume is not None and not isinstance(resume, bool):
                         raise ValueError("resume must be true or false")
