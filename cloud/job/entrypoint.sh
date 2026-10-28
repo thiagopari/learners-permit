@@ -42,6 +42,13 @@ step "Model weights"
 cd "$GR00T"
 if [ "${HF_HUB_OFFLINE:-0}" = 1 ]; then
     echo "baked into the image (Dockerfile.vm): no download, no HF token needed"
+    # Use the environments exactly as built: `uv run` otherwise re-syncs on every start, fetching wheels.
+    export UV_NO_SYNC=1 UV_OFFLINE=1
+    # transformers 4.57.3 (GR00T's pin) calls the Hub API from the tokenizer loader (is_base_mistral -> model_info)
+    # unless the model name is a local folder, and that call fails offline even with the files cached. GR00T loads
+    # its backbone by name relative to its own folder, so make that name a local folder. (Found Oct 28.)
+    snap=$(ls -d ~/.cache/huggingface/hub/models--nvidia--Cosmos-Reason2-2B/snapshots/*/ | head -1)
+    mkdir -p nvidia && ln -sfn "$snap" nvidia/Cosmos-Reason2-2B
 else  # GR00T's backbone (Cosmos-Reason2-2B) is gated: accept it on huggingface.co, and pass HF_TOKEN as a secret
     : "${HF_TOKEN:?no HF_TOKEN: cloud/job.sh run passes it with --env-secret}"
     [ ! -d /cache ] || export HF_HOME=/cache/huggingface  # an optional mounted volume saves the download next time
