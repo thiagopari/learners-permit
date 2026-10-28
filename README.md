@@ -17,10 +17,13 @@ for how long. Learner's Permit makes that decision in code, from evidence:
 - **Earned.** The AI may command a skill only after a Nebius-run evaluation sweep shows, with 95% confidence, that it
   succeeds at least 80% of the time (a Bayesian sequential test). An *unattended* tier needs 99%: 298 straight
   successes.
-- **Scoped.** A licence covers only the conditions tested (today: the commanded speed, and the scene).
-- **Revocable.** It's pulled when live results slip, or when Cosmos Reason 2 sees the scene has changed.
-- **Enforced, not prompted.** One Cedar policy at one endpoint, `POST /run`, the only path to the robot. The
-  requester's role comes from the session, never from the LLM.
+- **Scoped.** A licence covers only the conditions tested (today: the commanded speed).
+- **Revocable.** It's pulled automatically when live results slip. A Cosmos Reason 2 check that also suspends it when
+  the scene changes is built and tested with a stand-in model, but **has not yet run on Nebius**.
+- **Enforced, not prompted.** One Cedar policy decides every API request that can move the robot: `POST /run` (and
+  the AI's `/orders` and `/agent/run`, which go through it) and the supervisor's commissioning trials. The requester's
+  role comes from the session, never from the LLM. (Evaluation scripts run by someone with a shell on the GPU VM,
+  like `cloud/measure.py`, drive RoboLab directly; the AI has no way to reach them.)
 
 ## What we measured (our own runs, Nebius RTX PRO 6000, Oct 24–28, 2026)
 Zero-shot **GR00T N1.7-DROID** driving a simulated Franka arm in Isaac Sim 5.0 through NVIDIA's RoboLab, every
@@ -30,12 +33,16 @@ episode recorded (none dropped for finishing late):
 |---|---|---|---|---|---|
 | Bananas in the bin (`BananasInBinThreeTotalTask`) | default | 40 | **37** (92.5%) | 0.976 | **licensed** |
 | Red dishes in the bin (`RedDishesInBinTask`) | default | 40 | **14** (35%) | ≈ 0 | **refused** |
-| Bananas in the bin | random background, seed 1 | 20 | _TBD_ | | |
+| Bananas in the bin | random background, seed 1 | 20 | **20** (100%) | | |
 | Bananas in the bin | random background, seed 2 | 20 | _TBD_ | | |
 
 - NVIDIA's RoboLab README reports 38/40 and 15/40 for the first two; ours match closely, but they are our numbers.
 - **Cost:** 40 episodes took 11.2 minutes on one RTX PRO 6000 at $1.80/h: **$0.34, or $8.40 per 1,000 episodes.**
 - Reliability varies wildly from task to task (92.5% vs 35% here), which is why licences are per skill.
+- A randomized background did **not** lower GR00T's success on bananas, so the drift revocation correctly never
+  fired; we have no measured scene that makes the licensed skill fail.
+- Every number in this table is from a real run. The offline demo (`demo/four_beats.py`) uses coin flips at these
+  rates and says so on every line; it is not robot evidence.
 
 ## How it works
 ```
@@ -46,11 +53,11 @@ person ─order─▶ Nemotron planner ─skill calls─▶ POST /run ◀── 
                                                  ▼
                                   GR00T N1.7-DROID in Isaac Sim (RoboLab), Nebius RTX PRO 6000
                                                  │ live results ──▶ drift revokes the licence
-                                                 │ Cosmos Reason 2 ──▶ a changed scene suspends it
+                                                 │ Cosmos Reason 2 ──▶ a changed scene suspends it (not yet run on Nebius)
                                                  ▼
                        Nemotron explains every refusal, block and revocation to the supervisor
 ```
-Rules the code enforces (`permit/`, 142 tests in `tests/`):
+Rules the code enforces (`permit/`, tested in `tests/`; CI runs them on every push):
 - **Identity:** the planner sees only the skill catalogue; any role, approver or extra argument it emits is dropped.
 - **Approvals:** a supervisor's approval is single use, bound to one exact command, repeat count and person, and
   lasts 10 minutes.
@@ -68,7 +75,7 @@ Rules the code enforces (`permit/`, 142 tests in `tests/`):
 |---|---|---|
 | **Nemotron-3-Super-120B-A12B** (`nvidia/nemotron-3-super-120b-a12b`) | Planner (tool calling over the skill catalogue) and explainer | Nebius Token Factory |
 | **GR00T N1.7-DROID** | The robot skill: a VLA policy driving a simulated Franka | Nebius AI Cloud, RTX PRO 6000 VM |
-| **Cosmos-Reason2-2B** | Scene check: is the cell still the scene the licence was earned in? | Nebius AI Cloud, same VM (`cloud/cosmos_server.py`); it isn't on Token Factory |
+| **Cosmos-Reason2-2B** | Scene check: is the cell still the scene the licence was earned in? | Built to run on the same Nebius VM (`cloud/cosmos_server.py`; it isn't on Token Factory). **Not yet run on Nebius**: tested with a stand-in model only |
 
 ## Nebius services used
 - **Token Factory:** every planner and explainer call, at runtime. OpenAI-compatible, so the `openai` client works
@@ -90,8 +97,8 @@ Rules the code enforces (`permit/`, 142 tests in `tests/`):
 **Any machine, no GPU, no keys** (offline stand-ins for Nemotron and Tavily; coin-flip trials):
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
-.venv/bin/python -m pytest -q tests        # 142 tests
-.venv/bin/python demo/four_beats.py        # refuse → earn → block → revoke
+.venv/bin/python -m pytest -q tests
+.venv/bin/python demo/four_beats.py        # refuse → earn → block → revoke, on labelled stand-in trials
 .venv/bin/python -m permit.server          # console at http://127.0.0.1:8099
 ```
 **With real Nemotron and Tavily:** copy `.env.example` to `.env` (git-ignored) and fill in `NEBIUS_API_KEY` (Token
@@ -118,7 +125,7 @@ The setup is hardened against what broke on a real VM: Isaac Sim's missing `libG
 | Path | What |
 |---|---|
 | `permit/` | **New:** the control plane (`server.py`), Cedar policy, the trust gate (`gate.py`), licences, Nemotron planner and explainer, Tavily check, Cosmos scene check, runners |
-| `console/`, `demo/`, `tests/` | **New:** licence console, four-beat demo, 142 tests |
+| `console/`, `demo/`, `tests/` | **New:** licence console, four-beat demo (offline, labelled stand-ins), tests |
 | `cloud/` | **New:** the Nebius GPU VM (`vm.sh`, `setup_vm.sh`, idle guard, spot price cap), `measure.py`, the Cosmos server, the Serverless Job (`job.sh`, `job/`) |
 | `docs/FEEDBACK.md` | Our feedback on Token Factory, AI Cloud and the NVIDIA tools |
 | everything else | Hyperion (prior work): [docs/hyperion-README.md](docs/hyperion-README.md), [docs/hyperion-gb10-readme.md](docs/hyperion-gb10-readme.md) |

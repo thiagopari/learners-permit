@@ -67,8 +67,8 @@ missing libGLU) cost most of the time we lost, and both are cheap to fix or docu
 ## NVIDIA models and tools
 
 **What we used.** GR00T N1.7-DROID (vision-language-action policy) through Isaac-GR00T's policy server; Isaac Sim 5.0
-and RoboLab (`BananasInBinThreeTotalTask`, `RedDishesInBinTask`); Nemotron-3-Super (above); Cosmos-Reason2-2B (gated,
-for scene verification).
+and RoboLab (`BananasInBinThreeTotalTask`, `RedDishesInBinTask`); Nemotron-3-Super (above); Cosmos-Reason2-2B (gated;
+downloaded to the VM for scene verification; TODO: update if it ran before submission).
 
 **What worked well**
 - RoboLab's GR00T runner and its `episode_results.jsonl` were exactly what an evaluation harness needs; every CLI flag
