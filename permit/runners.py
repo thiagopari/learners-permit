@@ -22,23 +22,31 @@ def mock(rates, seconds_per_batch=0.0):
     return coin_flips(rates, seconds_per_batch=seconds_per_batch)
 
 
-def robolab(task, ports, video="none", timeout=3600, root=None, retries=1, extra_args=()):
+def robolab(task, ports, video="none", timeout=3600, root=None, retries=1, extra_args=(), seed=None):
     """Each arm is a GR00T policy server on its own port. One RoboLab process per arm and batch runs n parallel envs,
     one episode each, and records every episode (success or time-out). Unlike LIBERO's rollout_policy.py, nothing
     is dropped for finishing late. Success is read from output/<folder>/episode_results.jsonl, never the exit code.
     A failed launch is retried `retries` times in a fresh folder: the whole launch is discarded, never part of it,
-    so a crash can't select which episodes count. extra_args go to RoboLab as given (e.g. a randomized background)."""
+    so a crash can't select which episodes count. extra_args go to RoboLab as given (e.g. a randomized background).
+    seed: RoboLab's scene seed for the first launch, then seed+1, seed+2, ... so every batch is a fresh set of scenes
+    (one fixed seed would replay the same scenes each batch); a retried launch gets a new seed too. Every arm sees
+    the same sequence, so two arms compared on one runner face the same scenes."""
     root = root or os.environ.get("ROBOLAB_DIR", os.path.expanduser("~/RoboLab"))
     videos = {}  # arm -> the last launch's episode videos (viewport first), for the Cosmos scene check
+    launches = {}  # arm -> launches so far, for the seed sequence
 
     def launch(arm, n):
         folder = f"lp_{task}_{arm}_{time.time_ns()}"
+        seeding = []
+        if seed is not None:
+            seeding = ["--seed", str(seed + launches.get(arm, 0))]
+            launches[arm] = launches.get(arm, 0) + 1
         # uv's installer puts it in ~/.local/bin, which a tmux or cron shell may not have on PATH (Oct 24, first run)
         uv = shutil.which("uv") or os.path.expanduser("~/.local/bin/uv")
         cmd = [uv, "run", "python", "policies/gr00t/run.py", "--headless", "--remote-host", "127.0.0.1",
                "--remote-port", str(ports[arm]), "--task", task, "--num-envs", str(n), "--num-runs", "1",
                "--open-loop-horizon", "8", "--instruction-type", "default", "--video-mode", video,
-               "--output-folder-name", folder, *extra_args]
+               "--output-folder-name", folder, *seeding, *extra_args]
         p = subprocess.Popen(cmd, cwd=root, env={**os.environ, "OMNI_KIT_ACCEPT_EULA": "Y"}, text=True,
                              stdout=subprocess.PIPE, stderr=subprocess.STDOUT, start_new_session=True)
         try:

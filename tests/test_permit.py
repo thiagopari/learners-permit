@@ -371,3 +371,21 @@ def test_robolab_runner_finds_uv_off_the_path(tmp_path, monkeypatch):
     monkeypatch.setattr(runners.shutil, "which", lambda name: None)
     runners.robolab("RedDishesInBinTask", {"ft": 5601}, root=str(tmp_path))({"ft": 1})
     assert cmds[0][0].replace("\\", "/").endswith("/.local/bin/uv")
+
+
+def test_robolab_runner_advances_the_seed_per_launch_and_per_arm_alike(tmp_path, monkeypatch):
+    FakeRoboLab.root, cmds = tmp_path, []
+
+    class Recording(FakeRoboLab):
+        def __init__(self, cmd, cwd, env, **kw):
+            cmds.append(cmd)
+            super().__init__(cmd, cwd, env, **kw)
+    monkeypatch.setattr(runners.subprocess, "Popen", Recording)
+    rb = runners.robolab("RedDishesInBinTask", {"a": 5600, "ft": 5601}, root=str(tmp_path), seed=2001)
+    rb({"a": 2, "ft": 2})
+    rb({"a": 2, "ft": 2})
+    seeds = [(c[c.index("--remote-port") + 1], c[c.index("--seed") + 1]) for c in cmds]
+    assert seeds == [("5600", "2001"), ("5601", "2001"), ("5600", "2002"), ("5601", "2002")]
+    plain = runners.robolab("RedDishesInBinTask", {"a": 5600}, root=str(tmp_path))
+    cmds.clear(); plain({"a": 1})
+    assert "--seed" not in cmds[0]
