@@ -68,21 +68,25 @@ nebius-ai-cloud, nebius-serverless, tavily, cedar, python
 Judges said (Oct 21): get to the aha moment fast. Label every robot shot **"Simulation: NVIDIA Isaac Sim"** on screen.
 No third-party music or trademarks beyond the sponsors' own products.
 
-| Time | Beat | On screen | Voice-over (draft) |
+| Time | Beat | On screen (all real; the source is in brackets) | Voice-over (draft) |
 |---|---|---|---|
-| 0:00–0:25 | **REFUSE** | Console: Olga orders "put the red dishes in the bin"; the row turns red: *skill not licensed*; Nemotron's explanation appears under it | "Olga asks the AI to clear the red dishes. It refuses. Not because it's unsure: because this skill hasn't earned a licence. Our own Nebius runs: 14 successes in 40." |
-| 0:25–0:50 | The idea | Title card + the architecture diagram from the README | "Learner's Permit: an AI may command a robot skill only after trials prove it, only where it was tested, and only until the evidence changes." |
-| 0:50–1:30 | **EARN** | Sim clip of GR00T putting bananas in the bin; licence card: 37/40, P(rate ≥ 80%) = 0.976, $8.40 per 1,000 episodes; then the same order runs | "Bananas earned theirs: a sweep on a Nebius RTX PRO 6000, 37 of 40, 97.6% confident it succeeds at least 80% of the time. Now the agent may run it, at the speed it was tested at." |
-| 1:30–2:05 | **BLOCK** | Order with part "Makita XFD131"; Tavily finds the spec sheet: 1.72 kg over a 1.0 kg limit; denied, source URL shown | "The web can only narrow a licence. Tavily pulls the spec sheet: too heavy for this skill. Blocked, with the source cited." |
-| 2:05–2:45 | **REVOKE** | ONLY what really happened. Today: the background runs (20/20 and 16/20) next to the drift rule, then the console revoking on live failures, labelled "offline stand-in". If Cosmos runs on Nebius before recording, show its real verdict instead | "We changed the background: GR00T still succeeded 20 of 20 and 16 of 20, not enough evidence of a drop, so the licence rightly stayed. If live results do slip, the licence is pulled automatically and the agent goes back to asking a person." |
-| 2:45–2:58 | Close | Logos: Nebius Token Factory, AI Cloud, Nemotron, GR00T, Cosmos, Tavily; repo URL | "Other robot agents ask when they're unsure. Ours asks when it's unproven." |
+| 0:00–0:20 | **REFUSE** | Terminal: `python demo/four_beats.py` with real keys; "Put the red dishes in the bin" → DENY, *skill not licensed*, Nemotron's explanation; then the red-dishes sim clip [`results/clips/…RedDishes…mp4`, 14/40 in `docs/results/measurements.jsonl`] | "Olga asks the AI to clear the red dishes. It refuses: not because it's unsure, but because this skill hasn't earned a licence. On our own Nebius runs, GR00T managed 14 of 40." |
+| 0:20–0:40 | The idea | Title card + the README's architecture diagram | "Learner's Permit: an AI may command a robot skill only after trials prove it, only where it was tested, and only until the evidence changes." |
+| 0:40–1:15 | **EARN** | Bananas sim clip [`results/clips/…Bananas…mp4`]; licence card 37/40, P = 0.976; then the Serverless Job log: batches 16/20 → 71/80, licensed, $10.80 per 1,000 episodes [`docs/results/serverless-job-2026-10-28.log`] | "Bananas earned theirs: 37 of 40, 97.6% confident it succeeds at least 80% of the time. And the same sweep runs as a Nebius Serverless Job: 80 episodes, licensed, about a cent per episode." |
+| 1:15–1:45 | **BLOCK** | Same terminal run: "The item is part Makita XFD131" → Tavily finds the spec sheet, 1.724 kg > 1.0 kg, denied with the source URL | "The web can only narrow a licence. Tavily pulls the spec sheet: too heavy for this skill. Blocked, with the source cited." |
+| 1:45–2:25 | **REVOKE** | The two real frames side by side, tiles then wood [`docs/results/e2e-revoke-2026-10-28/*.jpg`]; the log lines: vision check "floor changed from tiled to wooden" → licence revoked → next request denied, with Nemotron's explanation [`e2e.jsonl`] | "Then the scene changed. GR00T still succeeded, but the licence was evidence about the old scene, and the vision check saw the floor had changed. Licence revoked, before the robot had to fail. The agent goes back to asking a person." |
+| 2:25–2:42 | Beyond robots | The crop table: pepper 37/40 licensed, tomato 85/100 not licensed [`docs/results/crop-2026-10-29/`] | "The same licence works for any model. Few-shot leaf diagnosis earned a licence for peppers, 37 of 40. Tomatoes, at 85 of 100, aren't trusted yet." |
+| 2:42–2:58 | Close | Logos: Nebius Token Factory and AI Cloud, Nemotron, GR00T, Tavily; repo URL | "Other robot agents ask when they're unsure. Ours asks when it's unproven." |
+
+Don't show: the offline demo's coin-flip licence numbers as if they were robot runs (only its Nemotron and Tavily
+parts are real), or Cosmos as the scene checker (it was measured and not used).
 
 Show for at least a minute in total the key modules working (the rules' requirement for projects without hardware):
 the console, `POST /run` decisions, the licence cards and the sim clips. Record the console from the four-beat demo
 with real keys (`python demo/four_beats.py` and `python -m permit.server`), and the clips with `cloud/vm.sh record`.
 
 ## Before submitting
-- [ ] TODO: team members in the README's Prior work, and on Devpost
+- [ ] Team on Devpost: Gnana Shishir Kumar Chintapalli, Thiago Pari, Megha (add Megha's surname in the README too)
 - [ ] Background-run numbers filled into the README table (and the REVOKE beat matches what happened)
 - [ ] Secret scan of the full history: `gitleaks detect --source . --log-opts="--all"` (config in `.gitleaks.toml`)
 - [ ] The repo is public, with the Apache-2.0 license at the top
