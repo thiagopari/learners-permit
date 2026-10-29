@@ -161,13 +161,17 @@ Rules the code enforces (`permit/`, tested in `tests/`; CI runs them on every pu
   ([log](docs/results/serverless-job-2026-10-28.log)). The image (`cloud/job/Dockerfile.vm`) packages the stack that
   passed setup on the VM, weights included, and starts fully offline.
 
-## Status (Oct 28, 2026)
-- **Real and tested on Nebius:** Nemotron planner and explainer (Token Factory), Tavily datasheet check, GR00T N1.7 +
-  Isaac Sim + RoboLab episodes through our runner, the measurements above, the vision scene check
+## Status (Oct 29, 2026)
+- **Real and tested on Nebius:** Nemotron planner and explainer (Token Factory), Tavily datasheet and recall checks,
+  GR00T N1.7 + Isaac Sim + RoboLab episodes through our runner, the measurements above, the vision scene check
   (Nemotron-3.5-Super-VL on Token Factory; Cosmos-Reason2-2B served on our VM and measured), and the end-to-end
-  earn → revoke → refuse run.
+  earn → revoke → refuse run, and the crop-disease licences (few-shot Nemotron-3.5-Super-VL and a ResNet-18 trained
+  on Nebius).
 - **Serverless Job:** a real commissioning sweep ran as a Nebius Serverless AI Job (71/80, licensed; above).
-- **Not built:** fine-tuning GR00T (so a refused skill can't earn its licence yet), a physical robot.
+- **Started, not trained:** `cloud/finetune/` collects GR00T's own successful red-dish episodes and turns them into
+  a LeRobot v2.1 DROID dataset for filtered behaviour cloning. No fine-tuning run yet, so a refused skill can't earn
+  its licence yet.
+- **Not built:** a physical robot.
 
 ## Run it
 **Any machine, no GPU, no keys** (offline stand-ins for Nemotron and Tavily; coin-flip trials):
@@ -191,18 +195,20 @@ cloud/vm.sh create      # RTX PRO 6000 VM with the idle guard (billing starts)
 cloud/vm.sh setup       # GR00T N1.7, Isaac Sim 5.0, RoboLab; ends with 2 real episodes
 cloud/vm.sh measure     # the table above, in tmux (about 1 h)
 cloud/vm.sh record      # episodes with video; cloud/vm.sh dashboard replays them at localhost:8080
-cloud/vm.sh cosmos      # Cosmos Reason 2 for the scene check (python -m permit.server --runner robolab --scene-check)
+cloud/vm.sh cosmos      # serves Cosmos Reason 2 on the VM, only to compare scene checkers (see the table above)
 cloud/vm.sh stop        # a stopped VM bills only its disk; cloud/vm.sh delete removes it
 ```
+The full loop on the VM: `python -m permit.server --runner robolab --scene-check` (the scene check calls
+Nemotron-3.5-Super-VL on Token Factory with `NEBIUS_API_KEY`).
 The setup is hardened against what broke on a real VM: Isaac Sim's missing `libGLU`, NVIDIA's DCGM holding port 5555
 (GR00T serves on 5600), a RoboLab bug in random backgrounds, and more; see `git log cloud/`.
 
 ## Repo map
 | Path | What |
 |---|---|
-| `permit/` | **New:** the control plane (`server.py`), Cedar policy, the trust gate (`gate.py`), licences, Nemotron planner and explainer, Tavily check, Cosmos scene check, runners |
+| `permit/` | **New:** the control plane (`server.py`), Cedar policy, the trust gate (`gate.py`), licences, Nemotron planner and explainer, Tavily checks, the vision scene check (`scene.py`), runners |
 | `console/`, `demo/`, `tests/` | **New:** licence console, four-beat demo (offline, labelled stand-ins), tests |
-| `cloud/` | **New:** the Nebius GPU VM (`vm.sh`, `setup_vm.sh`, idle guard, spot price cap), `measure.py`, the Cosmos server, the Serverless Job (`job.sh`, `job/`) |
+| `cloud/` | **New:** the Nebius GPU VM (`vm.sh`, `setup_vm.sh`, idle guard, spot price cap), `measure.py`, the Cosmos server, the Serverless Job (`job.sh`, `job/`), fine-tuning data (`finetune/`) |
 | `docs/FEEDBACK.md` | Our feedback on Token Factory, AI Cloud and the NVIDIA tools |
 | `crop/` | **New:** a few-shot crop-disease skill licensed per crop by the same gate |
 | `cell/`, `navfix/`, `sim/`, `glue/`, `isaac/`, `docker/`, `tools/`, `samples/`, `agent/`, `infra/`, `warehouse/`, `fleetops.sh`, `enable_thinking.sh`, `*.patch.json5` | **Hyperion, prior work (Oct 3), not part of this entry:** kept for reference and credit, by its original authors (see [Prior work](#prior-work)). Nothing in Learner's Permit imports or runs it. Maps: [docs/hyperion-README.md](docs/hyperion-README.md), [docs/hyperion-gb10-readme.md](docs/hyperion-gb10-readme.md) |
@@ -216,21 +222,22 @@ prompt: nothing read its result at runtime.
 
 The Hyperion folders listed in the repo map are kept as that prior work, credited to its authors; they are not part
 of this entry, and Learner's Permit doesn't use them. Learner's Permit is new work from the submission period, by
-this team: **Gnana Shishir Kumar Chintapalli, Thiago Pari and Megha** (_TODO: Megha's surname_):
+this team: **Gnana Shishir Kumar Chintapalli, Thiago Pari and Megha Manoj**:
 - **The trust gate, rewritten from scratch** (`permit/gate.py`, our own code; Hyperion's `cell/bandit.py` isn't used),
   with 80% and 99% tiers and resumable sweeps.
 - **Enforcement in code:** one `POST /run` choke point with Cedar policies; the gate's result is checked on every run.
 - **Per-skill, per-scope licences** that drift and scene changes revoke.
-- **Nemotron on Token Factory** as planner and explainer; the **Tavily** datasheet check.
-- **GR00T N1.7-DROID in Isaac Sim** through RoboLab on Nebius, with the measurements above; the **Cosmos Reason 2**
-  scene check; the Nebius VM tooling and the Serverless Job.
+- **Nemotron on Token Factory** as planner and explainer; the **Tavily** datasheet and recall checks.
+- **GR00T N1.7-DROID in Isaac Sim** through RoboLab on Nebius, with the measurements above; the vision **scene check**
+  (Nemotron-3.5-Super-VL, chosen over Cosmos-Reason2-2B by measurement); the Nebius VM tooling and the Serverless Job.
 
 ## What's next
-- **Earn, not only refuse:** fine-tune GR00T on scripted demos so a refused skill (red dishes, 14/40) can earn its
-  licence; scope licences by phrasing and object colour; put a real arm behind the same `POST /run`.
+- **Earn, not only refuse:** fine-tune GR00T on its own successful red-dish episodes (`cloud/finetune/` builds the
+  dataset) so the refused skill (14/40) can earn its licence; scope licences by phrasing and object colour; put a real
+  arm behind the same `POST /run`.
 - **CropAI, beyond the lab photos above (planned):** licence a crop-disease skill per cultivar and lighting window from
   real labelled *field* images, and revoke it when the season or the light changes.
 
 ## License
-Apache-2.0 for this repository's code. No model weights are included; GR00T, Cosmos and Nemotron are under NVIDIA's
-model licenses.
+Apache-2.0 ([LICENSE](LICENSE)) for this repository's code. No model weights are included; GR00T, Cosmos and
+Nemotron are under NVIDIA's model licenses.
