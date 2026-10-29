@@ -70,6 +70,26 @@ scene ([raw results](docs/results/)).
 So the scene check uses Nemotron-3.5-Super-VL; Cosmos-Reason2-2B would have suspended every licence on every run.
 (Prompting it to ignore the task objects didn't stop the false alarms.)
 
+### Beyond robot arms: a crop-disease skill, licensed per crop (Oct 29)
+The gate licenses any model's skill, not only a robot's. `crop/` treats "diagnose this leaf photo" as a skill:
+Nemotron-3.5-Super-VL on Token Factory, shown one verified reference leaf per diagnosis (few-shot, no training),
+then the query leaf. Each trial is one labelled photo from the public PlantVillage dataset; the model sees only the
+image, never its file name. The licence's scope is the crop.
+
+| Crop | Diagnoses | Correct | P(accuracy ≥ 80%) | Licence |
+|---|---|---|---|---|
+| Pepper | healthy, bacterial spot | **37/40** (92.5%) | 0.976 | **licensed** |
+| Tomato | healthy, early blight, late blight | **85/100** (85%) | 0.881 | **not licensed**: still undecided at the 100-photo cap |
+
+- Tomato's healthy leaves were 34/34; most errors were early blight read as late blight (10 of 15). A diseased leaf
+  was called healthy 4 times for tomato and 3 for pepper, the misses that matter most in a field.
+- The pepper licence covers peppers only: asked about a tomato, the licence check says no.
+- Every prediction, the licences and the image manifest (source URL and SHA-256 of each photo) are in
+  [docs/results/crop-2026-10-29/](docs/results/crop-2026-10-29/) and
+  [crop-dataset-manifest.json](docs/results/crop-dataset-manifest.json). Run it with `python crop/run.py`.
+- Images: PlantVillage (Hughes & Salathé, [github.com/spMohanty/PlantVillage-Dataset](https://github.com/spMohanty/PlantVillage-Dataset),
+  CC BY-SA 3.0): 205 photos, lab-shot leaves on plain backgrounds, so this says nothing yet about field photos.
+
 
 ## How it works
 ```
@@ -182,9 +202,8 @@ Learner's Permit is new work from the submission period, by this team (_TODO: li
 ## What's next
 - **Earn, not only refuse:** fine-tune GR00T on scripted demos so a refused skill (red dishes, 14/40) can earn its
   licence; scope licences by phrasing and object colour; put a real arm behind the same `POST /run`.
-- **Beyond robot arms (planned, not built):** the gate licenses any model's skill within the conditions it was tested
-  in. Our next project, CropAI, would license a crop-disease classifier per cultivar and lighting window from real
-  labelled field images, and revoke it when the season or the light changes.
+- **CropAI, beyond the lab photos above (planned):** licence a crop-disease skill per cultivar and lighting window from
+  real labelled *field* images, and revoke it when the season or the light changes.
 
 ## License
 Apache-2.0 for this repository's code. No model weights are included; GR00T, Cosmos and Nemotron are under NVIDIA's

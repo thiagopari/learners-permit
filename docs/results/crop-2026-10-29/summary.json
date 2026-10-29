@@ -1,0 +1,36 @@
+{
+ "model": "nvidia/Nemotron-3.5-Super-VL",
+ "few_shot": "one verified reference leaf per diagnosis",
+ "crops": {
+  "tomato": {
+   "status": "refused",
+   "successes": 85,
+   "trials": 100,
+   "p": 0.8811,
+   "scope": {
+    "crop": [
+     "tomato"
+    ]
+   },
+   "minutes": 0.5
+  },
+  "pepper": {
+   "status": "licensed",
+   "successes": 37,
+   "trials": 40,
+   "p": 0.9756,
+   "scope": {
+    "crop": [
+     "pepper"
+    ]
+   },
+   "minutes": 0.2
+  }
+ },
+ "scope_checks": {
+  "tomato licence covers tomato": false,
+  "tomato licence covers pepper": false,
+  "pepper licence covers tomato": false,
+  "pepper licence covers pepper": true
+ }
+}
