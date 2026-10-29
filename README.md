@@ -70,13 +70,49 @@ scene ([raw results](docs/results/)).
 So the scene check uses Nemotron-3.5-Super-VL; Cosmos-Reason2-2B would have suspended every licence on every run.
 (Prompting it to ignore the task objects didn't stop the false alarms.)
 
+### Beyond robot arms: a crop-disease skill, licensed per crop (Oct 29)
+The gate licenses any model's skill, not only a robot's. `crop/` treats "diagnose this leaf photo" as a skill:
+Nemotron-3.5-Super-VL on Token Factory, shown one verified reference leaf per diagnosis (few-shot, no training),
+then the query leaf. Each trial is one labelled photo from the public PlantVillage dataset; the model sees only the
+image, never its file name. The licence's scope is the crop.
+
+| Crop | Diagnoses | Correct | P(accuracy ≥ 80%) | Licence |
+|---|---|---|---|---|
+| Pepper | healthy, bacterial spot | **37/40** (92.5%) | 0.976 | **licensed** |
+| Tomato | healthy, early blight, late blight | **85/100** (85%) | 0.881 | **not licensed**: still undecided at the 100-photo cap |
+
+- Tomato's healthy leaves were 34/34; most errors were early blight read as late blight (10 of 15). A diseased leaf
+  was called healthy 4 times for tomato and 3 for pepper, the misses that matter most in a field.
+- The pepper licence covers peppers only: asked about a tomato, the licence check says no.
+- Every prediction, the licences and the image manifest (source URL and SHA-256 of each photo) are in
+  [docs/results/crop-2026-10-29/](docs/results/crop-2026-10-29/) and
+  [crop-dataset-manifest.json](docs/results/crop-dataset-manifest.json). Run it with `python crop/run.py`.
+- Images: PlantVillage (Hughes & Salathé, [github.com/spMohanty/PlantVillage-Dataset](https://github.com/spMohanty/PlantVillage-Dataset),
+  CC BY-SA 3.0): 205 photos, lab-shot leaves on plain backgrounds, so this says nothing yet about field photos.
+
+**Few-shot vs trained, same photos, same gate (Oct 29).** `crop/train.py` fine-tuned an ImageNet-pretrained
+ResNet-18 on 4,312 other PlantVillage photos (12 seconds, 4 epochs, on our Nebius RTX PRO 6000; validation accuracy
+98.75%), with every photo above excluded by SHA-256. Commissioned through the same gate on the same held-out photos:
+
+| Crop | Few-shot Nemotron-3.5-Super-VL | Trained ResNet-18: licence | Trained ResNet-18: every held-out photo |
+|---|---|---|---|
+| Tomato | 85/100, **not licensed** | 20/20, P = 0.991, **licensed** | 119/120 (one early blight called healthy) |
+| Pepper | 37/40, licensed | 20/20, P = 0.991, **licensed** | 80/80 |
+
+- The gate stops as soon as it's sure, so the trained model's licences took 20 photos each; the last column scores
+  it on all of them as a separate check. The licence is tied to the model's hash (`a70f3d278de7`): a retrained model
+  has to earn its own.
+- **Caveat:** PlantVillage's training and test photos come from the same lab setup, and models are known to score
+  near-perfectly on it partly by learning that setup; this is not evidence about field photos, where the few-shot
+  model's lack of training may matter less. Results: [docs/results/crop-2026-10-29-trained/](docs/results/crop-2026-10-29-trained/).
+
 
 ## How it works
 ```
 person ─order─▶ Nemotron planner ─skill calls─▶ POST /run ◀── the only path to the robot
                 (Token Factory)                  │ Cedar: role × skill × object × bin × speed × hours × person in cell
                                                  │ licence: proven for this scope? (the trust gate, on Nebius sweeps)
-                                                 │ Tavily datasheet: can only BLOCK (too heavy → denied, source cited)
+                                                 │ Tavily datasheet + recall notices: can only BLOCK (too heavy, or recalled → denied, source cited)
                                                  ▼
                                   GR00T N1.7-DROID in Isaac Sim (RoboLab), Nebius RTX PRO 6000
                                                  │ live results ──▶ drift revokes the licence
@@ -91,8 +127,15 @@ Rules the code enforces (`permit/`, tested in `tests/`; CI runs them on every pu
 - **Requesters:** the AI works only for people whose own role may request work.
 - **Modes:** the AI never changes modes or speed limits, even with an approval.
 - **Fail closed:** missing context means deny; a person in the cell caps everyone at 25% speed.
-- **Outside evidence can only narrow:** a Tavily datasheet can block a pick, and a Cosmos scene check can suspend a
-  licence; neither can ever allow anything.
+- **Outside evidence can only narrow:** a Tavily datasheet (too heavy) or an official recall notice found by Tavily
+  can block a pick, and a vision scene check can suspend a licence; none of them can ever allow anything.
+- **A recall counts only if it names the item.** Tavily searches official recall sites (CPSC, FDA, FSIS, NHTSA,
+  recalls.gov); a notice blocks only if its title names the item, or its text names the item's model number close to
+  the rest of its name. Real searches showed why (Oct 29, [results](docs/results/recall-2026-10-29/)): "Makita
+  XFD131" returned CPSC recalls of other Makita tools, "bananas" an FDA recall of frozen fruit mixes, and a Makita
+  recall page listed a Scotch laminator in its sidebar. With these rules, of 7 real items, exactly the 3 under
+  recall were blocked, each citing its own notice: Fisher-Price Rock 'n Play (CPSC 2023), Makita XPG01Z grease gun
+  (CPSC 2025), Scotch TL1302Z laminator. When both web checks fire, both reasons are reported.
 - **Every no is explained, and the explanation can't lie about numbers:** Nemotron sees only audit facts (never the
   order text or web page text). An answer that quotes a number not in those facts, or gives a person a licence that
   belongs to a skill, is replaced by a template, and no explanation can change a decision.
@@ -161,7 +204,8 @@ The setup is hardened against what broke on a real VM: Isaac Sim's missing `libG
 | `console/`, `demo/`, `tests/` | **New:** licence console, four-beat demo (offline, labelled stand-ins), tests |
 | `cloud/` | **New:** the Nebius GPU VM (`vm.sh`, `setup_vm.sh`, idle guard, spot price cap), `measure.py`, the Cosmos server, the Serverless Job (`job.sh`, `job/`) |
 | `docs/FEEDBACK.md` | Our feedback on Token Factory, AI Cloud and the NVIDIA tools |
-| everything else | Hyperion (prior work): [docs/hyperion-README.md](docs/hyperion-README.md), [docs/hyperion-gb10-readme.md](docs/hyperion-gb10-readme.md) |
+| `crop/` | **New:** a few-shot crop-disease skill licensed per crop by the same gate |
+| `cell/`, `navfix/`, `sim/`, `glue/`, `isaac/`, `docker/`, `tools/`, `samples/`, `agent/`, `infra/`, `warehouse/`, `fleetops.sh`, `enable_thinking.sh`, `*.patch.json5` | **Hyperion, prior work (Oct 3), not part of this entry:** kept for reference and credit, by its original authors (see [Prior work](#prior-work)). Nothing in Learner's Permit imports or runs it. Maps: [docs/hyperion-README.md](docs/hyperion-README.md), [docs/hyperion-gb10-readme.md](docs/hyperion-gb10-readme.md) |
 
 ## Prior work
 Hyperion, an AI ops supervisor for a simulated 20-robot warehouse, was built on **2026-10-03** at the Dell × NVIDIA
@@ -170,7 +214,9 @@ GB10 hackathon in Boston by Thiago Pari, Ferbin, Megha and Amal; its public uplo
 statistical trust gate deciding which robot skills an agent may use. In Hyperion that gate lived only in the LLM's
 prompt: nothing read its result at runtime.
 
-Learner's Permit is new work from the submission period, by this team (_TODO: list the three team members_):
+The Hyperion folders listed in the repo map are kept as that prior work, credited to its authors; they are not part
+of this entry, and Learner's Permit doesn't use them. Learner's Permit is new work from the submission period, by
+this team: **Gnana Shishir Kumar Chintapalli, Thiago Pari and Megha** (_TODO: Megha's surname_):
 - **The trust gate, rewritten from scratch** (`permit/gate.py`, our own code; Hyperion's `cell/bandit.py` isn't used),
   with 80% and 99% tiers and resumable sweeps.
 - **Enforcement in code:** one `POST /run` choke point with Cedar policies; the gate's result is checked on every run.
@@ -178,6 +224,12 @@ Learner's Permit is new work from the submission period, by this team (_TODO: li
 - **Nemotron on Token Factory** as planner and explainer; the **Tavily** datasheet check.
 - **GR00T N1.7-DROID in Isaac Sim** through RoboLab on Nebius, with the measurements above; the **Cosmos Reason 2**
   scene check; the Nebius VM tooling and the Serverless Job.
+
+## What's next
+- **Earn, not only refuse:** fine-tune GR00T on scripted demos so a refused skill (red dishes, 14/40) can earn its
+  licence; scope licences by phrasing and object colour; put a real arm behind the same `POST /run`.
+- **CropAI, beyond the lab photos above (planned):** licence a crop-disease skill per cultivar and lighting window from
+  real labelled *field* images, and revoke it when the season or the light changes.
 
 ## License
 Apache-2.0 for this repository's code. No model weights are included; GR00T, Cosmos and Nemotron are under NVIDIA's

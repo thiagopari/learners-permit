@@ -21,3 +21,6 @@ permit/data/
 
 # Serverless Job results fetched with cloud/job.sh fetch
 /results/
+
+# Downloaded PlantVillage images (CC BY-SA 3.0, github.com/spMohanty/PlantVillage-Dataset); the file list is in docs/results
+/data/plantvillage/

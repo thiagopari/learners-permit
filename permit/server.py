@@ -25,7 +25,7 @@ import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-from permit import authz, datasheet, envfile, explainer, licences, planner, runners, scene
+from permit import authz, datasheet, envfile, explainer, licences, planner, recall, runners, scene
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 SESSIONS = json.loads(os.environ.get("PERMIT_SESSIONS", '{"demo-sue": "sue", "demo-olga": "olga", "demo-max": "max"}'))
@@ -40,7 +40,7 @@ def command_hash(skill, args, repeat, requester):
 class Permit:
     def __init__(self, data_dir=os.path.join(ROOT, "data"), runner="mock", plan=None, check_part=None,
                  clock=time.localtime, mock_delay=0.0, lock_timeout=5.0, explain=None, check_scene=None,
-                 frame=scene.frame):
+                 frame=scene.frame, check_recall=None):
         self.skills = json.load(open(os.path.join(ROOT, "skills.json")))
         self.licences = licences.Licences(os.path.join(data_dir, "licences.json"))
         self.audit_path = os.path.join(data_dir, "audit.jsonl")
@@ -49,6 +49,7 @@ class Permit:
         self.batch = 20 if runner == "robolab" else 4  # each RoboLab call boots Isaac Sim: amortize over 20 episodes
         self.plan, self.check_part, self.clock = plan or planner.offline_plan, check_part, clock
         self.explain = explain  # facts -> text, e.g. explainer.nemotron; None uses the template
+        self.check_recall = check_recall  # item -> recall.check verdict (Tavily, official recall notices)
         self.sensors = {"human_in_zone": False}
         self.approvals = {}
         self.lock, self.lock_timeout = threading.RLock(), lock_timeout  # one cell, one command at a time
@@ -148,12 +149,20 @@ class Permit:
         ctx = self.context(skill, args, requester, approver)
         ok = authz.decide(user, "pick_place", "cell1", ctx)
         reasons = [] if ok else self.why(user, ctx)
-        sheet = None
-        if ok and args.get("part_number") and self.check_part:
+        sheet, notice = None, None
+        # Web evidence can only narrow. Once the policy allows the request, both checks run and every reason is
+        # reported: on Oct 29 two real recalled items were also too heavy, and the datasheet block hid the recall.
+        permitted = ok
+        if permitted and args.get("part_number") and self.check_part:
             sheet = self.check_part(args["part_number"], self.skills[skill]["max_mass_kg"])
-            if sheet["verdict"] == "block":  # web evidence can only narrow
+            if sheet["verdict"] == "block":
                 ok = False
                 reasons.append(f"datasheet: {sheet['mass_kg']} kg > {sheet['limit_kg']} kg limit ({sheet['source']})")
+        if permitted and args.get("part_number") and self.check_recall:
+            notice = self.check_recall(args["part_number"])
+            if notice["verdict"] == "block":
+                ok = False
+                reasons.append(f"recall: {notice['title']} ({notice['source']})")
         result, was, seen = None, (self.licences.data.get(skill) or {}).get("status"), None
         if ok:
             policy = (self.licences.data.get(skill) or {}).get("policy") or next(iter(self.skills[skill]["arms"]))
@@ -170,7 +179,7 @@ class Permit:
             if result is None:
                 result = ("success" if outcomes[0] else "failure") if repeat == 1 else f"{sum(outcomes)}/{repeat} succeeded"
         entry = self.log(actor=user, requester=requester, skill=skill, args=args, repeat=repeat, approver=approver,
-                         decision="allow" if ok else "deny", reasons=reasons, context=ctx, datasheet=sheet,
+                         decision="allow" if ok else "deny", reasons=reasons, context=ctx, datasheet=sheet, recall=notice,
                          result=result, licence=(self.licences.data.get(skill) or {}).get("status", "none"),
                          **({"scene": self.scene} if self.scene else {}), **({"scene_check": seen} if seen else {}))
         lic = self.licences.data.get(skill) or {}
@@ -348,5 +357,6 @@ if __name__ == "__main__":
           f"datasheets: {'Tavily' if web else 'off (set TAVILY_API_KEY)'} | runner: {a.runner} | "
           f"scene check: {scene.MODEL if a.scene_check else 'off (--scene-check)'}")
     serve(Permit(runner=a.runner, plan=planner.plan if llm else None, check_part=datasheet.check if web else None,
+                 check_recall=recall.check if web else None,
                  explain=explainer.nemotron if llm else None, check_scene=scene.check if a.scene_check else None,
                  mock_delay=0.3 if a.runner == "mock" else 0.0, lock_timeout=5.0 if a.runner == "mock" else 30.0), a.port)

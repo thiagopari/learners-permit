@@ -1,0 +1,49 @@
+{
+ "diagnose_leaf:tomato": {
+  "status": "licensed",
+  "decision": "pass",
+  "tier": "supervised",
+  "thr": 0.8,
+  "revoke_below": 0.7,
+  "policy": "resnet18-plantvillage:a70f3d278de7",
+  "successes": 20,
+  "trials": 20,
+  "p": 0.9908,
+  "scope": {
+   "crop": [
+    "tomato"
+   ]
+  },
+  "issued": "2026-10-29 15:59:32",
+  "live": [],
+  "log": [
+   "batch 1: resnet18-plantvillage:a70f3d278de7 10/10 | P(rate >= 80%) for resnet18-plantvillage:a70f3d278de7 = 0.91",
+   "batch 2: resnet18-plantvillage:a70f3d278de7 20/20 | P(rate >= 80%) for resnet18-plantvillage:a70f3d278de7 = 0.99"
+  ],
+  "resumed": 0,
+  "minutes": 0.0
+ },
+ "diagnose_leaf:pepper": {
+  "status": "licensed",
+  "decision": "pass",
+  "tier": "supervised",
+  "thr": 0.8,
+  "revoke_below": 0.7,
+  "policy": "resnet18-plantvillage:a70f3d278de7",
+  "successes": 20,
+  "trials": 20,
+  "p": 0.9908,
+  "scope": {
+   "crop": [
+    "pepper"
+   ]
+  },
+  "issued": "2026-10-29 15:59:32",
+  "live": [],
+  "log": [
+   "batch 1: resnet18-plantvillage:a70f3d278de7 10/10 | P(rate >= 80%) for resnet18-plantvillage:a70f3d278de7 = 0.91",
+   "batch 2: resnet18-plantvillage:a70f3d278de7 20/20 | P(rate >= 80%) for resnet18-plantvillage:a70f3d278de7 = 0.99"
+  ],
+  "resumed": 0
+ }
+}

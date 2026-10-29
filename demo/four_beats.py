@@ -17,7 +17,7 @@ import tempfile
 from types import SimpleNamespace
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from permit import datasheet, envfile, explainer, planner  # noqa: E402
+from permit import datasheet, envfile, explainer, planner, recall  # noqa: E402
 from permit.server import Permit  # noqa: E402
 
 PAGE = "https://example.com/datasheets/PN-48213 (offline stand-in for Tavily)"
@@ -55,10 +55,11 @@ part = os.environ.get("LP_DEMO_PART", "Makita XFD131") if live_block else "PN-48
 p = Permit(data_dir=tempfile.mkdtemp(), clock=lambda: SimpleNamespace(tm_hour=14),  # demo clock: inside 06-22
            plan=planner.plan if llm else None, explain=explainer.nemotron if llm else None,
            check_part=datasheet.check if live_block
-           else (lambda part, limit: datasheet.check(part, limit, call=canned)))
+           else (lambda part, limit: datasheet.check(part, limit, call=canned)),
+           check_recall=recall.check if live_block else None)
 print("TRIALS ARE OFFLINE STAND-INS (coin flips at our measured GR00T rates), not robot runs.")
 print(f"planner and explanations: {'Nemotron on Token Factory' if llm else 'offline stand-ins'} | "
-      f"datasheets: {'Tavily, live' if live_block else 'offline stand-in'}\n")
+      f"datasheets and recalls: {'Tavily, live' if live_block else 'offline stand-in, no recall check'}\n")
 
 print("1. REFUSE: red dishes (measured 14/40) can't earn a licence, so the AI won't run it")
 card("red_dishes_in_bin", p.commission("sue", "red_dishes_in_bin"))
@@ -70,6 +71,9 @@ show(p.order("olga", "Put the bananas in the bin"))
 
 print("3. BLOCK: the datasheet says the item is too heavy for the skill")
 show(p.order("olga", f"Put the bananas in the bin. The item is part {part}."))
+if live_block:  # a real CPSC recall notice names this item: Tavily finds it, and it blocks the pick too
+    print("   ...and an item under an official recall:")
+    show([p.execute("nemotron", "bananas_in_bin", {"part_number": "Fisher-Price Rock 'n Play"}, requester="olga")])
 
 print("4. REVOKE (hypothetical: on Nebius a new background did not lower GR00T's success): IF live results slip")
 p.rates["bananas_in_bin"]["n17_droid"] = 0.1
