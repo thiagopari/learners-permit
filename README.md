@@ -112,15 +112,18 @@ Rules the code enforces (`permit/`, tested in `tests/`; CI runs them on every pu
   GPUs have the RT cores Isaac Sim needs). `cloud/vm.sh` creates it with `--recovery-policy fail` and a 30-minute idle
   guard, and spot runs are capped by a Nebius pricing policy (`cloud/price_cap.sh`).
 - **Serverless AI Jobs:** `cloud/job.sh` packages a commissioning sweep as a job that checkpoints to Object Storage
-  after every batch and resumes after preemption. A smoke-test job ran on the RTX PRO 6000 platform (`gpu-rtx6000-a`,
-  uk-south2) on Oct 28; the full sweep job: _TODO: update when it has run_.
+  after every batch and resumes after preemption. **It ran on Nebius on Oct 28** (`aijob-e05wvv2wq3rcyjpech`, `gpu-rtx6000-a`,
+  uk-south2): a commissioning sweep of bananas, 4 batches of 20 real GR00T episodes, **71/80, P(rate ≥ 80%) = 0.974,
+  licensed**, in 28.8 minutes, at **$10.80 per 1,000 episodes** measured inside the job
+  ([log](docs/results/serverless-job-2026-10-28.log)). The image (`cloud/job/Dockerfile.vm`) packages the stack that
+  passed setup on the VM, weights included, and starts fully offline.
 
 ## Status (Oct 28, 2026)
 - **Real and tested on Nebius:** Nemotron planner and explainer (Token Factory), Tavily datasheet check, GR00T N1.7 +
   Isaac Sim + RoboLab episodes through our runner, the measurements above, the vision scene check
   (Nemotron-3.5-Super-VL on Token Factory; Cosmos-Reason2-2B served on our VM and measured), and the end-to-end
   earn → revoke → refuse run.
-- **Serverless Job:** a smoke test ran on Nebius; the full sweep job: _TODO_.
+- **Serverless Job:** a real commissioning sweep ran as a Nebius Serverless AI Job (71/80, licensed; above).
 - **Not built:** fine-tuning GR00T (so a refused skill can't earn its licence yet), a physical robot.
 
 ## Run it

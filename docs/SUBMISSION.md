@@ -32,10 +32,13 @@ plain English.
   skill at 80%, 298 at the unattended 99% tier.
 - **Cedar** at a single choke point; single-use supervisor approvals bound to one exact command.
 - **Tavily** search + extract for part datasheets; a page counts only if it names the part.
-- **Cosmos Reason 2** (built and tested with a stand-in model; TODO: say whether it ran on Nebius) compares each live
-  run's scene with the one the licence was earned in.
+- **A vision scene check** compares each live run's scene with the one the licence was earned in. We measured
+  Cosmos-Reason2-2B (served on our Nebius VM) against Nemotron-3.5-Super-VL (Token Factory) on our own frames: Cosmos
+  raised false alarms on an unchanged scene 3 times in 3, so the check uses Nemotron-3.5-Super-VL (8/9, no false
+  alarms).
 - **Nebius Serverless AI Jobs:** the sweep packaged as a job that checkpoints to Object Storage and resumes after
-  preemption (built and tested with a mock; TODO: say whether it ran on Nebius).
+  preemption (it ran on Nebius on Oct 28: 4 batches of 20 real GR00T episodes on an RTX PRO 6000, 71/80, licensed, $10.80 per
+  1,000 episodes).
 
 **Challenges we ran into** (all fixed, all in `git log cloud/`): Isaac Sim segfaulted on the Nebius image until we
 installed `libGLU`; NVIDIA's DCGM monitor holds port 5555, GR00T's default; a RoboLab bug broke random backgrounds;
