@@ -5,7 +5,7 @@ Deadline: Oct 30, 2026, 10:00 AM PT (1:00 PM ET).
 
 The Devpost text, final and paste-ready: [DEVPOST.md](DEVPOST.md).
 
-## The video (2:30; the aha moment in the first 15 seconds)
+## The video (2:44; the aha moment in the first 15 seconds)
 Judges said (Oct 21): get to the aha moment fast. Every robot frame is labelled **"Simulation: NVIDIA Isaac Sim"**.
 No music, and third-party brand names are hidden. Everything on screen is a real result; the source is in brackets.
 
@@ -17,7 +17,8 @@ No music, and third-party brand names are hidden. Everything on screen is a real
 | 1:08–1:31 | **BLOCK** | Tavily finds a drill's spec sheet, 1.7 kg > 1 kg, denied [`tests/test_permit.py`, Oct 22 extraction]; then a recall notice for a grease gun, denied [`recall-2026-10-29/`] |
 | 1:31–1:57 | **REVOKE** | The two real frames, tiles then wood; the console replaying the run's audit log: revoked by the vision check, then the next request denied with Nemotron's explanation [`e2e-revoke-2026-10-28/`] |
 | 1:57–2:16 | Beyond robots | The crop licences: few-shot Nemotron-VL (pepper licensed, tomato not) vs a ResNet-18 trained on Nebius (both) [`crop-2026-10-29*/`] |
-| 2:16–2:30 | Close | Built on Nebius Token Factory and AI Cloud, NVIDIA Nemotron, GR00T and Isaac Sim, and Tavily |
+| 2:16–2:30 | Field system | The team's field design (Oct 28): drones and ground robots feed crop models, every action goes through the permit. The built parts are lit, the rest is marked "next" |
+| 2:30–2:44 | Close | Built on Nebius Token Factory and AI Cloud, NVIDIA Nemotron, GR00T and Isaac Sim, and Tavily |
 
 Don't show: the offline demo's coin-flip licence numbers as if they were robot runs (only its Nemotron and Tavily
 parts are real), or Cosmos as the scene checker (it was measured and not used).
