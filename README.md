@@ -112,7 +112,7 @@ ResNet-18 on 4,312 other PlantVillage photos (12 seconds, 4 epochs, on our Nebiu
 person ─order─▶ Nemotron planner ─skill calls─▶ POST /run ◀── the only path to the robot
                 (Token Factory)                  │ Cedar: role × skill × object × bin × speed × hours × person in cell
                                                  │ licence: proven for this scope? (the trust gate, on Nebius sweeps)
-                                                 │ Tavily datasheet: can only BLOCK (too heavy → denied, source cited)
+                                                 │ Tavily datasheet + recall notices: can only BLOCK (too heavy, or recalled → denied, source cited)
                                                  ▼
                                   GR00T N1.7-DROID in Isaac Sim (RoboLab), Nebius RTX PRO 6000
                                                  │ live results ──▶ drift revokes the licence
@@ -127,8 +127,15 @@ Rules the code enforces (`permit/`, tested in `tests/`; CI runs them on every pu
 - **Requesters:** the AI works only for people whose own role may request work.
 - **Modes:** the AI never changes modes or speed limits, even with an approval.
 - **Fail closed:** missing context means deny; a person in the cell caps everyone at 25% speed.
-- **Outside evidence can only narrow:** a Tavily datasheet can block a pick, and a Cosmos scene check can suspend a
-  licence; neither can ever allow anything.
+- **Outside evidence can only narrow:** a Tavily datasheet (too heavy) or an official recall notice found by Tavily
+  can block a pick, and a vision scene check can suspend a licence; none of them can ever allow anything.
+- **A recall counts only if it names the item.** Tavily searches official recall sites (CPSC, FDA, FSIS, NHTSA,
+  recalls.gov); a notice blocks only if its title names the item, or its text names the item's model number close to
+  the rest of its name. Real searches showed why (Oct 29, [results](docs/results/recall-2026-10-29/)): "Makita
+  XFD131" returned CPSC recalls of other Makita tools, "bananas" an FDA recall of frozen fruit mixes, and a Makita
+  recall page listed a Scotch laminator in its sidebar. With these rules, of 7 real items, exactly the 3 under
+  recall were blocked, each citing its own notice: Fisher-Price Rock 'n Play (CPSC 2023), Makita XPG01Z grease gun
+  (CPSC 2025), Scotch TL1302Z laminator. When both web checks fire, both reasons are reported.
 - **Every no is explained, and the explanation can't lie about numbers:** Nemotron sees only audit facts (never the
   order text or web page text). An answer that quotes a number not in those facts, or gives a person a licence that
   belongs to a skill, is replaced by a template, and no explanation can change a decision.

@@ -1,0 +1,87 @@
+{
+ "note": "Real Tavily searches, Oct 29. expected_block is our reading of the official notices: the Rock 'n Play, the Makita XPG01Z grease gun and the Scotch TL1302Z laminator are under CPSC recalls; the others aren't named by any notice found (TL1302Z is not a Makita product).",
+ "right": 7,
+ "of": 7,
+ "runs": [
+  {
+   "item": "Makita XFD131",
+   "expected_block": false,
+   "verdict": "none_found",
+   "reason": "official recall pages found, none naming this item",
+   "sources": [
+    "https://www.cpsc.gov/Recalls/2002/cpsc-makita-usa-inc-announce-recall-to-repair-circular-saws",
+    "https://www.cpsc.gov/zh-CN/Recalls/2022/Makita-U-S-A-Recalls-Cordless-Hedge-Trimmers-Due-to-Laceration-Hazard",
+    "https://www.cpsc.gov/Recalls/2025/Makita-USA-Inc-Recalls-Cordless-Grease-Guns-and-Grease-Gun-Hoses-Due-to-Laceration-Hazard",
+    "https://www.cpsc.gov/zhT-CN/Recalls/2022/Makita-U-S-A-Recalls-Cordless-Hedge-Trimmers-Due-to-Laceration-Hazard",
+    "https://www.cpsc.gov/Recalls/1995/cpsc-makita-announce-angle-grinder-and-angle-sander-recall"
+   ],
+   "right": true
+  },
+  {
+   "item": "DeWalt DCF887",
+   "expected_block": false,
+   "verdict": "none_found",
+   "reason": "official recall pages found, none naming this item",
+   "sources": [
+    "https://www.cpsc.gov/Recalls/1999/CPSC-DeWalt-Industrial-Tool-Co-Announce-Recall-to-Repair-Electric-Screwdrivers",
+    "https://www.cpsc.gov/Recalls/1996/cpsc-and-dewalt-announce-recall-of-one-hour-battery-chargers",
+    "https://www.cpsc.gov/Recalls/2001/CPSC-DEWALT-Industrial-Tool-Co-Announce-Recall-of-Battery-Chargers1",
+    "https://www.cpsc.gov/Recalls/2001/cpsc-dewalt-industrial-tool-co-announce-recall-to-repair-12-inch-miter-saws",
+    "https://www.cpsc.gov/Recalls/2000/cpsc-dewalt-industrial-tool-co-announce-recall-of-battery-chargers1?language=zh-hant"
+   ],
+   "right": true
+  },
+  {
+   "item": "bananas",
+   "expected_block": false,
+   "verdict": "none_found",
+   "reason": "official recall pages found, none naming this item",
+   "sources": [
+    "https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts/if-copack-llc-dba-initiative-foods-recalls-tippy-toes-brand-apple-pear-banana-because-possible",
+    "https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts/wanabana-recalls-wanabana-weis-and-schnucks-apple-cinnamon-fruit-puree-pouches-cinnamon-apple-sauce",
+    "https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts/pt-organics-limited-recalls-select-pumpkin-tree-peter-rabbit-organics-banana-strawberry-fruit-puree",
+    "https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts/edgewell-personal-care-issues-voluntary-nationwide-recall-banana-boat-hair-scalp-sunscreen-due",
+    "https://www.fda.gov/safety/recalls-market-withdrawals-safety-alerts/voluntary-recall-specific-frozen-fruit-products-due-possible-contamination-listeria-monocytogenes"
+   ],
+   "right": true
+  },
+  {
+   "item": "Fisher-Price Rock 'n Play",
+   "expected_block": true,
+   "verdict": "block",
+   "title": "Fisher-Price Reannounces Recall of 4.7 Million Rock \u2018n Play Sleepers; At Least Eight Deaths Occurred After Recall | CPSC.gov",
+   "source": "https://www.cpsc.gov/Recalls/2023/Fisher-Price-Reannounces-Recall-of-4-7-Million-Rock-n-Play-Sleepers-At-Least-Eight-Deaths-Occurred-After-Recall",
+   "right": true
+  },
+  {
+   "item": "Makita XPG01Z",
+   "expected_block": true,
+   "verdict": "block",
+   "title": "Makita U.S.A., Inc. Recalls Cordless Grease Guns and Grease Gun Hoses Due to Laceration Hazard | CPSC.gov",
+   "source": "https://www.cpsc.gov/Recalls/2025/Makita-USA-Inc-Recalls-Cordless-Grease-Guns-and-Grease-Gun-Hoses-Due-to-Laceration-Hazard",
+   "right": true
+  },
+  {
+   "item": "Makita TL1302Z",
+   "expected_block": false,
+   "verdict": "none_found",
+   "reason": "official recall pages found, none naming this item",
+   "sources": [
+    "https://www.cpsc.gov/Recalls/1995/cpsc-makita-announce-angle-grinder-and-angle-sander-recall",
+    "https://www.cpsc.gov/Recalls/2005/cpsc-makita-usa-inc-announce-recall-of-chain-saws",
+    "https://www.cpsc.gov/Recalls/2027/3M-Company-Recalls-ScotchTM-Thermal-Laminators-Due-to-Risk-of-Serious-Injury-or-Death-from-Fire-Hazard",
+    "https://cpsc.gov/Recalls/2027/3M-Company-Recalls-ScotchTM-Thermal-Laminators-Due-to-Risk-of-Serious-Injury-or-Death-from-Fire-Hazard",
+    "https://www.cpsc.gov/Recalls/2025/Makita-USA-Inc-Recalls-Cordless-Grease-Guns-and-Grease-Gun-Hoses-Due-to-Laceration-Hazard"
+   ],
+   "right": true
+  },
+  {
+   "item": "Scotch TL1302Z",
+   "expected_block": true,
+   "verdict": "block",
+   "title": "3M Company Recalls Scotch\u2122 Thermal Laminators Due to Risk of Serious Injury or Death from Fire Hazard | CPSC.gov",
+   "source": "https://www.cpsc.gov/Recalls/2027/3M-Company-Recalls-ScotchTM-Thermal-Laminators-Due-to-Risk-of-Serious-Injury-or-Death-from-Fire-Hazard",
+   "right": true
+  }
+ ]
+}

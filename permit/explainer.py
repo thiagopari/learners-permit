@@ -31,18 +31,21 @@ def needs(entry):
 def facts(entry, licence):
     """The only input Nemotron sees: what the control plane decided, and the evidence it decided on."""
     ctx = entry.get("context") or {}
-    sheet = entry.get("datasheet") or {}
-    blocked = sheet.get("verdict") == "block"
+    sheet, notice = entry.get("datasheet") or {}, entry.get("recall") or {}
+    heavy, recalled = sheet.get("verdict") == "block", notice.get("verdict") == "block"
+    blocked = heavy or recalled
     event = "revoked" if entry.get("action") == "revoke" else "blocked" if blocked else "refused"
     f = {"event": event, "skill": entry["skill"], "skill_name": plain(entry["skill"]),
-         "reasons": [r for r in entry.get("reasons", []) if not r.startswith("datasheet:")]}
+         "reasons": [r for r in entry.get("reasons", []) if not r.startswith(("datasheet:", "recall:"))]}
     if event != "revoked":  # a revocation is about the skill, not about whoever's run tipped it
         f["requested_by"] = entry.get("requester") or entry.get("actor")
     if ctx:
         f["request"] = {k: ctx[k] for k in ("speed_pct", "hour", "human_in_zone", "requester_role") if k in ctx}
-    if blocked:
+    if heavy:
         f["datasheet"] = {"part": sheet.get("part"), "mass_kg": sheet["mass_kg"], "limit_kg": sheet["limit_kg"],
                           "source": sheet["source"]}
+    if recalled:
+        f["recall"] = {"item": notice["item"], "notice": notice["title"], "source": notice["source"]}
     if licence:
         # Pre-worded evidence: given a bare "p": 0.9775, Nemotron called it "a 97.75% success rate" (Oct 22 test).
         live, bar, sure = licence.get("live", []), round(licence["thr"] * 100), round(licence["p"] * 100, 2)
@@ -79,6 +82,9 @@ def facts(entry, licence):
                         "evidence": "the skill has never been commissioned, so it has no licence"}
     if event == "revoked":
         f["next_step"] = "until a supervisor commissions the skill again, the AI asks a person before every run"
+    elif recalled:
+        f["next_step"] = ("web evidence can only block, so no approval overrides this; set the item aside and check "
+                          "its lot against the recall notice")
     elif blocked:
         f["next_step"] = "web evidence can only block, so no approval overrides this; use a skill rated for the part"
     elif entry.get("escalate"):
@@ -99,6 +105,10 @@ def offline(f):
     if f["event"] == "revoked":
         return (f"The licence for {f['skill_name']} was revoked: {lic['evidence']}. "
                 f"Next: {f['next_step']}.")
+    if f["event"] == "blocked" and "recall" in f:
+        r = f["recall"]
+        return (f"The pick of {r['item']} was blocked: an official recall notice names it ({r['notice']}; source: "
+                f"{r['source']}). Next: {f['next_step']}.")
     if f["event"] == "blocked":
         d = f["datasheet"]
         return (f"The pick of part {d['part']} was blocked: its datasheet lists {d['mass_kg']} kg, over the "

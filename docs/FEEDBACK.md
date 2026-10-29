@@ -107,3 +107,8 @@ a robot pick.
   CB Insights, RocketReach); `specifications` at `search_depth: "advanced"` found the manufacturer and retailers.
   `extract` failed on the manufacturer's own product page. A made-up part number matched an unrelated real part
   (`48213-04030`), so we now require the page to name the part before trusting its weight.
+- **Recall search (also block-only):** `include_domains` over official recall sites (cpsc.gov, fda.gov, fsis.usda.gov,
+  nhtsa.gov, recalls.gov) worked well and fast (~0.3 s). But results are brand-level: "Makita XFD131 recall" returned
+  recalls of other Makita tools, and "bananas recall" an FDA recall of fruit mixes; page text also includes "recent
+  recalls" sidebars (a Scotch laminator on a Makita page). We require the item in the notice's title, or its model
+  number near the rest of its name. A per-result "main content only" option, or entity matching, would help.

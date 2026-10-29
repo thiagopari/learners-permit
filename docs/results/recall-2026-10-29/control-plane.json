@@ -1,0 +1,82 @@
+{
+ "note": "Real Tavily (datasheet + recall) and real Nemotron through Permit.execute on Oct 29. The bananas licence here came from offline stand-in trials: only the web checks and the explanations are under test.",
+ "runs": [
+  {
+   "item": "Fisher-Price Rock 'n Play",
+   "decision": "deny",
+   "reasons": [
+    "datasheet: 11.34 kg > 1.0 kg limit (https://recalls-rappels.canada.ca/en/alert-recall/fisher-price-newborn-rock-n-play-sleeper-recalled-due-reports-deaths-united-states)",
+    "recall: Fisher-Price Reannounces Recall of 4.7 Million Rock \u2018n Play Sleepers; At Least Eight Deaths Occurred After Recall | CPSC.gov (https://www.cpsc.gov/Recalls/2023/Fisher-Price-Reannounces-Recall-of-4-7-Million-Rock-n-Play-Sleepers-At-Least-Eight-Deaths-Occurred-After-Recall)"
+   ],
+   "datasheet": {
+    "verdict": "block",
+    "part": "Fisher-Price Rock 'n Play",
+    "mass_kg": 11.34,
+    "limit_kg": 1.0,
+    "source": "https://recalls-rappels.canada.ca/en/alert-recall/fisher-price-newborn-rock-n-play-sleeper-recalled-due-reports-deaths-united-states",
+    "evidence": "weighing up to 25 pounds"
+   },
+   "recall": {
+    "verdict": "block",
+    "item": "Fisher-Price Rock 'n Play",
+    "title": "Fisher-Price Reannounces Recall of 4.7 Million Rock \u2018n Play Sleepers; At Least Eight Deaths Occurred After Recall | CPSC.gov",
+    "source": "https://www.cpsc.gov/Recalls/2023/Fisher-Price-Reannounces-Recall-of-4-7-Million-Rock-n-Play-Sleepers-At-Least-Eight-Deaths-Occurred-After-Recall"
+   },
+   "explanation": "The request by operator Olga to run the bananas in bin skill at 40% speed was blocked because the part being handled\u2014a Fisher-Price Rock 'n Play sleeper\u2014has an active recall due to safety risks, including reported deaths. The system cannot approve the operation while the item is under recall, regardless of the skill\u2019s licence status or requested settings. Set the item aside and verify its lot against the recall notice before proceeding.",
+   "explained_by": "nemotron"
+  },
+  {
+   "item": "Makita XPG01Z",
+   "decision": "deny",
+   "reasons": [
+    "datasheet: 5.171 kg > 1.0 kg limit (https://www.toolnut.com/products/makita-xpg01z-18v-lxt-lithium-ion-grease-gun)",
+    "recall: Makita U.S.A., Inc. Recalls Cordless Grease Guns and Grease Gun Hoses Due to Laceration Hazard | CPSC.gov (https://www.cpsc.gov/Recalls/2025/Makita-USA-Inc-Recalls-Cordless-Grease-Guns-and-Grease-Gun-Hoses-Due-to-Laceration-Hazard)"
+   ],
+   "datasheet": {
+    "verdict": "block",
+    "part": "Makita XPG01Z",
+    "mass_kg": 5.171,
+    "limit_kg": 1.0,
+    "source": "https://www.toolnut.com/products/makita-xpg01z-18v-lxt-lithium-ion-grease-gun",
+    "evidence": "Weight (lbs) | 11.4 lbs"
+   },
+   "recall": {
+    "verdict": "block",
+    "item": "Makita XPG01Z",
+    "title": "Makita U.S.A., Inc. Recalls Cordless Grease Guns and Grease Gun Hoses Due to Laceration Hazard | CPSC.gov",
+    "source": "https://www.cpsc.gov/Recalls/2025/Makita-USA-Inc-Recalls-Cordless-Grease-Guns-and-Grease-Gun-Hoses-Due-to-Laceration-Hazard"
+   },
+   "explanation": "The request was blocked because the part being used\u2014a Makita grease gun\u2014is under an active recall due to a laceration hazard, which makes it unsafe regardless of other conditions like speed or operator role. The system cannot override recalls with approvals, even if the skill is licensed and the request meets all other safety thresholds. Set the item aside and verify its lot number against the official recall notice before proceeding further.",
+   "explained_by": "nemotron"
+  },
+  {
+   "item": "Makita XFD131",
+   "decision": "deny",
+   "reasons": [
+    "datasheet: 1.724 kg > 1.0 kg limit (https://www.toolnut.com/products/makita-xfd131-18v-lxt-compact-brushless-1-2-in-driver-drill-3ah-kit)"
+   ],
+   "datasheet": {
+    "verdict": "block",
+    "part": "Makita XFD131",
+    "mass_kg": 1.724,
+    "limit_kg": 1.0,
+    "source": "https://www.toolnut.com/products/makita-xfd131-18v-lxt-compact-brushless-1-2-in-driver-drill-3ah-kit",
+    "evidence": "weighs only 3.8 lbs"
+   },
+   "recall": {
+    "verdict": "none_found",
+    "item": "Makita XFD131",
+    "reason": "official recall pages found, none naming this item",
+    "sources": [
+     "https://www.cpsc.gov/Recalls/2002/cpsc-makita-usa-inc-announce-recall-to-repair-circular-saws",
+     "https://www.cpsc.gov/zh-CN/Recalls/2022/Makita-U-S-A-Recalls-Cordless-Hedge-Trimmers-Due-to-Laceration-Hazard",
+     "https://www.cpsc.gov/Recalls/2025/Makita-USA-Inc-Recalls-Cordless-Grease-Guns-and-Grease-Gun-Hoses-Due-to-Laceration-Hazard",
+     "https://www.cpsc.gov/zhT-CN/Recalls/2022/Makita-U-S-A-Recalls-Cordless-Hedge-Trimmers-Due-to-Laceration-Hazard",
+     "https://www.cpsc.gov/Recalls/1995/cpsc-makita-announce-angle-grinder-and-angle-sander-recall"
+    ]
+   },
+   "explanation": "The pick of part Makita XFD131 was blocked: its datasheet lists 1.724 kg, over the 1.0 kg limit for bananas in bin (source: https://www.toolnut.com/products/makita-xfd131-18v-lxt-compact-brushless-1-2-in-driver-drill-3ah-kit). Next: web evidence can only block, so no approval overrides this; use a skill rated for the part.",
+   "explained_by": "template (Nemotron's answer gave a person the skill's licence)"
+  }
+ ]
+}

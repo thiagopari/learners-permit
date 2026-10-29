@@ -40,7 +40,10 @@ def tavily(endpoint, body):
 
 def names_part(text, part_number):
     """Every word of the part number appears in the text as a whole token, ignoring case and the separators
-    inside it: PN-48213 matches "PN 48213" or "pn48213", not "48213-04030"; "Makita XFD131" needs both words."""
+    inside it: PN-48213 matches "PN 48213" or "pn48213", not "48213-04030"; "Makita XFD131" needs both words.
+    Curly apostrophes count as straight ones (official pages write "Rock ‘n Play")."""
+    curly = str.maketrans({chr(0x2018): "'", chr(0x2019): "'"})
+    text, part_number = text.translate(curly), part_number.translate(curly)
     for word in part_number.split():
         pieces = [re.escape(x) for x in re.split(r"[-_./]", word) if x]
         if pieces and not re.search(r"(?<![A-Za-z0-9])" + r"[-_./ ]?".join(pieces) + r"(?![A-Za-z0-9])", text, re.I):
