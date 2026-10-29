@@ -19,16 +19,17 @@ from permit.licences import Licences  # noqa: E402
 SKILL = "diagnose_leaf"
 
 
-def commission(licences, crop, record, client=None, data=leaf.DATA):
-    rb = leaf.runner(crop, record, client=client, data=data)
+def commission(licences, crop, record, client=None, data=leaf.DATA, predict=None, model_id=leaf.MODEL):
+    rb = leaf.runner(crop, record, client=client, data=data, predict=predict, workers=1 if predict else 8)
     t0 = time.time()
-    skill, scope, source = f"{SKILL}:{crop}", {"crop": [crop]}, f"plantvillage-fewshot:{leaf.MODEL}"
+    kind = "trained" if predict else "fewshot"
+    skill, scope, source = f"{SKILL}:{crop}", {"crop": [crop]}, f"plantvillage-{kind}:{model_id}"
     # One crop per licence: the crop is the scope, and the sweep's key, so crops never share trials.
     try:
-        lic = licences.commission(skill, [leaf.MODEL], rb, batch=10, scope=scope, source=source, resume=False)
+        lic = licences.commission(skill, [model_id], rb, batch=10, scope=scope, source=source, resume=False)
     except leaf.OutOfPhotos:  # the gate couldn't decide on the photos we have: report that, unlicensed
-        prog = licences.sweeps[licences.sweep_key(skill, [leaf.MODEL], "supervised", scope, source)]
-        s, f = prog["successes"][leaf.MODEL], prog["failures"][leaf.MODEL]
+        prog = licences.sweeps[licences.sweep_key(skill, [model_id], "supervised", scope, source)]
+        s, f = prog["successes"][model_id], prog["failures"][model_id]
         from permit.gate import prob_rate_at_least
         lic = {"status": "undecided (ran out of labelled photos)", "successes": s, "trials": s + f,
                "p": round(prob_rate_at_least(s, f, 0.8), 4), "scope": scope}
@@ -38,9 +39,11 @@ def commission(licences, crop, record, client=None, data=leaf.DATA):
     return lic
 
 
-def main(out=None, client=None, data=leaf.DATA):
+def main(out=None, client=None, data=leaf.DATA, predict=None, model_id=leaf.MODEL, meta=None):
     envfile.load()
-    out = pathlib.Path(out or ROOT / "docs" / "results" / f"crop-{time.strftime('%Y-%m-%d')}")
+    kind = "trained" if predict else "fewshot"
+    default = f"crop-{time.strftime('%Y-%m-%d')}" + ("-trained" if predict else "")
+    out = pathlib.Path(out or ROOT / "docs" / "results" / default)
     out.mkdir(parents=True, exist_ok=True)
     licences = Licences(str(out / "licences.json"))
     preds = open(out / "predictions.jsonl", "w")
@@ -48,9 +51,13 @@ def main(out=None, client=None, data=leaf.DATA):
     def record(row):
         preds.write(json.dumps(row) + "\n"); preds.flush()
 
-    summary = {"model": leaf.MODEL, "few_shot": "one verified reference leaf per diagnosis", "crops": {}}
+    summary = {"model": model_id, "kind": kind, "crops": {}}
+    if kind == "fewshot":
+        summary["few_shot"] = "one verified reference leaf per diagnosis"
+    if meta:
+        summary["training"] = meta
     for crop in leaf.CROPS:
-        lic = commission(licences, crop, record, client=client, data=data)
+        lic = commission(licences, crop, record, client=client, data=data, predict=predict, model_id=model_id)
         summary["crops"][crop] = {k: lic[k] for k in ("status", "successes", "trials", "p", "scope", "minutes")}
         print(f"{crop}: {lic['status'].upper()} on {lic['successes']}/{lic['trials']} labelled photos, "
               f"P(accuracy >= 80%) = {lic['p']}  ({lic['minutes']} min)", flush=True)
@@ -63,4 +70,17 @@ def main(out=None, client=None, data=leaf.DATA):
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("--trained", help="a model.pt from crop/train.py, instead of the few-shot vision model")
+    ap.add_argument("--out")
+    a = ap.parse_args()
+    if a.trained:
+        import hashlib
+        sha = hashlib.sha256(pathlib.Path(a.trained).read_bytes()).hexdigest()
+        meta_path = pathlib.Path(a.trained).with_name("training_meta.json")
+        meta = json.load(open(meta_path)) if meta_path.exists() else None
+        # The model's hash is its identity: a retrained model is a different arm and must earn its own licence.
+        main(out=a.out, predict=leaf.trained(a.trained), model_id=f"resnet18-plantvillage:{sha[:12]}", meta=meta)
+    else:
+        main(out=a.out)

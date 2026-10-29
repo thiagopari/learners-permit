@@ -79,3 +79,17 @@ def test_file_names_never_reach_the_model(tmp_path):
     assert "ref_" not in sent and "_000" not in sent and ".JPG" not in sent and ".jpg" not in sent
     first = client.sent[0]["messages"][0]["content"]
     assert [p["type"] for p in first].count("image_url") == 4  # 3 tomato references + the query
+
+
+def test_a_trained_model_is_commissioned_on_the_same_photos_without_any_api_call(tmp_path):
+    data = dataset(tmp_path / "data")
+    seen = []
+
+    def predict(path, crop, labels):  # stands in for leaf.trained(model.pt): reads the label from the fake bytes
+        seen.append((path.name, crop, tuple(labels)))
+        return path.read_bytes()[2:].decode().split(":")[0]
+    s = run.main(out=tmp_path / "out", client=FakeVLM(answer="must not be called"), data=data, predict=predict,
+                 model_id="resnet18-plantvillage:abc123")
+    assert s["kind"] == "trained" and s["model"] == "resnet18-plantvillage:abc123"
+    assert s["crops"]["tomato"]["status"] == "licensed" and not any(n.startswith("ref_") for n, _, _ in seen)
+    assert {labels for _, crop, labels in seen if crop == "pepper"} == {("healthy", "bacterial_spot")}

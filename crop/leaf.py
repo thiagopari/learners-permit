@@ -85,20 +85,46 @@ def parse(text, labels):
     return named[0] if len(named) == 1 else None
 
 
-def runner(crop, record, client=None, workers=8, data=DATA):
+def trained(model_path, device=None):
+    """predict(path, crop, labels) -> label from a model crop/train.py trained, choosing among this crop's labels only
+    (the few-shot model is offered the same choices)."""
+    import torch
+    from PIL import Image
+    from crop.train import model_for, transform
+    ckpt = torch.load(model_path, map_location="cpu")
+    device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+    model = model_for(len(ckpt["classes"]))
+    model.load_state_dict(ckpt["state_dict"])
+    model.to(device).eval()
+    t = transform(False)
+
+    def predict(path, crop, labels):
+        idx = [ckpt["classes"].index(f"{crop}:{label}") for label in labels]
+        with torch.no_grad():
+            logits = model(t(Image.open(path).convert("RGB")).unsqueeze(0).to(device))[0]
+        return labels[int(logits[idx].argmax())]
+    return predict
+
+
+def runner(crop, record, client=None, workers=8, data=DATA, predict=None):
     """A trust-gate runner (run_batch({arm: n}) -> {arm: [1, 0, ...]}) whose trials are the next n labelled photos.
-    record(row) receives every prediction. Each photo is used once; the gate stops before they run out."""
+    record(row) receives every prediction. Each photo is used once; the gate stops before they run out.
+    predict(path, crop, labels) -> label replaces the few-shot vision model (e.g. trained(model.pt))."""
     refs, queue = references(crop, data), trials(crop, data)
     labels = list(refs)
 
     def one(item):
         path, truth = item
         t0 = time.time()
-        try:
-            raw = ask(refs, path, client)
-        except Exception as e:  # an API failure is a failed trial, not a skipped one
-            raw = f"error: {type(e).__name__}"
-        guess = parse(raw, labels)
+        if predict is not None:
+            guess = predict(path, crop, labels)
+            raw = guess
+        else:
+            try:
+                raw = ask(refs, path, client)
+            except Exception as e:  # an API failure is a failed trial, not a skipped one
+                raw = f"error: {type(e).__name__}"
+            guess = parse(raw, labels)
         row = {"crop": crop, "image": path.name, "truth": truth, "predicted": guess, "correct": guess == truth,
                "seconds": round(time.time() - t0, 1), "raw": raw[:200]}
         record(row)
