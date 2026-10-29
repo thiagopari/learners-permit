@@ -9,7 +9,8 @@
 # Time limits: every step has its own, and the whole run stops LP_BUDGET_MIN minutes after start (keep it under the
 # job's --timeout), so results are always copied out before the platform kills the container.
 set -euo pipefail
-LP=/opt/learners-permit GR00T=/opt/Isaac-GR00T ROBOLAB=/opt/RoboLab
+# /opt for cloud/job/Dockerfile; /home/permit for Dockerfile.vm, which packages a VM where setup passed
+P=${LP_PREFIX:-/opt} LP=${LP_PREFIX:-/opt}/learners-permit GR00T=${LP_PREFIX:-/opt}/Isaac-GR00T ROBOLAB=${LP_PREFIX:-/opt}/RoboLab
 : "${LP_RUN_ID:?set LP_RUN_ID (cloud/job.sh run sets it)}"
 dest=${LP_RESULTS:-/results}/$LP_RUN_ID
 mkdir -p "$dest"
@@ -30,19 +31,30 @@ finish() {
 }
 trap finish EXIT
 mkdir -p "$dest/robolab-output"
-cp /opt/versions.txt "$dest/versions.txt"
+cp "$P/versions.txt" "$dest/versions.txt" 2> /dev/null || true
 
 step "GPU, driver and Vulkan"
 nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader | tee -a "$dest/versions.txt"
 vulkaninfo --summary 2> /dev/null | grep -i 'deviceName' | grep -q -i nvidia \
     || { echo "Vulkan sees no NVIDIA GPU, so Isaac Sim can't render. Is the platform one with RT cores?"; exit 1; }
 
-step "Model weights (Cosmos-Reason2-2B is gated: accept it on huggingface.co, and pass HF_TOKEN as a secret)"
-: "${HF_TOKEN:?no HF_TOKEN: cloud/job.sh run passes it with --env-secret}"
-[ ! -d /cache ] || export HF_HOME=/cache/huggingface  # an optional mounted volume saves the download next time
+step "Model weights"
 cd "$GR00T"
-timeout -k 30 30m uv run hf download nvidia/Cosmos-Reason2-2B > /dev/null
-timeout -k 30 30m uv run hf download nvidia/GR00T-N1.7-DROID > /dev/null
+if [ "${HF_HUB_OFFLINE:-0}" = 1 ]; then
+    echo "baked into the image (Dockerfile.vm): no download, no HF token needed"
+    # Use the environments exactly as built: `uv run` otherwise re-syncs on every start, fetching wheels.
+    export UV_NO_SYNC=1 UV_OFFLINE=1
+    # transformers 4.57.3 (GR00T's pin) calls the Hub API from the tokenizer loader (is_base_mistral -> model_info)
+    # unless the model name is a local folder, and that call fails offline even with the files cached. GR00T loads
+    # its backbone by name relative to its own folder, so make that name a local folder. (Found Oct 28.)
+    snap=$(ls -d ~/.cache/huggingface/hub/models--nvidia--Cosmos-Reason2-2B/snapshots/*/ | head -1)
+    mkdir -p nvidia && ln -sfn "$snap" nvidia/Cosmos-Reason2-2B
+else  # GR00T's backbone (Cosmos-Reason2-2B) is gated: accept it on huggingface.co, and pass HF_TOKEN as a secret
+    : "${HF_TOKEN:?no HF_TOKEN: cloud/job.sh run passes it with --env-secret}"
+    [ ! -d /cache ] || export HF_HOME=/cache/huggingface  # an optional mounted volume saves the download next time
+    timeout -k 30 30m uv run hf download nvidia/Cosmos-Reason2-2B > /dev/null
+    timeout -k 30 30m uv run hf download nvidia/GR00T-N1.7-DROID > /dev/null
+fi
 
 step "GR00T policy server on 127.0.0.1:5600"
 CUDA_VISIBLE_DEVICES=0 setsid uv run python gr00t/eval/run_gr00t_server.py --model-path nvidia/GR00T-N1.7-DROID \

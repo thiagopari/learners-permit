@@ -61,6 +61,14 @@ RoboLab, plus a Serverless AI Job image for evaluation sweeps.
   demand from Nov 2). Pricing policies handle it well, but the change landed on teams mid-project; the console banner
   was the only notice we saw.
 
+**Serverless AI Jobs, specifically**
+- **Worked well:** `gpu-rtx6000-a` jobs run (an RTX PRO 6000 with Vulkan inside the container, which Isaac Sim
+  needs); provisioning took ~2 minutes and pulling our 50 GB image ~7; images in the same project's Container Registry
+  needed no credentials. Our evaluation sweep ran to completion as a job: 80 GR00T episodes in 29 minutes.
+- **Needs work:** the platforms jobs support aren't listed, so we spent a smoke-test job to learn that RTX PRO 6000
+  works. Logs fetched with `nebius ai job logs` right after a job finished came back empty when we asked again later,
+  so save them at once (or say how long they're kept).
+
 **Would we build with it again?** Yes. The hardware and the CLI were solid; the two image issues (DCGM's port and the
 missing libGLU) cost most of the time we lost, and both are cheap to fix or document.
 
@@ -68,7 +76,8 @@ missing libGLU) cost most of the time we lost, and both are cheap to fix or docu
 
 **What we used.** GR00T N1.7-DROID (vision-language-action policy) through Isaac-GR00T's policy server; Isaac Sim 5.0
 and RoboLab (`BananasInBinThreeTotalTask`, `RedDishesInBinTask`); Nemotron-3-Super (above); Cosmos-Reason2-2B (gated;
-downloaded to the VM for scene verification; TODO: update if it ran before submission).
+served on our VM with Transformers and measured for scene verification: it flagged two runs of the same scene as
+changed every time, so we use Nemotron-3.5-Super-VL instead).
 
 **What worked well**
 - RoboLab's GR00T runner and its `episode_results.jsonl` were exactly what an evaluation harness needs; every CLI flag

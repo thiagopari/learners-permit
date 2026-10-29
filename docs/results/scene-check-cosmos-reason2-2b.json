@@ -1,0 +1,128 @@
+[
+ {
+  "test": "A same scene (control)",
+  "trial": 1,
+  "expected": "same",
+  "verdict": "changed",
+  "parts": [
+   "table"
+  ],
+  "changes": [
+   "Banana 3 has moved from the black table to the gray tray."
+  ],
+  "ok": false,
+  "seconds": 20.9
+ },
+ {
+  "test": "A same scene (control)",
+  "trial": 2,
+  "expected": "same",
+  "verdict": "changed",
+  "parts": [
+   "table"
+  ],
+  "changes": [
+   "Banana 3 has moved from the black surface to the gray tray."
+  ],
+  "ok": false,
+  "seconds": 20.2
+ },
+ {
+  "test": "A same scene (control)",
+  "trial": 3,
+  "expected": "same",
+  "verdict": "changed",
+  "parts": [
+   "table"
+  ],
+  "changes": [
+   "Banana 3 has moved from the black table to the gray tray."
+  ],
+  "ok": false,
+  "seconds": 20.3
+ },
+ {
+  "test": "B random background",
+  "trial": 1,
+  "expected": "changed",
+  "verdict": "changed",
+  "parts": [
+   "table"
+  ],
+  "changes": [
+   "The wooden floor is replaced by a tiled floor in the new image."
+  ],
+  "ok": true,
+  "seconds": 20.4
+ },
+ {
+  "test": "B random background",
+  "trial": 2,
+  "expected": "changed",
+  "verdict": "changed",
+  "parts": [
+   "table"
+  ],
+  "changes": [
+   "The wooden floor is replaced by a tiled floor in the new image."
+  ],
+  "ok": true,
+  "seconds": 20.2
+ },
+ {
+  "test": "B random background",
+  "trial": 3,
+  "expected": "changed",
+  "verdict": "changed",
+  "parts": [
+   "table"
+  ],
+  "changes": [
+   "The wooden floor is replaced by a tiled floor."
+  ],
+  "ok": true,
+  "seconds": 18.4
+ },
+ {
+  "test": "C different scene (control)",
+  "trial": 1,
+  "expected": "changed",
+  "verdict": "changed",
+  "parts": [
+   "table"
+  ],
+  "changes": [
+   "The table surface has changed from black to wooden with a grain pattern."
+  ],
+  "ok": true,
+  "seconds": 21.6
+ },
+ {
+  "test": "C different scene (control)",
+  "trial": 2,
+  "expected": "changed",
+  "verdict": "changed",
+  "parts": [
+   "table"
+  ],
+  "changes": [
+   "The table surface has changed from black to wooden with a grainy texture. The table now holds a red bowl, a banana, a Ru"
+  ],
+  "ok": true,
+  "seconds": 23.0
+ },
+ {
+  "test": "C different scene (control)",
+  "trial": 3,
+  "expected": "changed",
+  "verdict": "changed",
+  "parts": [
+   "table"
+  ],
+  "changes": [
+   "The table surface has changed from black to wooden with a grain pattern. The table is now wooden with a grain pattern, w"
+  ],
+  "ok": true,
+  "seconds": 23.0
+ }
+]

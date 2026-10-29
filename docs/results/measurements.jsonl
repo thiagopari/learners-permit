@@ -1,0 +1,6 @@
+{"task": "BananasInBinThreeTotalTask", "episodes": 40, "background_seed": null, "successes": 37, "minutes": 11.2}
+{"task": "RedDishesInBinTask", "episodes": 40, "background_seed": null, "successes": 14, "minutes": 17.8}
+{"task": "BananasInBinThreeTotalTask", "episodes": 20, "background_seed": 1, "error": "ach not called, holding a loose ptr to a stage!\n2026-10-24T16:34:59Z [10,982ms] [Warning] [omni.fabric.plugin] gFabricState->gUsdStageToSimStageWithHistoryMap had 1 outstanding SimStageWithHistory(s) at shutdown\n2026-10-24T16:34:59Z [11,033ms] [Warning] [carb] Recursive unloadAllPlugins() detected!\n", "minutes": 0.4}
+{"task": "BananasInBinThreeTotalTask", "episodes": 20, "background_seed": 2, "error": "ach not called, holding a loose ptr to a stage!\n2026-10-24T16:35:21Z [10,575ms] [Warning] [omni.fabric.plugin] gFabricState->gUsdStageToSimStageWithHistoryMap had 1 outstanding SimStageWithHistory(s) at shutdown\n2026-10-24T16:35:22Z [10,620ms] [Warning] [carb] Recursive unloadAllPlugins() detected!\n", "minutes": 0.4}
+{"task": "BananasInBinThreeTotalTask", "episodes": 20, "background_seed": 1, "successes": 20, "minutes": 2.2}
+{"task": "BananasInBinThreeTotalTask", "episodes": 20, "background_seed": 2, "successes": 16, "minutes": 9.5}

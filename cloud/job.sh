@@ -34,12 +34,22 @@ done
 [ $# -gt 0 ] || { sed -n '2,24p' "$0"; exit 1; }
 region=${NEBIUS_REGION:-uk-south2}
 commit=$(git rev-parse --short HEAD)
-image() { echo "cr.$region.nebius.cloud/${NEBIUS_REGISTRY:?set NEBIUS_REGISTRY}/learners-permit-eval:$commit"; }
+# LP_IMAGE picks another tag, e.g. the image cloud/job/build_on_vm.sh packaged from the VM (<commit>-vm).
+image() { echo "${LP_IMAGE:-cr.$region.nebius.cloud/${NEBIUS_REGISTRY:?set NEBIUS_REGISTRY}/learners-permit-eval:$commit}"; }
 
 submit() {  # submit RUN_ID SKILL [KEY=VAL..]
     local run_id=$1 skill=$2; shift 2
-    : "${LP_BUCKET:?set LP_BUCKET}" "${LP_HF_SECRET:?set LP_HF_SECRET}" "${NEBIUS_PROJECT_ID:?set NEBIUS_PROJECT_ID}"
+    : "${NEBIUS_PROJECT_ID:?set NEBIUS_PROJECT_ID}"
     local hours=${LP_JOB_HOURS:-4}
+    # Optional: a bucket keeps checkpoints and results after the job (and lets a preempted job resume); without one
+    # they live only for the job's lifetime and the verdict is in its log. The Dockerfile.vm image needs no HF token.
+    local storage=() secrets=()
+    if [ -n "${LP_BUCKET:-}" ]; then
+        storage=(--volume "s3://$LP_BUCKET:/results:rw:${LP_S3_PROFILE:-default}")
+    else
+        echo "no LP_BUCKET: results stay in the job's log ($0 logs <job ID>), and a preempted run can't resume"
+    fi
+    [ -z "${LP_HF_SECRET:-}" ] || secrets=(--env-secret "HF_TOKEN=$LP_HF_SECRET")
     local envs=(--env "LP_RUN_ID=$run_id" --env "LP_SKILL=$skill" --env "LP_COMMIT=$commit"
                 --env "LP_BUDGET_MIN=$(( hours * 60 - 15 ))" --env "LP_USD_PER_HOUR=${LP_USD_PER_HOUR:-1.80}")
     local kv
@@ -55,13 +65,12 @@ submit() {  # submit RUN_ID SKILL [KEY=VAL..]
     fi
     # on-failure: a preempted or crashed run restarts and resumes from the checkpoint in the bucket.
     nebius ai job create --parent-id "$NEBIUS_PROJECT_ID" --name "lp-$run_id" --image "$(image)" "${envs[@]}" \
-        --env-secret "HF_TOKEN=$LP_HF_SECRET" \
-        --volume "s3://$LP_BUCKET:/results:rw:${LP_S3_PROFILE:-default}" \
+        "${secrets[@]}" "${storage[@]}" \
         --platform "$platform" --preset "${LP_JOB_PRESET:-1gpu-24vcpu-218gb}" \
-        "${pricing[@]}" --timeout "${hours}h" --restart-policy on-failure --disk-size 250Gi --shm-size 32Gi \
-        --format jsonpath='{.metadata.id}'
+        "${pricing[@]}" --timeout "${hours}h" --restart-policy "${LP_RESTART:-on-failure}" --disk-size 250Gi \
+        --shm-size 32Gi --format jsonpath='{.metadata.id}'
     echo
-    echo "run $run_id: results in s3://$LP_BUCKET/$run_id. Follow with $0 logs <job ID>; fetch with $0 fetch $run_id"
+    echo "run $run_id: follow with $0 logs <job ID>${LP_BUCKET:+; fetch with $0 fetch $run_id}"
 }
 
 case "${1:-}" in

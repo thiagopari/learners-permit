@@ -1,0 +1,107 @@
+[
+ {
+  "test": "A same scene (control)",
+  "trial": 1,
+  "verdict": "same",
+  "parts": [],
+  "changes": [],
+  "ok": true,
+  "s": 5.8
+ },
+ {
+  "test": "A same scene (control)",
+  "trial": 2,
+  "verdict": "same",
+  "parts": [],
+  "changes": [],
+  "ok": true,
+  "s": 3.5
+ },
+ {
+  "test": "A same scene (control)",
+  "trial": 3,
+  "verdict": "same",
+  "parts": [],
+  "changes": [],
+  "ok": true,
+  "s": 3.9
+ },
+ {
+  "test": "B random background",
+  "trial": 1,
+  "verdict": "changed",
+  "parts": [
+   "background",
+   "floor"
+  ],
+  "changes": [
+   "The floor changed from tiled to wooden flooring on the left side",
+   "The background walls changed from tiled area to a white wall with baseboard on the right"
+  ],
+  "ok": true,
+  "s": 3.7
+ },
+ {
+  "test": "B random background",
+  "trial": 2,
+  "verdict": "unknown",
+  "parts": null,
+  "changes": [],
+  "ok": false,
+  "s": 5.3
+ },
+ {
+  "test": "B random background",
+  "trial": 3,
+  "verdict": "changed",
+  "parts": [
+   "background",
+   "floor"
+  ],
+  "changes": [
+   "visible floor changed from white tiles to wood",
+   "background changed from tiled floor to wooden floor and wall"
+  ],
+  "ok": true,
+  "s": 3.2
+ },
+ {
+  "test": "C different scene (control)",
+  "trial": 1,
+  "verdict": "changed",
+  "parts": [
+   "table"
+  ],
+  "changes": [
+   "table surface changed from black to wood grain"
+  ],
+  "ok": true,
+  "s": 3.9
+ },
+ {
+  "test": "C different scene (control)",
+  "trial": 2,
+  "verdict": "changed",
+  "parts": [
+   "table"
+  ],
+  "changes": [
+   "table surface changed from black to light wood"
+  ],
+  "ok": true,
+  "s": 3.0
+ },
+ {
+  "test": "C different scene (control)",
+  "trial": 3,
+  "verdict": "changed",
+  "parts": [
+   "table"
+  ],
+  "changes": [
+   "table surface changed from black to light wood grain"
+  ],
+  "ok": true,
+  "s": 3.8
+ }
+]

@@ -1,0 +1,12 @@
+# Serverless AI Job aijob-e05wvv2wq3rcyjpech, Oct 28 2026: gpu-rtx6000-a (RTX PRO 6000), uk-south2, image
+# cr.uk-south2.nebius.cloud/e05tkd8w1an6nadmat/learners-permit-eval:cdf9a04-vm. State: COMPLETED.
+# Excerpt of the job's log as fetched with `nebius ai job logs` when it finished (step headers, batch lines, summary).
+[2026-10-28T11:48:00-04:00] == [0 min] GPU, driver and Vulkan
+[2026-10-28T11:48:03-04:00] == [0 min] Model weights
+[2026-10-28T11:48:03-04:00] == [0 min] GR00T policy server on 127.0.0.1:5600
+[2026-10-28T11:48:28-04:00] == [0 min] Commissioning sweep: bananas_in_bin, tier supervised (105 min left)
+[2026-10-28T11:57:52-04:00] batch 1: n17_droid 16/20 | P(rate >= 80%) for n17_droid = 0.41
+[2026-10-28T12:05:36-04:00] batch 2: n17_droid 34/40 | P(rate >= 80%) for n17_droid = 0.74
+[2026-10-28T12:13:20-04:00] batch 3: n17_droid 51/60 | P(rate >= 80%) for n17_droid = 0.80
+[2026-10-28T12:17:17-04:00] batch 4: n17_droid 71/80 | P(rate >= 80%) for n17_droid = 0.97
+[2026-10-28T12:17:17-04:00] {"skill": "bananas_in_bin", "status": "licensed", "decision": "pass", "tier": "supervised", "policy": "n17_droid", "successes": 71, "trials": 80, "p": 0.9744, "scope": {"speed_pct": [40]}, "source": "robolab:job:cdf9a04", "resumed": 0, "minutes": 28.8, "episodes_this_attempt": 80, "usd_this_attempt": 0.86, "usd_per_1000_episodes": 10.8}
