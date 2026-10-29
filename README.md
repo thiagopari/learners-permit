@@ -181,7 +181,8 @@ The setup is hardened against what broke on a real VM: Isaac Sim's missing `libG
 | `console/`, `demo/`, `tests/` | **New:** licence console, four-beat demo (offline, labelled stand-ins), tests |
 | `cloud/` | **New:** the Nebius GPU VM (`vm.sh`, `setup_vm.sh`, idle guard, spot price cap), `measure.py`, the Cosmos server, the Serverless Job (`job.sh`, `job/`) |
 | `docs/FEEDBACK.md` | Our feedback on Token Factory, AI Cloud and the NVIDIA tools |
-| everything else | Hyperion (prior work): [docs/hyperion-README.md](docs/hyperion-README.md), [docs/hyperion-gb10-readme.md](docs/hyperion-gb10-readme.md) |
+| `crop/` | **New:** a few-shot crop-disease skill licensed per crop by the same gate |
+| `cell/`, `navfix/`, `sim/`, `glue/`, `isaac/`, `docker/`, `tools/`, `samples/`, `agent/`, `infra/`, `warehouse/`, `fleetops.sh`, `enable_thinking.sh`, `*.patch.json5` | **Hyperion, prior work (Oct 3), not part of this entry:** kept for reference and credit, by its original authors (see [Prior work](#prior-work)). Nothing in Learner's Permit imports or runs it. Maps: [docs/hyperion-README.md](docs/hyperion-README.md), [docs/hyperion-gb10-readme.md](docs/hyperion-gb10-readme.md) |
 
 ## Prior work
 Hyperion, an AI ops supervisor for a simulated 20-robot warehouse, was built on **2026-10-03** at the Dell × NVIDIA
@@ -190,7 +191,9 @@ GB10 hackathon in Boston by Thiago Pari, Ferbin, Megha and Amal; its public uplo
 statistical trust gate deciding which robot skills an agent may use. In Hyperion that gate lived only in the LLM's
 prompt: nothing read its result at runtime.
 
-Learner's Permit is new work from the submission period, by this team (_TODO: list the three team members_):
+The Hyperion folders listed in the repo map are kept as that prior work, credited to its authors; they are not part
+of this entry, and Learner's Permit doesn't use them. Learner's Permit is new work from the submission period, by
+this team: **Gnana Shishir Kumar Chintapalli, Thiago Pari and Megha** (_TODO: Megha's surname_):
 - **The trust gate, rewritten from scratch** (`permit/gate.py`, our own code; Hyperion's `cell/bandit.py` isn't used),
   with 80% and 99% tiers and resumable sweeps.
 - **Enforcement in code:** one `POST /run` choke point with Cedar policies; the gate's result is checked on every run.
