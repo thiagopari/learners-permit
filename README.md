@@ -90,6 +90,22 @@ image, never its file name. The licence's scope is the crop.
 - Images: PlantVillage (Hughes & Salathé, [github.com/spMohanty/PlantVillage-Dataset](https://github.com/spMohanty/PlantVillage-Dataset),
   CC BY-SA 3.0): 205 photos, lab-shot leaves on plain backgrounds, so this says nothing yet about field photos.
 
+**Few-shot vs trained, same photos, same gate (Oct 29).** `crop/train.py` fine-tuned an ImageNet-pretrained
+ResNet-18 on 4,312 other PlantVillage photos (12 seconds, 4 epochs, on our Nebius RTX PRO 6000; validation accuracy
+98.75%), with every photo above excluded by SHA-256. Commissioned through the same gate on the same held-out photos:
+
+| Crop | Few-shot Nemotron-3.5-Super-VL | Trained ResNet-18: licence | Trained ResNet-18: every held-out photo |
+|---|---|---|---|
+| Tomato | 85/100, **not licensed** | 20/20, P = 0.991, **licensed** | 119/120 (one early blight called healthy) |
+| Pepper | 37/40, licensed | 20/20, P = 0.991, **licensed** | 80/80 |
+
+- The gate stops as soon as it's sure, so the trained model's licences took 20 photos each; the last column scores
+  it on all of them as a separate check. The licence is tied to the model's hash (`a70f3d278de7`): a retrained model
+  has to earn its own.
+- **Caveat:** PlantVillage's training and test photos come from the same lab setup, and models are known to score
+  near-perfectly on it partly by learning that setup; this is not evidence about field photos, where the few-shot
+  model's lack of training may matter less. Results: [docs/results/crop-2026-10-29-trained/](docs/results/crop-2026-10-29-trained/).
+
 
 ## How it works
 ```

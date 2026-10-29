@@ -1,0 +1,39 @@
+{
+ "arch": "resnet18, ImageNet-pretrained (torchvision IMAGENET1K_V1), fine-tuned",
+ "classes": [
+  "tomato:healthy",
+  "tomato:early_blight",
+  "tomato:late_blight",
+  "pepper:healthy",
+  "pepper:bacterial_spot"
+ ],
+ "train_photos": 4312,
+ "val_photos": 479,
+ "excluded_held_out_photos": 205,
+ "epochs": 4,
+ "history": [
+  {
+   "epoch": 1,
+   "val_accuracy": 0.9666,
+   "loss": 0.0346
+  },
+  {
+   "epoch": 2,
+   "val_accuracy": 0.9269,
+   "loss": 0.1722
+  },
+  {
+   "epoch": 3,
+   "val_accuracy": 0.9916,
+   "loss": 0.0057
+  },
+  {
+   "epoch": 4,
+   "val_accuracy": 0.9875,
+   "loss": 0.0067
+  }
+ ],
+ "minutes": 0.2,
+ "device": "NVIDIA RTX PRO 6000 Blackwell Server Edition",
+ "model_sha256": "a70f3d278de75cb655544eb603c2300f90b3f8a92ba0cd18923933e496598d32"
+}
