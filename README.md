@@ -179,6 +179,13 @@ Learner's Permit is new work from the submission period, by this team (_TODO: li
 - **GR00T N1.7-DROID in Isaac Sim** through RoboLab on Nebius, with the measurements above; the **Cosmos Reason 2**
   scene check; the Nebius VM tooling and the Serverless Job.
 
+## What's next
+- **Earn, not only refuse:** fine-tune GR00T on scripted demos so a refused skill (red dishes, 14/40) can earn its
+  licence; scope licences by phrasing and object colour; put a real arm behind the same `POST /run`.
+- **Beyond robot arms (planned, not built):** the gate licenses any model's skill within the conditions it was tested
+  in. Our next project, CropAI, would license a crop-disease classifier per cultivar and lighting window from real
+  labelled field images, and revoke it when the season or the light changes.
+
 ## License
 Apache-2.0 for this repository's code. No model weights are included; GR00T, Cosmos and Nemotron are under NVIDIA's
 model licenses.

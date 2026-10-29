@@ -53,7 +53,9 @@ degraded GR00T on bananas (20/20, 16/20), so the licence correctly stayed.
 and if every outside signal (web, vision, live results) can only take permission away.
 
 **What's next:** fine-tune GR00T on scripted demos so a refused skill earns its licence; licences scoped by phrasing
-and object colour; a real arm behind the same `POST /run`.
+and object colour; a real arm behind the same `POST /run`. And beyond robot arms: the gate licenses any model's skill
+within the conditions it was tested in. Our next project, CropAI (planned, not built), would license a crop-disease
+classifier per cultivar and lighting from real labelled field images, and revoke it when the season or light changes.
 
 **Built with:** nvidia-nemotron, nvidia-gr00t, nvidia-cosmos, isaac-sim, robolab, nebius-token-factory,
 nebius-ai-cloud, nebius-serverless, tavily, cedar, python
