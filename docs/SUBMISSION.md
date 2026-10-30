@@ -5,32 +5,35 @@ Deadline: Oct 30, 2026, 10:00 AM PT (1:00 PM ET).
 
 The Devpost text, final and paste-ready: [DEVPOST.md](DEVPOST.md).
 
-## The video (2:44; the aha moment in the first 15 seconds)
-Judges said (Oct 21): get to the aha moment fast. Every robot frame is labelled **"Simulation: NVIDIA Isaac Sim"**.
-No music, and third-party brand names are hidden. Everything on screen is a real result; the source is in brackets.
+## The video (2:49; the aha moment in the first 15 seconds)
+Judges said (Oct 21): get to the aha moment fast. Every robot frame is labelled **"Simulation · rendered in NVIDIA
+Isaac Sim"**. Music: “Impact Prelude” by Kevin MacLeod (incompetech.com), CC BY 4.0, credited on the end card and in
+the YouTube description. Captions are burned in. Third-party brand names are hidden. Everything on screen is a real
+result; the source is in brackets.
 
 | Time | Beat | On screen |
 |---|---|---|
-| 0:00–0:17 | **REFUSE** | The red-dishes sim frame, then its licence card: 14/40, P(rate ≥ 80%) = 2.4 × 10⁻¹⁰, refused [`docs/results/measurements.jsonl`] |
-| 0:17–0:39 | The idea | Title, then the architecture: Nemotron's only path to the robot is `POST /run` |
-| 0:39–1:08 | **EARN** | The bananas sim frame; its licence card, 37/40, P = 0.976, licensed [`e2e-revoke-2026-10-28/licences.json`]; the Serverless Job, 71/80 [`serverless-job-2026-10-28.log`] |
-| 1:08–1:31 | **BLOCK** | Tavily finds a drill's spec sheet, 1.7 kg > 1 kg, denied [`tests/test_permit.py`, Oct 22 extraction]; then a recall notice for a grease gun, denied [`recall-2026-10-29/`] |
-| 1:31–1:57 | **REVOKE** | The two real frames, tiles then wood; the console replaying the run's audit log: revoked by the vision check, then the next request denied with Nemotron's explanation [`e2e-revoke-2026-10-28/`] |
-| 1:57–2:16 | Beyond robots | The crop licences: few-shot Nemotron-VL (pepper licensed, tomato not) vs a ResNet-18 trained on Nebius (both) [`crop-2026-10-29*/`] |
-| 2:16–2:30 | Field system | The team's field design (Oct 28): drones and ground robots feed crop models, every action goes through the permit. The built parts are lit, the rest is marked "next" |
-| 2:30–2:44 | Close | Built on Nebius Token Factory and AI Cloud, NVIDIA Nemotron, GR00T and Isaac Sim, and Tavily |
+| 0:00–0:18 | **REFUSE** | The red-dishes sim frame, then its licence card: 14/40, P(rate ≥ 80%) = 2.4 × 10⁻¹⁰, refused [`docs/results/measurements.jsonl`] |
+| 0:18–0:40 | The idea | Title, then the architecture: Nemotron's only path to the robot is `POST /run` |
+| 0:40–1:09 | **EARN** | The bananas sim frame; its licence card, 37/40, P = 0.976, licensed [`e2e-revoke-2026-10-28/licences.json`]; the Serverless Job, 71/80 [`serverless-job-2026-10-28.log`] |
+| 1:09–1:32 | **BLOCK** | Tavily finds a drill's spec sheet, 1.7 kg > 1 kg, denied [`tests/test_permit.py`, Oct 22 extraction]; then a recall notice for a grease gun, denied [`recall-2026-10-29/`] |
+| 1:32–1:58 | **REVOKE** | The wood-floor frame where GR00T still succeeded, then both real frames side by side (tiles, wood); the vision check's verdict from the run's audit log ("changed", 13:07), revoked, then the next request denied with Nemotron's explanation [`e2e-revoke-2026-10-28/`] |
+| 1:58–2:17 | Beyond robots | The crop licences: few-shot Nemotron-VL (pepper licensed, tomato not) vs a ResNet-18 trained on Nebius (both) [`crop-2026-10-29*/`] |
+| 2:17–2:32 | Field system | The team's field design (Oct 28): drones and ground robots feed crop models, every action goes through the permit. The built parts are lit, the rest is marked "next" |
+| 2:32–2:49 | Close | Built on Nebius Token Factory and AI Cloud, NVIDIA Nemotron, GR00T and Isaac Sim, and Tavily |
 
 Don't show: the offline demo's coin-flip licence numbers as if they were robot runs (only its Nemotron and Tavily
 parts are real), or Cosmos as the scene checker (it was measured and not used).
 
 The rules ask projects without hardware to show the key modules working for at least a minute in total: here the
-licence cards, the `POST /run` decisions, the console and the sim frames run from 0:00 to 0:17 and 0:39 to 2:16.
+licence cards, the `POST /run` decisions and the sim frames run from 0:00 to 0:18 and 0:40 to 1:58.
 
 ## Before submitting
 - [ ] Team on Devpost: Gnana Shishir Kumar Chintapalli, Megha Manoj, Thiago Pari
 - [x] Run numbers in the README, and the REVOKE beat matches what happened
 - [x] Secret scan of the full history: `gitleaks detect --source . --log-opts="--all"` (config in `.gitleaks.toml`)
 - [x] The repo is public, with the Apache-2.0 license at the top
-- [ ] Video public on YouTube, under 3 minutes (captions: upload the `.srt` made with it)
+- [ ] Video public on YouTube, under 3 minutes, music credit in the description (captions are burned in; the `.srt` is
+  optional)
 - [ ] After submitting: `cloud/vm.sh delete` if a VM is up, so the disk stops billing; keep Token Factory testable until
   Dec 15
